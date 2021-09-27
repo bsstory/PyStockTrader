@@ -337,12 +337,7 @@ class CollectorKiwoom:
                     except Exception as e:
                         self.windowQ.put([ui_num['S단순텍스트'], f'OnReceiveRealData 주식체결 {e}'])
                     else:
-                        self.UpdateTickData(code, c, o, h, low, per, dm, ch, vp, bids, asks, t)
-                        if code in self.dict_gsjm.keys() and t != self.dict_gsjm[code]:
-                            self.dict_gsjm[code] = t
-                            vitimedown = now() < self.dict_vipr[code][2]
-                            vid5priceup = c >= self.dict_vipr[code][5]
-                            self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, vitimedown, vid5priceup])
+                        self.UpdateTickData(code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t)
         elif realtype == '주식호가잔량':
             try:
                 s1jr = int(self.GetCommRealData(code, 61))
@@ -399,16 +394,21 @@ class CollectorKiwoom:
             vid5 = self.GetVIPriceDown5(code, key)
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
 
-    def UpdateTickData(self, code, c, o, h, low, per, dm, ch, vp, bids, asks, t):
+    def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t):
+        if code in self.dict_gsjm.keys():
+            injango = code in self.list_jang
+            vitimedown = now() < self.dict_vipr[code][2]
+            vid5priceup = c >= self.dict_vipr[code][5]
+            self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup])
+
         vitime = strf_time('%Y%m%d%H%M%S', self.dict_vipr[code][1])
         vid5 = self.dict_vipr[code][2]
         try:
             s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg = self.dict_hoga[code]
         except KeyError:
             s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg = 0, 0, 0, 0, 0, 0, 0, 0
-        data = [code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
-                s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg, t, now()]
-        self.tick1Q.put(data)
+        self.tick1Q.put([code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
+                         s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg, t, now()])
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'
