@@ -323,18 +323,18 @@ class CollectorKiwoom:
                         self.UpdateTickData(code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t)
         elif realtype == '주식호가잔량':
             try:
-                s1jr = int(self.GetCommRealData(code, 61))
-                s2jr = int(self.GetCommRealData(code, 62))
-                b1jr = int(self.GetCommRealData(code, 71))
-                b2jr = int(self.GetCommRealData(code, 72))
-                s1hg = abs(int(self.GetCommRealData(code, 41)))
                 s2hg = abs(int(self.GetCommRealData(code, 42)))
+                s1hg = abs(int(self.GetCommRealData(code, 41)))
                 b1hg = abs(int(self.GetCommRealData(code, 51)))
                 b2hg = abs(int(self.GetCommRealData(code, 52)))
+                s2jr = int(self.GetCommRealData(code, 62))
+                s1jr = int(self.GetCommRealData(code, 61))
+                b1jr = int(self.GetCommRealData(code, 71))
+                b2jr = int(self.GetCommRealData(code, 72))
             except Exception as e:
                 self.windowQ.put([ui_num['S단순텍스트'], f'OnReceiveRealData 주식호가잔량 {e}'])
             else:
-                self.dict_hoga[code] = [s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg]
+                self.dict_hoga[code] = [s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr]
 
     def InsertViPriceDown5(self, code, o):
         vid5 = self.GetVIPriceDown5(code, o)
@@ -387,11 +387,11 @@ class CollectorKiwoom:
         vitime = strf_time('%Y%m%d%H%M%S', self.dict_vipr[code][1])
         vid5 = self.dict_vipr[code][2]
         try:
-            s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg = self.dict_hoga[code]
+            s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = self.dict_hoga[code]
         except KeyError:
-            s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg = 0, 0, 0, 0, 0, 0, 0, 0
+            s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = 0, 0, 0, 0, 0, 0, 0, 0
         self.tick1Q.put([code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
-                         s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg, t, now()])
+                         s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, now()])
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'

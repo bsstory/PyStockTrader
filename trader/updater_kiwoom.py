@@ -30,7 +30,7 @@ class UpdaterKiwoom:
                 self.PutTickData(tick[1])
 
     def UpdateTickData(self, code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
-                       s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg, d, receiv_time):
+                       s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, d, receiv_time):
         try:
             hlm = int(round((h + low) / 2))
             hlmp = round((c / hlm - 1) * 100, 2)
@@ -50,7 +50,7 @@ class UpdaterKiwoom:
             sm = int(dm - self.dict_df[code]['누적거래대금'][-1])
             self.dict_df[code].at[d] = \
                 c, o, h, per, hlmp, sm, dm, ch, vp, bids, asks, vitime, vid5,\
-                s1jr, s2jr, b1jr, b2jr, s1hg, s2hg, b1hg, b2hg
+                s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr
 
         if now() > self.time_info:
             self.UpdateInfo(receiv_time)
