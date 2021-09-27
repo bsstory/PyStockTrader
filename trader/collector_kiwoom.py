@@ -15,8 +15,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 class CollectorKiwoom:
     app = QtWidgets.QApplication(sys.argv)
 
-    def __init__(self, windowQ, collectorQ, sstgQ, soundQ, queryQ, teleQ,
-                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q, tick6Q, tick7Q, tick8Q):
+    def __init__(self, windowQ, collectorQ, sstgQ, soundQ, queryQ, teleQ, tick1Q):
         self.windowQ = windowQ
         self.collectorQ = collectorQ
         self.sstgQ = sstgQ
@@ -24,13 +23,6 @@ class CollectorKiwoom:
         self.queryQ = queryQ
         self.teleQ = teleQ
         self.tick1Q = tick1Q
-        self.tick2Q = tick2Q
-        self.tick3Q = tick3Q
-        self.tick4Q = tick4Q
-        self.tick5Q = tick5Q
-        self.tick6Q = tick6Q
-        self.tick7Q = tick7Q
-        self.tick8Q = tick8Q
 
         self.dict_bool = {
             '실시간데이터수신등록': False,
@@ -120,8 +112,6 @@ class CollectorKiwoom:
                 work = self.collectorQ.get()
                 if type(work) == list:
                     self.UpdateRealreg(work)
-                elif type(work) == str:
-                    self.UpdateJangolist(work)
                 elif type(work) == str:
                     self.UpdateJangolist(work)
                 continue
@@ -225,13 +215,6 @@ class CollectorKiwoom:
             if code not in codes:
                 codes.append(code)
         self.tick1Q.put(['틱데이터저장', codes])
-        self.tick2Q.put(['틱데이터저장', codes])
-        self.tick3Q.put(['틱데이터저장', codes])
-        self.tick4Q.put(['틱데이터저장', codes])
-        self.tick5Q.put(['틱데이터저장', codes])
-        self.tick6Q.put(['틱데이터저장', codes])
-        self.tick7Q.put(['틱데이터저장', codes])
-        self.tick8Q.put(['틱데이터저장', codes])
 
     def OnEventConnect(self, err_code):
         if err_code == 0:
