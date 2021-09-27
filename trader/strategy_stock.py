@@ -28,7 +28,7 @@ class StrategyStock:
                 self.UpdateTotaljasan(data)
             elif len(data) == 2:
                 self.UpdateList(data[0], data[1])
-            elif len(data) == 14:
+            elif len(data) == 13:
                 self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
                                  data[8], data[9], data[10], data[11], data[12])
             elif len(data) == 7:
