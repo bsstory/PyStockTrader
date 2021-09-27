@@ -47,14 +47,14 @@ class CollectorKiwoom:
         self.list_code = None
         self.list_kosd = None
 
+        self.df_tr = None
+        self.dict_item = None
+        self.str_trname = None
+
         self.operation = 1
         self.df_mt = pd.DataFrame(columns=['거래대금상위100'])
         self.str_tday = strf_time('%Y%m%d')
         self.str_jcct = self.str_tday + '090000'
-
-        self.df_tr = None
-        self.dict_item = None
-        self.str_trname = None
 
         remaintime = (strp_time('%Y%m%d%H%M%S', self.str_tday + '090100') - now()).total_seconds()
         exittime = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
@@ -175,6 +175,7 @@ class CollectorKiwoom:
         for i in range(0, len(self.list_code), 100):
             self.collectorQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
             k += 1
+        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 장운영시간 등록 완료'])
 
     def ViRealreg(self):
         self.Block_Request('opt10054', 시장구분='000', 장전구분='1', 종목코드='', 발동구분='1', 제외종목='111111011',
@@ -190,6 +191,7 @@ class CollectorKiwoom:
             for code in codes:
                 self.dict_gsjm[code] = '090000'
                 self.sstgQ.put(['조건진입', code])
+        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간조건검색 등록 완료'])
 
     def ConditionSearchStop(self):
         self.dict_bool['실시간조건검색중단'] = True
