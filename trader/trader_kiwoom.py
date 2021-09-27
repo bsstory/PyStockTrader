@@ -386,22 +386,6 @@ class TraderKiwoom:
         self.dict_df['TRDF'] = df
         self.dict_bool['TR수신'] = True
 
-    def OnReceiveRealCondition(self, code, IorD, cname, cindex):
-        if cname == '' and cindex == '':
-            return
-
-        if IorD == 'I':
-            self.sstgQ.put(['조건진입', code])
-            if code not in self.dict_gsjm.keys():
-                self.dict_gsjm[code] = '090000'
-            self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
-        elif IorD == 'D':
-            if code not in self.dict_df['잔고목록'].index and code not in self.list_buy:
-                self.sstgQ.put(['조건이탈', code])
-                if code in self.dict_gsjm.keys():
-                    del self.dict_gsjm[code]
-                self.stockQ.put([sn_jscg, code])
-
     def OnReceiveRealData(self, code, realtype, realdata):
         if realdata == '':
             return
@@ -609,6 +593,7 @@ class TraderKiwoom:
                 bg = oc * cp
                 pg, sg, sp = self.GetPgSgSp(bg, oc * cp)
                 self.dict_df['잔고목록'].at[code] = name, cp, cp, sp, sg, bg, pg, oc
+                self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
                 self.collectorQ.put(f'잔고편입 {code}')
             else:
                 jc = self.dict_df['잔고목록']['보유수량'][code]
@@ -618,10 +603,12 @@ class TraderKiwoom:
                 bp = int(bg / jc)
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
+
         elif og == '매도':
             jc = self.dict_df['잔고목록']['보유수량'][code]
             if jc - oc == 0:
                 self.dict_df['잔고목록'].drop(index=code, inplace=True)
+                self.stockQ.put([sn_jscg, code])
                 self.collectorQ.put(f'잔고청산 {code}')
             else:
                 bp = self.dict_df['잔고목록']['매입가'][code]
