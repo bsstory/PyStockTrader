@@ -196,8 +196,6 @@ class CollectorKiwoom:
     def ConditionSearchStop(self):
         self.dict_bool['실시간조건검색중단'] = True
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[0], 0)
-        time.sleep(0.2)
-        self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[1], 0)
 
     def RemoveRealreg(self):
         self.collectorQ.put(['ALL', 'ALL'])
