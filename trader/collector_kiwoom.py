@@ -25,10 +25,8 @@ class CollectorKiwoom:
         self.tick1Q = tick1Q
 
         self.dict_bool = {
-            '실시간데이터수신등록': False,
             '실시간조건검색시작': False,
             '실시간조건검색중단': False,
-            '실시간데이터수신중단': False,
 
             '로그인': False,
             'TR수신': False,
@@ -126,10 +124,9 @@ class CollectorKiwoom:
                 if not self.dict_bool['실시간조건검색중단']:
                     self.ConditionSearchStop()
             if self.operation == 8:
-                if not self.dict_bool['실시간데이터수신중단']:
-                    self.RemoveRealreg()
-                    self.SaveDatabase()
-                    break
+                self.RemoveRealreg()
+                self.SaveDatabase()
+                break
 
             if now() > self.time_mtop:
                 if len(self.df_mt) > 0:
@@ -158,7 +155,8 @@ class CollectorKiwoom:
             if sn == sn_oper:
                 self.windowQ.put([ui_num['S단순텍스트'], f'실시간 알림 등록 {result} - 장운영시간 [{sn}]'])
             else:
-                self.windowQ.put([ui_num['S단순텍스트'], f"실시간 알림 등록 {result} - [{sn}] 종목갯수 {len(rreg[1].split(';'))}"])
+                text = f"실시간 알림 등록 {result} - [{sn}] 종목갯수 {len(rreg[1].split(';'))}"
+                self.windowQ.put([ui_num['S단순텍스트'], text])
 
     def UpdateJangolist(self, work):
         code = work.split(' ')[1]
@@ -175,8 +173,7 @@ class CollectorKiwoom:
         self.list_code = self.SendCondition(sn_oper, self.dict_cond[1], 1, 0)
         k = 0
         for i in range(0, len(self.list_code), 100):
-            self.collectorQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]),
-                                 '10;12;14;30;228;41;61;71;81', 1])
+            self.collectorQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
             k += 1
 
     def ViRealreg(self):
@@ -195,6 +192,7 @@ class CollectorKiwoom:
                 self.sstgQ.put(['조건진입', code])
 
     def ConditionSearchStop(self):
+        self.dict_bool['실시간조건검색중단'] = True
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[0], 0)
         time.sleep(0.2)
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[1], 0)
