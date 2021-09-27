@@ -13,9 +13,9 @@ class StrategyStock:
         self.stockQ = stockQ
         self.sstgQ = sstgQ
 
+        self.dict_gsjm = {}     # key: 종목코드, value: 10시이전 DataFrame, 10시이후 list
         self.list_buy = []
         self.list_sell = []
-        self.dict_gsjm = {}     # key: 종목코드, value: 10시이전 DataFrame, 10시이후 list
         self.int_tujagm = 0
         self.time_gsjm = now()
         self.Start()

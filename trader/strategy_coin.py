@@ -8,33 +8,38 @@ from utility.static import now, timedelta_sec, strf_time, timedelta_hour
 
 
 class StrategyCoin:
-    def __init__(self, windowQ, coinQ, queryQ, stgQ):
+    def __init__(self, windowQ, coinQ, queryQ, sstgQ):
         self.windowQ = windowQ
         self.coinQ = coinQ
         self.queryQ = queryQ
-        self.stgQ = stgQ
+        self.sstgQ = sstgQ
 
+        self.dict_gsjm = {}     # key: 종목코드, value: DataFrame
         self.list_buy = []
         self.list_sell = []
-        self.dict_csan = {}     # key: 종목코드, value: datetime
-        self.dict_gsjm = {}     # key: 종목코드, value: DataFrame
-        self.time_hsjm = now()
+        self.int_tujagm = 0
+        self.time_gsjm = now()
         self.Start()
 
     def Start(self):
         while True:
-            data = self.stgQ.get()
-            if len(data) == 2:
+            data = self.sstgQ.get()
+            if type(data) == int:
+                self.UpdateTotaljasan(data)
+            elif len(data) == 2:
                 self.UpdateList(data[0], data[1])
-            elif len(data) == 12:
+            elif len(data) == 11:
                 self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6],
-                                 data[7], data[8], data[9], data[10], data[11])
+                                 data[7], data[8], data[9], data[10])
             elif len(data) == 5:
                 self.SellStrategy(data[0], data[1], data[2], data[3], data[4])
 
-            if now() > self.time_hsjm:
+            if now() > self.time_gsjm:
                 self.windowQ.put([ui_num['C관심종목'], self.dict_gsjm])
-                self.time_hsjm = timedelta_sec(1)
+                self.time_gsjm = timedelta_sec(1)
+
+    def UpdateTotaljasan(self, data):
+        self.int_tujagm = data
 
     def UpdateList(self, gubun, tickers):
         if '관심종목초기화' in gubun:
@@ -51,7 +56,7 @@ class StrategyCoin:
             if tickers in self.list_sell:
                 self.list_sell.remove(tickers)
 
-    def BuyStrategy(self, ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango, batting):
+    def BuyStrategy(self, ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango):
         if ticker not in self.dict_gsjm.keys():
             return
 
@@ -79,7 +84,7 @@ class StrategyCoin:
 
         # 전략 비공개
 
-        oc = int(batting / c)
+        oc = int(self.int_tujagm / c)
         if oc > 0:
             self.list_buy.append(ticker)
             self.coinQ.put(['매수', ticker, c, oc])

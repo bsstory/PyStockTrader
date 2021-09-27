@@ -86,8 +86,6 @@ sn_cond = 1002
 sn_oper = 1003
 sn_jscg = 1004
 sn_vijc = 1005
-sn_cthg = 1006
-sn_short = 1100
 sn_jchj = 2000
 
 color_fg_bt = QColor(230, 230, 235)

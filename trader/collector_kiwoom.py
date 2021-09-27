@@ -6,10 +6,10 @@ import pythoncom
 import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QAxContainer import QAxWidget
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.static import *
 from utility.setting import *
-warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
 class CollectorKiwoom:
@@ -124,7 +124,7 @@ class CollectorKiwoom:
                 if not self.dict_bool['실시간조건검색중단']:
                     self.ConditionSearchStop()
             if self.operation == 8:
-                self.RemoveRealreg()
+                self.AllRemoveRealreg()
                 self.SaveDatabase()
                 break
 
@@ -197,7 +197,7 @@ class CollectorKiwoom:
         self.dict_bool['실시간조건검색중단'] = True
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[0], 0)
 
-    def RemoveRealreg(self):
+    def AllRemoveRealreg(self):
         self.collectorQ.put(['ALL', 'ALL'])
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
 
@@ -213,6 +213,21 @@ class CollectorKiwoom:
             if code not in codes:
                 codes.append(code)
         self.tick1Q.put(['틱데이터저장', codes])
+
+    def UpdateMoneyTop(self):
+        timetype = '%Y%m%d%H%M%S'
+        list_text = ';'.join(list(self.dict_gsjm.keys()))
+        curr_datetime = strp_time(timetype, self.str_jcct)
+        last_datetime = strp_time(timetype, self.df_mt.index[-1])
+        gap_seconds = (curr_datetime - last_datetime).total_seconds()
+        pre_time2 = strf_time(timetype, timedelta_sec(-2, curr_datetime))
+        pre_time1 = strf_time(timetype, timedelta_sec(-1, curr_datetime))
+        if 1 <= gap_seconds < 2:
+            self.df_mt.at[pre_time1] = list_text
+        elif 2 <= gap_seconds < 3:
+            self.df_mt.at[pre_time2] = list_text
+            self.df_mt.at[pre_time1] = list_text
+        self.df_mt.at[self.str_jcct] = list_text
 
     def OnEventConnect(self, err_code):
         if err_code == 0:
@@ -390,21 +405,6 @@ class CollectorKiwoom:
             s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = 0, 0, 0, 0, 0, 0, 0, 0
         self.tick1Q.put([code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
                          s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, now()])
-
-    def UpdateMoneyTop(self):
-        timetype = '%Y%m%d%H%M%S'
-        list_text = ';'.join(list(self.dict_gsjm.keys()))
-        curr_datetime = strp_time(timetype, self.str_jcct)
-        last_datetime = strp_time(timetype, self.df_mt.index[-1])
-        gap_seconds = (curr_datetime - last_datetime).total_seconds()
-        pre_time2 = strf_time(timetype, timedelta_sec(-2, curr_datetime))
-        pre_time1 = strf_time(timetype, timedelta_sec(-1, curr_datetime))
-        if 1 <= gap_seconds < 2:
-            self.df_mt.at[pre_time1] = list_text
-        elif 2 <= gap_seconds < 3:
-            self.df_mt.at[pre_time2] = list_text
-            self.df_mt.at[pre_time1] = list_text
-        self.df_mt.at[self.str_jcct] = list_text
 
     def OnReceiveTrData(self, screen, rqname, trcode, record, nnext):
         if screen == '' and record == '':

@@ -140,7 +140,6 @@ class TraderKiwoom:
                 break
 
             if int_time < DICT_SET['잔고청산'] <= int(strf_time('%H%M%S')):
-                self.AllRemoveRealreg()
                 self.JangoChungsan()
             if int_time < DICT_SET['전략종료'] <= int(strf_time('%H%M%S')):
                 self.AllRemoveRealreg()
@@ -276,7 +275,9 @@ class TraderKiwoom:
                     self.dict_intg['추정예탁자산'] = self.dict_intg['예수금'] + pggm
                 else:
                     self.dict_intg['추정예탁자산'] = int(df['추정예탁자산'][0])
+
                 self.dict_intg['종목당투자금'] = int(self.dict_intg['추정예탁자산'] * 0.99 / DICT_SET['최대매수종목수1'])
+                self.sstgQ.put(self.dict_intg['종목당투자금'])
 
                 if DICT_SET['모의투자1']:
                     self.dict_df['잔고평가'].at[self.dict_strg['당일날짜']] = \

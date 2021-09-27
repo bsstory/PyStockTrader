@@ -33,7 +33,7 @@ class TraderUpbit(QThread):
         self.dict_jcdt = {}                             # 종목별 체결시간 저장용
         self.dict_intg = {
             '예수금': 0,
-            '종목당투자금': 0,                            # 종목당 투자금은 int(예수금 / 최대매수종목수)로 계산
+            '종목당투자금': 0,                            # 종목당 투자금은 int(예수금 * 0.99 / 최대매수종목수)로 계산
             '업비트수수료': 0.                            # 0.5% 일경우 0.005로 입력
         }
         self.dict_time = {
@@ -80,12 +80,13 @@ class TraderUpbit(QThread):
         """ 예수금 조회 및 종목당투자금 계산 """
         if DICT_SET['모의투자2']:
             self.dict_intg['예수금'] = 100000000 - self.df_jg['매입금액'].sum() + self.df_jg['평가손익'].sum()
-            self.dict_intg['종목당투자금'] = int(100000000 * 0.99 / DICT_SET['최대매수종목수2'])
         elif self.upbit is not None:
             self.dict_intg['예수금'] = int(float(self.upbit.get_balances()[0]['balance']))
-            self.dict_intg['종목당투자금'] = int(self.dict_intg['예수금'] * 0.99 / DICT_SET['최대매수종목수2'])
         else:
             self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않았습니다.'])
+
+        self.dict_intg['종목당투자금'] = int(self.dict_intg['예수금'] * 0.99 / DICT_SET['최대매수종목수2'])
+        self.cstgQ.put(self.dict_intg['종목당투자금'])
 
         if len(self.df_td) > 0:
             self.UpdateTotaltradelist(first=True)
@@ -135,7 +136,7 @@ class TraderUpbit(QThread):
 
                 uuidnone = self.buy_uuid is None
                 injango = ticker in self.df_jg.index
-                data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango, self.dict_intg['종목당투자금']]
+                data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango]
                 self.cstgQ.put(data)
 
                 """ 잔고목록 갱신 및 매도조건 확인 """

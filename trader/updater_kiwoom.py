@@ -2,17 +2,18 @@ import os
 import sys
 import warnings
 import numpy as np
+import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from utility.static import *
-from utility.setting import *
+from utility.setting import ui_num
+from utility.static import now, strf_time, timedelta_sec
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
 class UpdaterKiwoom:
-    def __init__(self, windowQ, queryQ, tickQ):
+    def __init__(self, windowQ, queryQ, tick1Q):
         self.windowQ = windowQ
         self.queryQ = queryQ
-        self.tickQ = tickQ
+        self.tick1Q = tick1Q
 
         self.dict_df = {}
         self.time_info = now()
@@ -21,7 +22,7 @@ class UpdaterKiwoom:
 
     def Start(self):
         while True:
-            tick = self.tickQ.get()
+            tick = self.tick1Q.get()
             if len(tick) != 2:
                 self.UpdateTickData(tick[0], tick[1], tick[2], tick[3], tick[4], tick[5], tick[6], tick[7],
                                     tick[8], tick[9], tick[10], tick[11], tick[12], tick[13], tick[14],
@@ -65,11 +66,15 @@ class UpdaterKiwoom:
             columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
                        '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
             self.dict_df[code][columns] = self.dict_df[code][columns].astype(int)
-            """
-            당일 거래종목만 저장하기
+        """
+        당일 거래목록만 저장하기
+        for code in list(self.dict_df.keys()):
             if code in codes:
+                columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
+                           '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
+                self.dict_df[code][columns] = self.dict_df[code][columns].astype(int)
             else:
                 del self.dict_df[code]
-            """
+        """
         self.queryQ.put([3, self.dict_df])
         sys.exit()
