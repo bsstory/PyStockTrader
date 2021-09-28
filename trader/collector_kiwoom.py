@@ -216,7 +216,7 @@ class CollectorKiwoom:
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'
-        list_text = ';'.join(list(self.dict_gsjm.keys()))
+        list_text = ';'.join(self.list_gsjm)
         curr_datetime = strp_time(timetype, self.str_jcct)
         last_datetime = strp_time(timetype, self.df_mt.index[-1])
         gap_seconds = (curr_datetime - last_datetime).total_seconds()
