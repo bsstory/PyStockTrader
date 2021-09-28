@@ -50,6 +50,7 @@ class TraderKiwoom:
             '계좌번호': ''
         }
         self.dict_bool = {
+            '잔고청산': False,
             '로그인': False,
             'TR수신': False,
             'TR다음': False,
@@ -121,13 +122,13 @@ class TraderKiwoom:
         if DICT_SET['알림소리1']:
             self.soundQ.put('키움증권 오픈에이피아이에 로그인하였습니다.')
 
+        if int(strf_time('%H%M%S')) > 90000:
+            self.dict_intg['장운영상태'] = 3
+
     def EventLoop(self):
-        int_time = int(strf_time('%H%M%S'))
         self.GetAccountjanGo()
         self.OperationRealreg()
         self.ViRealreg()
-        if int_time > 90000:
-            self.dict_intg['장운영상태'] = 3
         while True:
             if not self.stockQ.empty():
                 work = self.stockQ.get()
@@ -146,9 +147,9 @@ class TraderKiwoom:
             if self.dict_intg['장운영상태'] == 1 and now() > self.exit_time:
                 break
 
-            if int_time < DICT_SET['잔고청산'] <= int(strf_time('%H%M%S')):
+            if int(strf_time('%H%M%S')) >= DICT_SET['잔고청산'] and not self.dict_bool['잔고청산']:
                 self.JangoChungsan()
-            if int_time < DICT_SET['전략종료'] <= int(strf_time('%H%M%S')):
+            if int(strf_time('%H%M%S')) >= DICT_SET['전략종료']:
                 self.AllRemoveRealreg()
                 self.SaveDatabase()
                 break
@@ -161,8 +162,6 @@ class TraderKiwoom:
             while now() < time_loop:
                 pythoncom.PumpWaitingMessages()
                 time.sleep(0.0001)
-
-            int_time = int(strf_time('%H%M%S'))
 
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 트레이더를 종료합니다.'])
         if DICT_SET['알림소리1']:
@@ -229,10 +228,7 @@ class TraderKiwoom:
                 self.windowQ.put([ui_num['S로그텍스트'], f'실시간 알림 등록 {result} - [{sn}] {name}'])
 
     def RunWork(self, work):
-        if work == '장운영상태':
-            if self.dict_intg['장운영상태'] != 3:
-                self.dict_intg['장운영상태'] = 3
-        elif work == '/당일체결목록':
+        if work == '/당일체결목록':
             if len(self.dict_df['체결목록']) > 0:
                 self.teleQ.put(self.dict_df['체결목록'])
             else:
@@ -248,8 +244,8 @@ class TraderKiwoom:
             else:
                 self.teleQ.put('현재는 잔고목록이 없습니다.')
         elif work == '/잔고청산주문':
-            self.AllRemoveRealreg()
-            self.JangoChungsan()
+            if not self.dict_bool['잔고청산']:
+                self.JangoChungsan()
 
     def GetAccountjanGo(self):
         jggm = 0
@@ -316,6 +312,7 @@ class TraderKiwoom:
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 시스템 시작 완료'])
 
     def JangoChungsan(self):
+        self.dict_bool['잔고청산'] = True
         if len(self.dict_df['잔고목록']) > 0:
             for code in self.dict_df['잔고목록'].index:
                 if code in self.list_sell:
