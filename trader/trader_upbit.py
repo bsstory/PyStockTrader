@@ -100,10 +100,7 @@ class TraderUpbit(QThread):
         self.cstgQ.put(['관심종목초기화', tickers])
         self.websocketQ = WebSocketManager('ticker', tickers)
         while True:
-            """
-            주문용 큐를 감시한다.
-            주문용 큐에 대한 입력은 모두 전략 연산 프로세스에서 이뤄진다.
-            """
+            """ 주문용 큐를 감시한다. """
             if not self.coinQ.empty():
                 data = self.coinQ.get()
                 if data[0] == '매수':
@@ -112,7 +109,6 @@ class TraderUpbit(QThread):
                     self.Sell(data[1], data[2], data[3])
 
             """
-            매매는 오전 10시부터 익일 오전 9시까지만 운영한다.
             실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
             티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
             """
@@ -147,20 +143,22 @@ class TraderUpbit(QThread):
                     self.UpdateJango(ticker, c, ch)
 
             """ 주문의 체결확인은 1초마다 반복한다. """
-            if not DICT_SET['모의투자2']:
-                if self.buy_uuid is not None and ticker == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
-                    self.CheckBuyChegeol(ticker)
-                    self.dict_time['매수체결확인'] = timedelta_sec(1)
-                if self.sell_uuid is not None and ticker == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
-                    self.CheckSellChegeol(ticker)
-                    self.dict_time['매도체결확인'] = timedelta_sec(1)
+            if self.buy_uuid is not None and ticker == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
+                self.CheckBuyChegeol(ticker)
+                self.dict_time['매수체결확인'] = timedelta_sec(1)
+            if self.sell_uuid is not None and ticker == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
+                self.CheckSellChegeol(ticker)
+                self.dict_time['매도체결확인'] = timedelta_sec(1)
 
             """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
             if now() > self.dict_time['거래정보']:
                 self.UpdateTotaljango()
                 self.dict_time['거래정보'] = timedelta_sec(1)
 
-            """ 오전 9시에 일별 일현손익 저장, 날짜 변경, 체결목록 및 거래목록 초기화가 진행된다. """
+            """
+            오전 9시에 일별 일현손익 저장, 날짜 변경, 체결목록 및 거래목록 초기화가 진행된다.
+            저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
+            """
             if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
                 self.queryQ.put([2, self.df_tt, 'c_totaltradelist', 'append'])
                 self.str_today = strf_time('%Y%m%d')
@@ -196,8 +194,11 @@ class TraderUpbit(QThread):
             self.UpdateBuy(ticker, c, oc)
         elif self.upbit is not None:
             ret = self.upbit.buy_market_order(ticker, self.dict_intg['종목당투자금'])
-            self.buy_uuid = [ticker, ret[0]['uuid']]
-            self.dict_time['체결확인'] = timedelta_sec(1)
+            if ret is not None:
+                self.buy_uuid = [ticker, ret[0]['uuid']]
+                self.dict_time['매수체결확인'] = timedelta_sec(1)
+            else:
+                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
@@ -214,8 +215,11 @@ class TraderUpbit(QThread):
             self.UpdateSell(ticker, c, oc)
         elif self.upbit is not None:
             ret = self.upbit.sell_market_order(ticker, oc)
-            self.sell_uuid = [ticker, ret[0]['uuid']]
-            self.dict_time['체결확인'] = timedelta_sec(1)
+            if ret is not None:
+                self.sell_uuid = [ticker, ret[0]['uuid']]
+                self.dict_time['매도체결확인'] = timedelta_sec(1)
+            else:
+                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
@@ -251,8 +255,17 @@ class TraderUpbit(QThread):
     def CheckBuyChegeol(self, ticker):
         ret = self.upbit.get_order(self.buy_uuid[1])
         if ret is not None and ret['state'] == 'done':
-            cp = ret['price']
-            cc = ret['executed_volume']
+            trades = ret['trades']
+            if len(trades) == 1:
+                cp = float(trades[0]['price'])
+                cc = float(trades[0]['volume'])
+            else:
+                tg = 0
+                cc = 0
+                for i in range(len(trades)):
+                    tg += float(trades[i]['price']) * float(trades[i]['volume'])
+                    cc += float(trades[i]['volume'])
+                cp = round(tg / cc, 2)
             self.UpdateBuy(ticker, cp, cc)
             self.cstgQ.put(['매수완료', ticker])
             self.buy_uuid = None
@@ -260,8 +273,17 @@ class TraderUpbit(QThread):
     def CheckSellChegeol(self, ticker):
         ret = self.upbit.get_order(self.sell_uuid[1])
         if ret is not None and ret['state'] == 'done':
-            cp = ret['price']
-            cc = ret['executed_volume']
+            trades = ret['trades']
+            if len(trades) == 1:
+                cp = float(trades[0]['price'])
+                cc = float(trades[0]['volume'])
+            else:
+                tg = 0
+                cc = 0
+                for i in range(len(trades)):
+                    tg += float(trades[i]['price']) * float(trades[i]['volume'])
+                    cc += float(trades[i]['volume'])
+                cp = round(tg / cc, 2)
             self.UpdateSell(ticker, cp, cc)
             self.cstgQ.put(['매도완료', ticker])
             self.sell_uuid = None
@@ -279,8 +301,7 @@ class TraderUpbit(QThread):
             self.df_jg.at[ticker] = ticker, cp, cp, sp, sg, bg, pg, cc
             self.df_jg.sort_values(by=['매입금액'], ascending=False, inplace=True)
             self.queryQ.put([2, self.df_jg, 'c_jangolist', 'replace'])
-            text = f'매매 시스템 체결 알림 - {ticker} {cc}코인 매수'
-            self.windowQ.put([ui_num['C로그텍스트'], text])
+            self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - {ticker} {cc}코인 매수'])
             if DICT_SET['알림소리2']:
                 self.soundQ.put(f'{ticker} {cc}코인을 매수하였습니다.')
             self.teleQ.put(f'매수 알림 - {ticker} {cp} {cc}')
@@ -302,8 +323,7 @@ class TraderUpbit(QThread):
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
         self.windowQ.put([ui_num['C거래목록'], self.df_td])
 
-        text = f'매매 시스템 체결 알림 - {ticker} {bp}코인 매도'
-        self.windowQ.put([ui_num['C로그텍스트'], text])
+        self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - {ticker} {bp}코인 매도'])
         if DICT_SET['알림소리2']:
             self.soundQ.put(f'{ticker} {cc}코인을 매도하였습니다.')
 
