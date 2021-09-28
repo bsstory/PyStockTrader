@@ -4,6 +4,7 @@ from PyQt5.QtGui import QFont, QColor
 
 OPENAPI_PATH = 'D:/OpenAPI'
 SYSTEM_PATH = 'D:/PythonProjects/PyStockTrader'
+LOGIN_PATH = f'{SYSTEM_PATH}/login'
 GRAPH_PATH = f'{SYSTEM_PATH}/backtester/graph'
 DB_SETTING = f'{SYSTEM_PATH}/database/setting.db'
 DB_BACKTEST = f'{SYSTEM_PATH}/database/backtest.db'

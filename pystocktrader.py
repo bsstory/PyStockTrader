@@ -88,14 +88,14 @@ class Window(QtWidgets.QMainWindow):
                 self.backtester_count = 0
                 self.backtester_proc = None
                 if DICT_SET['아이디2'] is not None:
-                    subprocess.Popen(f'python {SYSTEM_PATH}/login_kiwoom/versionupdater.py')
+                    subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
                 else:
                     text = '키움증권 두번째 계정이 설정되지 않아 버전 업그레이드를 실행할 수 없습니다.'
                     windowQ.put([ui_num['S단순텍스트'], text])
 
             if DICT_SET['키움콜렉터'] and self.int_time < DICT_SET['자동로그인2'] <= int(strf_time('%H%M%S')):
                 if DICT_SET['아이디2'] is not None:
-                    subprocess.Popen(f'python {SYSTEM_PATH}/login_kiwoom/autologin2.py')
+                    subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
                 else:
                     text = '키움증권 두번째 계정이 설정되지 않아 자동로그인설정을 실행할 수 없습니다.'
                     windowQ.put([ui_num['S단순텍스트'], text])
@@ -109,7 +109,7 @@ class Window(QtWidgets.QMainWindow):
 
             if DICT_SET['키움트레이더'] and self.int_time < DICT_SET['자동로그인1'] <= int(strf_time('%H%M%S')):
                 if DICT_SET['아이디1'] is not None:
-                    subprocess.Popen(f'python {SYSTEM_PATH}/login_kiwoom/autologin1.py')
+                    subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
                 else:
                     text = '키움증권 첫번째 계정이 설정되지 않아 자동로그인설정을 실행할 수 없습니다.'
                     windowQ.put([ui_num['S로그텍스트'], text])
