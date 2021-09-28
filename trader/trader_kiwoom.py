@@ -121,6 +121,8 @@ class TraderKiwoom:
         self.GetAccountjanGo()
         self.OperationRealreg()
         self.ViRealreg()
+        if int_time > 90000:
+            self.dict_intg['장운영상태'] = 3
         while True:
             if not self.stockQ.empty():
                 work = self.stockQ.get()
