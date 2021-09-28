@@ -393,8 +393,8 @@ class CollectorKiwoom:
     def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, receivetime):
         if code in self.dict_gsjm.keys():
             injango = code in self.list_jang
-            vitimedown = now() < self.dict_vipr[code][2]
-            vid5priceup = c >= self.dict_vipr[code][5]
+            vitimedown = now() < timedelta_sec(180, self.dict_vipr[code][1])
+            vid5priceup = c >= self.dict_vipr[code][2]
             self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup])
 
         vitime = strf_time('%Y%m%d%H%M%S', self.dict_vipr[code][1])
