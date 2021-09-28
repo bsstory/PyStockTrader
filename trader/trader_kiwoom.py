@@ -94,7 +94,7 @@ class TraderKiwoom:
         if len(self.dict_df['거래목록']) > 0:
             self.windowQ.put([ui_num['C거래목록'], self.dict_df['거래목록']])
         if len(self.dict_df['잔고목록']) > 0:
-            for code in list(self.dict_df['잔고목록'].keys()):
+            for code in self.dict_df['잔고목록'].index:
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
                 self.collectorQ.put(f'잔고편입 {code}')
 
