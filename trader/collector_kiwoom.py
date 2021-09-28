@@ -393,7 +393,7 @@ class CollectorKiwoom:
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
 
     def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, receivetime):
-        if code in self.dict_gsjm.keys():
+        if DICT_SET['키움트레이더'] and code in self.dict_gsjm.keys():
             injango = code in self.list_jang
             vitimedown = now() < timedelta_sec(180, self.dict_vipr[code][1])
             vid5priceup = c >= self.dict_vipr[code][2]
