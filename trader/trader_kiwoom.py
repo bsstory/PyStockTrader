@@ -58,6 +58,7 @@ class TraderKiwoom:
         }
         remaintime = (strp_time('%Y%m%d%H%M%S', self.dict_strg['당일날짜'] + '090100') - now()).total_seconds()
         self.exit_time = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
+        self.tdtj_time = now()
         self.dict_item = None
         self.list_trcd = None
         self.list_kosd = None
@@ -148,8 +149,9 @@ class TraderKiwoom:
                 self.SaveDatabase()
                 break
 
-            if int_time != int(strf_time('%H%M%S')):
+            if now() > self.tdtj_time:
                 self.UpdateTotaljango()
+                self.tdtj_time = timedelta_sec(1)
 
             time_loop = timedelta_sec(0.25)
             while now() < time_loop:
