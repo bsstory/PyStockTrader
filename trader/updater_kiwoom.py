@@ -54,12 +54,9 @@ class UpdaterKiwoom:
                 s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr
 
         if now() > self.time_info:
-            self.UpdateInfo(receiv_time)
+            gap = (now() - receiv_time).total_seconds()
+            self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
             self.time_info = timedelta_sec(60)
-
-    def UpdateInfo(self, receiv_time):
-        gap = (now() - receiv_time).total_seconds()
-        self.windowQ.put([ui_num['S단순텍스트'], f'수신시간과 갱신시간의 차이는 [{gap}]초입니다.'])
 
     def PutTickData(self, codes):
         for code in list(self.dict_df.keys()):

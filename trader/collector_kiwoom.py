@@ -397,7 +397,7 @@ class CollectorKiwoom:
             injango = code in self.list_jang
             vitimedown = now() < timedelta_sec(180, self.dict_vipr[code][1])
             vid5priceup = c >= self.dict_vipr[code][2]
-            self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup])
+            self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup, receivetime])
 
         vitime = strf_time('%Y%m%d%H%M%S', self.dict_vipr[code][1])
         vid5 = self.dict_vipr[code][2]

@@ -13,11 +13,15 @@ class StrategyStock:
         self.stockQ = stockQ
         self.sstgQ = sstgQ
 
-        self.dict_gsjm = {}     # key: 종목코드, value: 10시이전 DataFrame, 10시이후 list
         self.list_buy = []
         self.list_sell = []
         self.int_tujagm = 0
-        self.time_gsjm = now()
+
+        self.dict_gsjm = {}     # key: 종목코드, value: 10시이전 DataFrame, 10시이후 list
+        self.dict_time = {
+            '관심종목': now(),
+            '연산시간': now()
+        }
         self.Start()
 
     def Start(self):
@@ -28,15 +32,15 @@ class StrategyStock:
                 self.UpdateTotaljasan(data)
             elif len(data) == 2:
                 self.UpdateList(data[0], data[1])
-            elif len(data) == 13:
+            elif len(data) == 14:
                 self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-                                 data[8], data[9], data[10], data[11], data[12])
+                                 data[8], data[9], data[10], data[11], data[12], data[13])
             elif len(data) == 7:
                 self.SellStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
 
-            if now() > self.time_gsjm:
+            if now() > self.dict_time['관심종목']:
                 self.windowQ.put([ui_num['S관심종목'], self.dict_gsjm])
-                self.time_gsjm = timedelta_sec(1)
+                self.dict_time['관심종목'] = timedelta_sec(1)
 
             if int_time < DICT_SET['잔고청산'] - 1 <= int(strf_time('%H%M%S')):
                 break
@@ -65,7 +69,7 @@ class StrategyStock:
             if code in self.list_sell:
                 self.list_sell.remove(code)
 
-    def BuyStrategy(self, code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup):
+    def BuyStrategy(self, code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup, receivetime):
         if code not in self.dict_gsjm.keys():
             return
 
@@ -93,6 +97,11 @@ class StrategyStock:
         if oc > 0:
             self.list_buy.append(code)
             self.stockQ.put(['매수', code, name, c, oc])
+
+        if now() > self.dict_time['연산시간']:
+            gap = (now() - receivetime).total_seconds()
+            self.windowQ.put([ui_num['S단순텍스트'], f'전략프로세스 연산 알림 - 수신시간과 연산시간의 차이는 [{gap}]초입니다.'])
+            self.dict_time['연산시간'] = timedelta_sec(60)
 
     def SellStrategy(self, code, name, per, sp, jc, ch, c):
         if code in self.list_sell:

@@ -136,7 +136,7 @@ class TraderUpbit(QThread):
 
                 uuidnone = self.buy_uuid is None
                 injango = ticker in self.df_jg.index
-                data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango]
+                data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango, now()]
                 self.cstgQ.put(data)
 
                 """ 잔고목록 갱신 및 매도조건 확인 """

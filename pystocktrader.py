@@ -69,7 +69,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.backtester_count = 0
         self.backtester_process = None
-        self.strategy_process = Process(target=StrategyCoin, args=(windowQ, coinQ, queryQ, cstgQ), daemon=True)
+        self.strategy_process = Process(target=StrategyCoin, args=(windowQ, coinQ, cstgQ), daemon=True)
         self.coin_tickupdater_process = Process(target=UpdaterUpbit, args=(windowQ, queryQ, tick2Q), daemon=True)
 
     def ProcessStart(self):
