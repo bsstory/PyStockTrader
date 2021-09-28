@@ -93,6 +93,10 @@ class TraderKiwoom:
             self.windowQ.put([ui_num['S체결목록'], self.dict_df['체결목록']])
         if len(self.dict_df['거래목록']) > 0:
             self.windowQ.put([ui_num['C거래목록'], self.dict_df['거래목록']])
+        if len(self.dict_df['잔고목록']) > 0:
+            for code in list(self.dict_df['잔고목록'].keys()):
+                self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
+                self.collectorQ.put(f'잔고편입 {code}')
 
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 정보 불러오기 완료'])
 
