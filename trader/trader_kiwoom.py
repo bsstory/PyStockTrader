@@ -686,7 +686,7 @@ class TraderKiwoom:
 
         if omc == 0:
             df = pd.DataFrame([[name, og, oc, omc, op, cp, dt]], columns=columns_cj, index=[on])
-            self.queryQ.put([2, df, 'chegeollist', 'append'])
+            self.queryQ.put([2, df, 's_chegeollist', 'append'])
 
     def OnReceiveConditionVer(self, ret, msg):
         if msg == '':
