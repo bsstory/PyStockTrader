@@ -333,7 +333,7 @@ class CollectorKiwoom:
                     except Exception as e:
                         self.windowQ.put([ui_num['S단순텍스트'], f'OnReceiveRealData 주식체결 {e}'])
                     else:
-                        self.UpdateTickData(code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t)
+                        self.UpdateTickData(code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, now())
         elif realtype == '주식호가잔량':
             try:
                 s2hg = abs(int(self.GetCommRealData(code, 42)))
@@ -390,7 +390,7 @@ class CollectorKiwoom:
             vid5 = self.GetVIPriceDown5(code, key)
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
 
-    def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t):
+    def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, receivetime):
         if code in self.dict_gsjm.keys():
             injango = code in self.list_jang
             vitimedown = now() < self.dict_vipr[code][2]
@@ -404,7 +404,7 @@ class CollectorKiwoom:
         except KeyError:
             s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = 0, 0, 0, 0, 0, 0, 0, 0
         self.tick1Q.put([code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
-                         s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, now()])
+                         s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime])
 
     def OnReceiveTrData(self, screen, rqname, trcode, record, nnext):
         if screen == '' and record == '':
