@@ -285,7 +285,7 @@ class CollectorKiwoom:
             except Exception as e:
                 self.windowQ.put([ui_num['S단순텍스트'], f'OnReceiveRealData VI발동/해제 {e}'])
             else:
-                if gubun == '1' and code in self.list_code['틱0'] and \
+                if gubun == '1' and code in self.list_code and \
                         (code not in self.dict_vipr.keys() or
                          (self.dict_vipr[code][0] and now() > self.dict_vipr[code][1])):
                     self.UpdateViPriceDown5(code, name)
