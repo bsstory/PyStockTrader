@@ -94,7 +94,7 @@ class StrategyCoin:
 
         if now() > self.dict_time['연산시간']:
             gap = (now() - receivetime).total_seconds()
-            self.windowQ.put([ui_num['C단순텍스트'], f'전략프로세스 연산 알림 - 수신시간과 연산시간의 차이는 [{gap}]초입니다.'])
+            self.windowQ.put([ui_num['C단순텍스트'], f'전략    연산 시간 알림 - 수신시간과 연산시간의 차이는 [{gap}]초입니다.'])
             self.dict_time['연산시간'] = timedelta_sec(60)
 
     def SellStrategy(self, ticker, sp, jc, ch, c):
