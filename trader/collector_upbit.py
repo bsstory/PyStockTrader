@@ -11,13 +11,14 @@ class WebsTicker(QThread):
     def __init__(self, tick2Q):
         super().__init__()
         self.tick2Q = tick2Q
+        self.websQ_ticker = None
 
     def run(self):
         dict_askbid = {}
         tickers = pyupbit.get_tickers(fiat="KRW")
-        websQ_ticker = WebSocketManager('ticker', tickers)
+        self.websQ_ticker = WebSocketManager('ticker', tickers)
         while True:
-            data = websQ_ticker.get()
+            data = self.websQ_ticker.get()
             ticker = data['code']
             t = data['trade_time']
             v = data['trade_volume']
@@ -45,10 +46,11 @@ class WebsOrderbook(QThread):
     def __init__(self, tick2Q):
         super().__init__()
         self.tick2Q = tick2Q
+        self.websQ_order = None
 
     def run(self):
         tickers = pyupbit.get_tickers(fiat="KRW")
-        websQ_order = WebSocketManager('orderbook', tickers)
+        self.websQ_order = WebSocketManager('orderbook', tickers)
         while True:
-            data = websQ_order.get()
+            data = self.websQ_order.get()
             self.tick2Q.put(data)

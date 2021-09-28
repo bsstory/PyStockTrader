@@ -63,20 +63,30 @@ class Window(QtWidgets.QMainWindow):
         self.qtimer3.timeout.connect(self.UpdateCpuper)
         self.qtimer3.start()
 
-        self.websocket_ticker = WebsTicker(tick2Q)
-        self.websocket_orderbook = WebsOrderbook(tick2Q)
-        self.trader_upbit = TraderUpbit(windowQ, coinQ, queryQ, soundQ, cstgQ, teleQ)
-
         self.backtester_count = 0
-        self.backtester_process = None
-        self.strategy_process = Process(target=StrategyCoin, args=(windowQ, coinQ, cstgQ), daemon=True)
-        self.coin_tickupdater_process = Process(target=UpdaterUpbit, args=(windowQ, queryQ, tick2Q), daemon=True)
+        self.backtester_proc = None
+
+        self.collector_coin_tick_thread = WebsTicker(tick2Q)
+        self.collector_coin_order_thread = WebsOrderbook(tick2Q)
+        self.collector_stock_proc = Process(target=CollectorKiwoom,
+                                            args=(windowQ, collectorQ, sstgQ, soundQ, queryQ, teleQ, tick1Q),
+                                            daemon=True)
+
+        self.updater_coin_proc = Process(target=UpdaterUpbit, args=(windowQ, queryQ, tick2Q), daemon=True)
+        self.updater_stock_proc = Process(target=UpdaterKiwoom, args=(windowQ, queryQ, tick1Q), daemon=True)
+
+        self.strategy_coin_proc = Process(target=StrategyCoin, args=(windowQ, coinQ, cstgQ), daemon=True)
+        self.strategy_stock_proc = Process(target=StrategyStock, args=(windowQ, stockQ, sstgQ), daemon=True)
+
+        self.trader_coin_thread = TraderUpbit(windowQ, coinQ, queryQ, soundQ, cstgQ, teleQ)
+        self.trader_stock_proc = \
+            Process(target=TraderKiwoom, args=(windowQ, stockQ, collectorQ, sstgQ, soundQ, queryQ, teleQ), daemon=True)
 
     def ProcessStart(self):
         if now().weekday() not in [6, 7]:
             if DICT_SET['키움콜렉터'] and self.int_time < DICT_SET['버전업'] <= int(strf_time('%H%M%S')):
                 self.backtester_count = 0
-                self.backtester_process = None
+                self.backtester_proc = None
                 if DICT_SET['아이디2'] is not None:
                     subprocess.Popen(f'python {SYSTEM_PATH}/login_kiwoom/versionupdater.py')
                 else:
@@ -91,9 +101,8 @@ class Window(QtWidgets.QMainWindow):
                     windowQ.put([ui_num['S단순텍스트'], text])
 
             if DICT_SET['키움콜렉터'] and self.int_time < DICT_SET['콜렉터'] <= int(strf_time('%H%M%S')):
-                Process(target=UpdaterKiwoom, args=(windowQ, queryQ, tick1Q), daemon=True).start()
-                Process(target=CollectorKiwoom,
-                        args=(windowQ, collectorQ, sstgQ, soundQ, queryQ, teleQ, tick1Q), daemon=True).start()
+                self.updater_stock_proc.start()
+                self.collector_stock_proc.start()
                 text = '주식 콜렉터를 시작하였습니다.'
                 soundQ.put(text)
                 teleQ.put(text)
@@ -107,9 +116,8 @@ class Window(QtWidgets.QMainWindow):
 
             if DICT_SET['키움트레이더'] and self.int_time < DICT_SET['트레이더'] <= int(strf_time('%H%M%S')):
                 if DICT_SET['아이디1'] is not None:
-                    Process(target=StrategyStock, args=(windowQ, stockQ, sstgQ), daemon=True).start()
-                    Process(target=TraderKiwoom, args=(windowQ, stockQ, collectorQ, sstgQ, soundQ, queryQ, teleQ),
-                            daemon=True).start()
+                    self.strategy_stock_proc.start()
+                    self.trader_stock_proc.start()
                     text = '주식 트레이더를 시작하였습니다.'
                     soundQ.put(text)
                     teleQ.put(text)
@@ -120,35 +128,35 @@ class Window(QtWidgets.QMainWindow):
         if DICT_SET['백테스터']:
             if DICT_SET['백테스터시작시간'] < self.int_time < DICT_SET['버전업']:
                 if self.backtester_count == 0 and \
-                        (self.backtester_process is None or self.backtester_process.poll() == 0):
+                        (self.backtester_proc is None or self.backtester_proc.poll() == 0):
                     self.ButtonClicked_8()
                     QTest.qWait(3000)
                     self.ButtonClicked_9()
                     self.backtester_count = 1
                 if self.backtester_count == 1 and \
-                        (self.backtester_process is None or self.backtester_process.poll() == 0):
+                        (self.backtester_proc is None or self.backtester_proc.poll() == 0):
                     self.ButtonClicked_13()
                     QTest.qWait(3000)
                     self.ButtonClicked_14()
                     self.backtester_count = 2
 
         if DICT_SET['업비트콜렉터']:
-            if not self.websocket_ticker.isRunning():
-                self.websocket_ticker.start()
-            if not self.websocket_orderbook.isRunning():
-                self.websocket_orderbook.start()
-            if not self.coin_tickupdater_process.is_alive():
-                self.coin_tickupdater_process.start()
+            if not self.collector_coin_tick_thread.isRunning():
+                self.collector_coin_tick_thread.start()
+            if not self.collector_coin_order_thread.isRunning():
+                self.collector_coin_order_thread.start()
+            if not self.updater_coin_proc.is_alive():
+                self.updater_coin_proc.start()
                 text = '코인 콜렉터를 시작하였습니다.'
                 soundQ.put(text)
                 teleQ.put(text)
 
         if DICT_SET['업비트트레이더']:
             if DICT_SET['Access_key'] is not None:
-                if not self.strategy_process.is_alive():
-                    self.strategy_process.start()
-                if not self.trader_upbit.isRunning():
-                    self.trader_upbit.start()
+                if not self.strategy_coin_proc.is_alive():
+                    self.strategy_coin_proc.start()
+                if not self.trader_coin_thread.isRunning():
+                    self.trader_coin_thread.start()
                     text = '코인 트레이더를 시작하였습니다.'
                     soundQ.put(text)
                     teleQ.put(text)
@@ -382,7 +390,7 @@ class Window(QtWidgets.QMainWindow):
         self.sbvc_lineEdit_47.setText(str(df['47'][0]))
 
     def ButtonClicked_9(self):
-        if self.backtester_process is not None and self.backtester_process.poll() != 0:
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -483,7 +491,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_process = subprocess.Popen(
+        self.backtester_proc = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_stock_vc.py '
             f'{self.sbvc_lineEdit_01.text()} {self.sbvc_lineEdit_02.text()} {self.sbvc_lineEdit_03.text()} '
             f'{self.sbvc_lineEdit_04.text()} {self.sbvc_lineEdit_05.text()} {self.sbvc_lineEdit_06.text()} '
@@ -646,7 +654,7 @@ class Window(QtWidgets.QMainWindow):
         self.sbvj_lineEdit_14.setText(str(df['멀티프로세스'][0]))
 
     def ButtonClicked_12(self):
-        if self.backtester_process is not None and self.backtester_process.poll() != 0:
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -681,7 +689,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_process = subprocess.Popen(
+        self.backtester_proc = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_stock_vj.py '
             f'{self.sbvj_lineEdit_01.text()} {self.sbvj_lineEdit_02.text()} {self.sbvj_lineEdit_03.text()} '
             f'{self.sbvj_lineEdit_04.text()} {self.sbvj_lineEdit_05.text()} {self.sbvj_lineEdit_06.text()} '
@@ -744,7 +752,7 @@ class Window(QtWidgets.QMainWindow):
         self.cbvc_lineEdit_47.setText(str(df['47'][0]))
 
     def ButtonClicked_14(self):
-        if self.backtester_process is not None and self.backtester_process.poll() != 0:
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -845,7 +853,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_process = subprocess.Popen(
+        self.backtester_proc = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_coin_vc.py '
             f'{self.cbvc_lineEdit_01.text()} {self.cbvc_lineEdit_02.text()} {self.cbvc_lineEdit_03.text()} '
             f'{self.cbvc_lineEdit_04.text()} {self.cbvc_lineEdit_05.text()} {self.cbvc_lineEdit_06.text()} '
@@ -1008,7 +1016,7 @@ class Window(QtWidgets.QMainWindow):
         self.cbvj_lineEdit_14.setText(str(df['멀티프로세스'][0]))
 
     def ButtonClicked_17(self):
-        if self.backtester_process is not None and self.backtester_process.poll() != 0:
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -1043,7 +1051,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_process = subprocess.Popen(
+        self.backtester_proc = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_coin_vj.py '
             f'{self.cbvj_lineEdit_01.text()} {self.cbvj_lineEdit_02.text()} {self.cbvj_lineEdit_03.text()} '
             f'{self.cbvj_lineEdit_04.text()} {self.cbvj_lineEdit_05.text()} {self.cbvj_lineEdit_06.text()} '
@@ -1484,16 +1492,42 @@ class Window(QtWidgets.QMainWindow):
 
     def closeEvent(self, a):
         buttonReply = QtWidgets.QMessageBox.question(
-            self, "프로그램 종료", "프로그램을 종료하겠습니까?",
+            self, "프로그램 종료", "프로그램을 종료합니다.",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
         if buttonReply == QtWidgets.QMessageBox.Yes:
-            if sound_process.is_alive():
-                sound_process.kill()
-            if query_process.is_alive():
-                query_process.kill()
-            if telegram_process.is_alive():
-                telegram_process.kill()
+            sound_process.kill()
+            query_process.kill()
+            telegram_process.kill()
+            if self.qtimer1.isActive():
+                self.qtimer1.stop()
+            if self.qtimer2.isActive():
+                self.qtimer2.stop()
+            if self.qtimer3.isActive():
+                self.qtimer3.stop()
+            if self.writer.isRunning():
+                self.writer.terminate()
+            if self.trader_stock_proc.is_alive():
+                self.trader_stock_proc.kill()
+            if self.strategy_coin_proc.is_alive():
+                self.strategy_coin_proc.kill()
+            if self.strategy_stock_proc.is_alive():
+                self.strategy_stock_proc.kill()
+            if self.updater_coin_proc.is_alive():
+                self.updater_coin_proc.kill()
+            if self.updater_stock_proc.is_alive():
+                self.updater_stock_proc.kill()
+            if self.collector_stock_proc.is_alive():
+                self.collector_stock_proc.kill()
+            if self.collector_coin_tick_thread.isRunning():
+                self.collector_coin_tick_thread.websQ_ticker.terminate()
+                self.collector_coin_tick_thread.terminate()
+            if self.collector_coin_order_thread.isRunning():
+                self.collector_coin_order_thread.websQ_order.terminate()
+                self.collector_coin_order_thread.terminate()
+            if self.trader_coin_thread.isRunning():
+                self.trader_coin_thread.websocketQ.terminate()
+                self.trader_coin_thread.terminate()
             a.accept()
         else:
             a.ignore()

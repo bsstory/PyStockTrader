@@ -96,7 +96,7 @@ class TraderUpbit(QThread):
         int_time = int(strf_time('%H%M%S'))
         tickers = pyupbit.get_tickers(fiat="KRW")
         self.cstgQ.put(['관심종목초기화', tickers])
-        websocketQ = WebSocketManager('ticker', tickers)
+        self.websocketQ = WebSocketManager('ticker', tickers)
         while True:
             """
             주문용 큐를 감시한다.
@@ -114,7 +114,7 @@ class TraderUpbit(QThread):
             실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
             티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
             """
-            data = websocketQ.get()
+            data = self.websocketQ.get()
             ticker = data['code']
             t = data['trade_time']
 
