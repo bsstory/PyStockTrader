@@ -189,6 +189,7 @@ class CollectorKiwoom:
         self.df_mt.at[self.str_tday + '090000'] = ';'.join(codes)
         if len(codes) > 0:
             for code in codes:
+                self.list_gsjm.append(code)
                 self.dict_gsjm[code] = '090000'
                 self.sstgQ.put(['조건진입', code])
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간조건검색 등록 완료'])
