@@ -29,7 +29,10 @@ class TraderUpbit(QThread):
         self.df_tj = pd.DataFrame(columns=columns_tj)   # 잔고평가
         self.df_td = pd.DataFrame(columns=columns_td)   # 거래목록
         self.df_tt = pd.DataFrame(columns=columns_tt)   # 실현손익
-        self.str_today = strf_time('%Y%m%d', timedelta_hour(-9))
+
+        self.str_today = strf_time('%Y%m%d')
+
+        self.bool_save = False
         self.dict_jcdt = {}                             # 종목별 체결시간 저장용
         self.dict_intg = {
             '예수금': 0,
@@ -93,7 +96,6 @@ class TraderUpbit(QThread):
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 예수금 조회 완료'])
 
     def EventLoop(self):
-        int_time = int(strf_time('%H%M%S'))
         tickers = pyupbit.get_tickers(fiat="KRW")
         self.cstgQ.put(['관심종목초기화', tickers])
         self.websocketQ = WebSocketManager('ticker', tickers)
@@ -158,11 +160,13 @@ class TraderUpbit(QThread):
                 self.UpdateTotaljango()
                 self.dict_time['거래정보'] = timedelta_sec(1)
 
-            """ coin_csan_time에 잔고청산 주문, coin_exit_time에 트레이더가 종료된다. """
-            if int(strf_time('%H%M%S')) >= 90000 > int_time:
+            """ 오전 9시에 일별 일현손익 저장, 날짜 변경, 체결목록 및 거래목록 초기화가 진행된다. """
+            if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
                 self.queryQ.put([2, self.df_tt, 'c_totaltradelist', 'append'])
-
-            int_time = int(strf_time('%H%M%S'))
+                self.str_today = strf_time('%Y%m%d')
+                self.df_cj = pd.DataFrame(columns=columns_cj)
+                self.df_td = pd.DataFrame(columns=columns_td)
+                self.bool_save = True
 
     """
     모의투자 시 실제 매도수 주문을 전송하지 않고 바로 체결목록, 잔고목록 등을 갱신한다.
@@ -197,6 +201,9 @@ class TraderUpbit(QThread):
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
+
+        if self.bool_save and int(strf_time('%H%M%S')) > 90000:
+            self.bool_save = False
 
     def Sell(self, ticker, c, oc):
         if self.sell_uuid is not None:

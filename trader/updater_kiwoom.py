@@ -28,7 +28,7 @@ class UpdaterKiwoom:
                                     tick[8], tick[9], tick[10], tick[11], tick[12], tick[13], tick[14],
                                     tick[15], tick[16], tick[17], tick[18], tick[19], tick[20], tick[21], tick[22])
             elif tick[0] == '틱데이터저장':
-                self.PutTickData(tick[1])
+                self.SaveTickData(tick[1])
 
     def UpdateTickData(self, code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
                        s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, d, receiv_time):
@@ -58,7 +58,7 @@ class UpdaterKiwoom:
             self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
             self.time_info = timedelta_sec(60)
 
-    def PutTickData(self, codes):
+    def SaveTickData(self, codes):
         for code in list(self.dict_df.keys()):
             columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
                        '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
