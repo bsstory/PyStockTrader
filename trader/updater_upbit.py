@@ -14,7 +14,7 @@ class UpdaterUpbit:
 
         self.dict_df = {}                   # 틱데이터 저장용 딕셔너리 key: ticker, value: datafame
         self.dict_orderbook = {}            # 오더북 저장용 딕셔너리
-        self.time_info = timedelta_sec(60)  # 틱데이터 저장주기 확인용
+        self.time_save = timedelta_sec(60)  # 틱데이터 저장주기 확인용
         self.Start()
 
     def Start(self):
@@ -51,12 +51,12 @@ class UpdaterUpbit:
         else:
             self.dict_df[ticker].at[dt] = list(data.values())
 
-        if now() > self.time_info:
+        if now() > self.time_save:
             gap = (now() - receiv_time).total_seconds()
             self.windowQ.put([ui_num['C단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
             self.queryQ.put([4, self.dict_df])
             self.dict_df = {}
-            self.time_info = timedelta_sec(60)
+            self.time_save = timedelta_sec(60)
 
     def UpdateOrderbook(self, data):
         ticker = data['code']
