@@ -514,7 +514,6 @@ class TraderKiwoom:
                 self.dict_vipr[code][:3] = False, timedelta_sec(5), timedelta_sec(180)
             except KeyError:
                 self.dict_vipr[code] = [False, timedelta_sec(5), timedelta_sec(180), 0, 0, 0]
-            self.windowQ.put([ui_num['S로그텍스트'], f'변동성 완화 장치 발동 - [{code}] {key}'])
             self.stockQ.put([sn_vijc, code, '10;12;14;30;228', 1])
         elif type(key) == int:
             uvi, dvi, uvid5 = self.GetVIPrice(code, key)

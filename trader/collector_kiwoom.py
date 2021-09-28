@@ -387,6 +387,7 @@ class CollectorKiwoom:
                 self.dict_vipr[code][1] = timedelta_sec(5)
             else:
                 self.dict_vipr[code] = [False, timedelta_sec(5), 0]
+            self.windowQ.put([ui_num['S단순텍스트'], f'변동성 완화 장치 발동 - [{code}] {key}'])
         elif type(key) == int:
             vid5 = self.GetVIPriceDown5(code, key)
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
