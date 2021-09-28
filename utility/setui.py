@@ -174,9 +174,7 @@ def SetUI(self):
     self.progressBar.setAlignment(Qt.AlignCenter)
     self.progressBar.setOrientation(Qt.Vertical)
     self.progressBar.setRange(0, 100)
-    self.progressBar.setStyleSheet(
-        'QProgressBar {background-color: #28282d;} QProgressBar::chunk {background-color: #5a5a5f;}'
-    )
+    self.progressBar.setStyleSheet(style_pgbar)
 
     self.stt_tableWidget = setTablewidget(self.st_tab, columns_tt, len(columns_tt), 1)
     self.std_tableWidget = setTablewidget(self.st_tab, columns_td, len(columns_td), 13)
