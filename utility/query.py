@@ -53,7 +53,7 @@ class Query:
                 if len(query) == 2:
                     count = len(query[1])
                     for i, code in enumerate(list(query[1].keys())):
-                        query[1][code].to_sql(code, self.con2, if_exists='append', chunksize=1000)
+                        query[1][code].to_sql(code, self.con3, if_exists='append', chunksize=1000)
                         text = f'시스템 명령 실행 알림 - 틱데이터 저장 중 ... [{i+1}/{count}]'
                         self.windowQ.put([ui_num['S단순텍스트'], text])
                 elif len(query) == 4:
