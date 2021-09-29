@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
 from multiprocessing import Process
 from PyQt5.QAxContainer import QAxWidget
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from utility.setting import OPENAPI_PATH
 
 
@@ -31,7 +31,7 @@ class Window(QtWidgets.QMainWindow):
 
     def AutoLoginOn(self):
         print('\n 자동 로그인 설정 대기 중 ...\n')
-        QTimer.singleShot(5000, lambda: auto_on(2))
+        QTimer.singleShot(5000, lambda: auto_on(1))
         self.ocx.dynamicCall('KOA_Functions(QString, QString)', 'ShowAccountWindow', '')
         print(' 자동 로그인 설정 완료\n')
         print(' 자동 로그인 설정용 프로세스 종료 중 ...')
@@ -53,5 +53,5 @@ if __name__ == '__main__':
     print(' 아이디 및 패스워드 입력 대기 중 ...\n')
     time.sleep(5)
 
-    manual_login(4)
+    manual_login(2)
     print(' 아이디 및 패스워드 입력 완료\n')

@@ -1,3 +1,4 @@
+import sys
 import time
 import pythoncom
 import pywintypes
@@ -5,7 +6,7 @@ from manuallogin import *
 from PyQt5 import QtWidgets
 from multiprocessing import Process
 from PyQt5.QAxContainer import QAxWidget
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from utility.setting import OPENAPI_PATH
 
 
