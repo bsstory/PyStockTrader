@@ -4,7 +4,7 @@ from PyQt5.QtGui import QFont, QColor
 
 OPENAPI_PATH = 'D:/OpenAPI'
 SYSTEM_PATH = 'D:/PythonProjects/PyStockTrader'
-LOGIN_PATH = f'{SYSTEM_PATH}/login'
+LOGIN_PATH = f'{SYSTEM_PATH}/stock/login_kiwoom'
 GRAPH_PATH = f'{SYSTEM_PATH}/backtester/graph'
 DB_SETTING = f'{SYSTEM_PATH}/database/setting.db'
 DB_BACKTEST = f'{SYSTEM_PATH}/database/backtest.db'
@@ -46,14 +46,9 @@ DICT_SET = {
 
     '모의투자1': df_s['모의투자'][0],
     '알림소리1': df_s['알림소리'][0],
-    '버전업': df_s['버전업'][0],
-    '자동로그인2': df_s['자동로그인2'][0],
     '콜렉터': df_s['콜렉터'][0],
-    '자동로그인1': df_s['자동로그인1'][0],
     '트레이더': df_s['트레이더'][0],
-    '전략시작': df_s['전략시작'][0],
     '잔고청산': df_s['잔고청산'][0],
-    '전략종료': df_s['전략종료'][0],
     '체결강도차이1': df_s['체결강도차이'][0],
     '평균시간1': df_s['평균시간'][0],
     '거래대금차이1': df_s['거래대금차이'][0],
