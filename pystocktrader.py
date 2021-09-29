@@ -108,8 +108,9 @@ class Window(QtWidgets.QMainWindow):
             soundQ.put(text)
             teleQ.put(text)
         else:
-            text = '키움증권 두번째 계정이 설정되지 않아 자동로그인설정을 실행할 수 없습니다.'
-            windowQ.put([ui_num['S단순텍스트'], text])
+            QtWidgets.QMessageBox.critical(
+                self, '오류 알림', '키움 두번째 계정이 설정되지 않아\n콜렉터를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+            )
 
     def KiwoomTraderStart(self):
         if DICT_SET['아이디1'] is not None:
@@ -124,8 +125,9 @@ class Window(QtWidgets.QMainWindow):
             soundQ.put(text)
             teleQ.put(text)
         else:
-            text = '키움증권 첫번째 계정이 설정되지 않아 트레이더를 실행할 수 없습니다.'
-            windowQ.put([ui_num['S로그텍스트'], text])
+            QtWidgets.QMessageBox.critical(
+                self, '오류 알림', '키움 첫번째 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+            )
 
     # noinspection PyMethodMayBeStatic
     def WaitLogin(self):
@@ -168,8 +170,9 @@ class Window(QtWidgets.QMainWindow):
                 soundQ.put(text)
                 teleQ.put(text)
         else:
-            text = '업비트 계정이 설정되지 않아 트레이더를 실행할 수 없습니다.'
-            windowQ.put([ui_num['C로그텍스트'], text])
+            QtWidgets.QMessageBox.critical(
+                self, '오류 알림', '업비트 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+            )
 
     def UpdateProgressBar(self):
         self.progressBar.setValue(int(self.cpu_per))
@@ -230,13 +233,23 @@ class Window(QtWidgets.QMainWindow):
 
     def ButtonClicked_2(self):
         buttonReply = QtWidgets.QMessageBox.question(
-            self, '주식 수동 시작', '주식 콜렉터 및 트레이더를 수동으로\n시작합니다.계속하시겠습니까?\n',
+            self, '주식 수동 시작', '주식 콜렉터 또는 트레이더를 시작합니다.\n계속하시겠습니까?\n',
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
         if buttonReply == QtWidgets.QMessageBox.Yes:
-            self.KiwoomCollectorStart()
-            QTest.qWait(20000)
-            self.KiwoomTraderStart()
+            if DICT_SET['아이디1'] is None:
+                QtWidgets.QMessageBox.critical(
+                    self, '오류 알림', '키움 첫번째 계정이 설정되지 않아\n콜렉터를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+                )
+            else:
+                self.KiwoomCollectorStart()
+                QTest.qWait(20000)
+            if DICT_SET['아이디2'] is None:
+                QtWidgets.QMessageBox.critical(
+                    self, '오류 알림', '키움 두번째 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+                )
+            else:
+                self.KiwoomTraderStart()
 
     def ButtonClicked_3(self):
         if self.geometry().width() > 1000:
