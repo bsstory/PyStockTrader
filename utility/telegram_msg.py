@@ -5,11 +5,15 @@ from utility.setting import ui_num, DICT_SET
 
 
 class TelegramMsg:
-    def __init__(self, windowQ, stockQ, coinQ, teleQ):
-        self.windowQ = windowQ
-        self.stockQ = stockQ
-        self.coinQ = coinQ
-        self.teleQ = teleQ
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.teleQ = qlist[3]
+        self.stockQ = qlist[5]
+        self.coinQ = qlist[6]
         self.updater = None
 
         if DICT_SET['텔레그램봇토큰'] is not None:

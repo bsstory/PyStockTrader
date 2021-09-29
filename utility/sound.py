@@ -2,8 +2,12 @@ import pyttsx3
 
 
 class Sound:
-    def __init__(self, soundQ):
-        self.soundQ = soundQ
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.soundQ = qlist[1]
         self.text2speak = pyttsx3.init()
         self.text2speak.setProperty('rate', 170)
         self.text2speak.setProperty('volume', 1.0)
