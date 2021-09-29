@@ -13,14 +13,18 @@ from utility.setting import *
 class TraderKiwoom:
     app = QtWidgets.QApplication(sys.argv)
 
-    def __init__(self, windowQ, stockQ, collectorQ, sstgQ, soundQ, queryQ, teleQ):
-        self.windowQ = windowQ
-        self.stockQ = stockQ
-        self.collectorQ = collectorQ
-        self.sstgQ = sstgQ
-        self.soundQ = soundQ
-        self.queryQ = queryQ
-        self.teleQ = teleQ
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.soundQ = qlist[1]
+        self.queryQ = qlist[2]
+        self.teleQ = qlist[3]
+        self.receivQ = qlist[4]
+        self.stockQ = qlist[5]
+        self.sstgQ = qlist[7]
         self.lock = Lock()
 
         self.dict_name = {}     # key: 종목코드, value: 종목명
@@ -97,7 +101,7 @@ class TraderKiwoom:
         if len(self.dict_df['잔고목록']) > 0:
             for code in self.dict_df['잔고목록'].index:
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
-                self.collectorQ.put(f'잔고편입 {code}')
+                self.receivQ.put(f'잔고편입 {code}')
 
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 정보 불러오기 완료'])
 
@@ -149,7 +153,7 @@ class TraderKiwoom:
 
             if int(strf_time('%H%M%S')) >= DICT_SET['잔고청산'] and not self.dict_bool['잔고청산']:
                 self.JangoChungsan()
-            if int(strf_time('%H%M%S')) >= DICT_SET['전략종료']:
+            if self.dict_intg['장운영상태'] == 8:
                 self.AllRemoveRealreg()
                 self.SaveDatabase()
                 break
@@ -163,11 +167,11 @@ class TraderKiwoom:
                 pythoncom.PumpWaitingMessages()
                 time.sleep(0.0001)
 
+        self.sstgQ.put('전략프로세스종료')
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 트레이더를 종료합니다.'])
         if DICT_SET['알림소리1']:
             self.soundQ.put('주식 트레이더를 종료합니다.')
         self.teleQ.put('주식 트레이더를 종료하였습니다.')
-        sys.exit()
 
     def SendOrder(self, order):
         name = order[-1]
@@ -599,7 +603,7 @@ class TraderKiwoom:
                 pg, sg, sp = self.GetPgSgSp(bg, oc * cp)
                 self.dict_df['잔고목록'].at[code] = name, cp, cp, sp, sg, bg, pg, oc
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
-                self.collectorQ.put(f'잔고편입 {code}')
+                self.receivQ.put(f'잔고편입 {code}')
             else:
                 jc = self.dict_df['잔고목록']['보유수량'][code]
                 bg = self.dict_df['잔고목록']['매입금액'][code]
@@ -614,7 +618,7 @@ class TraderKiwoom:
             if jc - oc == 0:
                 self.dict_df['잔고목록'].drop(index=code, inplace=True)
                 self.stockQ.put([sn_jscg, code])
-                self.collectorQ.put(f'잔고청산 {code}')
+                self.receivQ.put(f'잔고청산 {code}')
             else:
                 bp = self.dict_df['잔고목록']['매입가'][code]
                 jc = jc - oc

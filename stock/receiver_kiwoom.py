@@ -12,17 +12,21 @@ from utility.static import *
 from utility.setting import *
 
 
-class CollectorKiwoom:
+class ReceiverKiwoom:
     app = QtWidgets.QApplication(sys.argv)
 
-    def __init__(self, windowQ, collectorQ, sstgQ, soundQ, queryQ, teleQ, tick1Q):
-        self.windowQ = windowQ
-        self.collectorQ = collectorQ
-        self.sstgQ = sstgQ
-        self.soundQ = soundQ
-        self.queryQ = queryQ
-        self.teleQ = teleQ
-        self.tick1Q = tick1Q
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.soundQ = qlist[1]
+        self.queryQ = qlist[2]
+        self.teleQ = qlist[3]
+        self.receivQ = qlist[4]
+        self.sstgQ = qlist[7]
+        self.tick1Q = qlist[9]
 
         self.dict_bool = {
             '실시간조건검색시작': False,
@@ -106,8 +110,8 @@ class CollectorKiwoom:
         self.OperationRealreg()
         self.ViRealreg()
         while True:
-            if not self.collectorQ.empty():
-                work = self.collectorQ.get()
+            if not self.receivQ.empty():
+                work = self.receivQ.get()
                 if type(work) == list:
                     self.UpdateRealreg(work)
                 elif type(work) == str:
@@ -138,11 +142,10 @@ class CollectorKiwoom:
                 pythoncom.PumpWaitingMessages()
                 time.sleep(0.0001)
 
-        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터를 종료합니다.'])
+        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 리시버를 종료합니다.'])
         if DICT_SET['알림소리1']:
-            self.soundQ.put('주식 콜렉터를 종료합니다.')
-        self.teleQ.put('주식 콜렉터를 종료하였습니다.')
-        sys.exit()
+            self.soundQ.put('주식 리시버를 종료합니다.')
+        self.teleQ.put('주식 리시버를 종료하였습니다.')
 
     def UpdateRealreg(self, rreg):
         sn = rreg[0]
@@ -169,11 +172,11 @@ class CollectorKiwoom:
                 del self.dict_gsjm[code]
 
     def OperationRealreg(self):
-        self.collectorQ.put([sn_oper, ' ', '215;20;214', 0])
+        self.receivQ.put([sn_oper, ' ', '215;20;214', 0])
         self.list_code = self.SendCondition(sn_oper, self.dict_cond[1], 1, 0)
         k = 0
         for i in range(0, len(self.list_code), 100):
-            self.collectorQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
+            self.receivQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
             k += 1
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 장운영시간 등록 완료'])
 
@@ -199,7 +202,7 @@ class CollectorKiwoom:
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[0], 0)
 
     def AllRemoveRealreg(self):
-        self.collectorQ.put(['ALL', 'ALL'])
+        self.receivQ.put(['ALL', 'ALL'])
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
 
     def SaveDatabase(self):

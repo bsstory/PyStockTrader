@@ -8,10 +8,16 @@ from utility.setting import columns_gj1, ui_num, DICT_SET
 
 
 class StrategyStock:
-    def __init__(self, windowQ, stockQ, sstgQ):
-        self.windowQ = windowQ
-        self.stockQ = stockQ
-        self.sstgQ = sstgQ
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.soundQ = qlist[1]
+        self.teleQ = qlist[3]
+        self.stockQ = qlist[5]
+        self.sstgQ = qlist[7]
 
         self.list_buy = []
         self.list_sell = []
@@ -25,27 +31,29 @@ class StrategyStock:
         self.Start()
 
     def Start(self):
-        int_time = int(strf_time('%H%M%S'))
         while True:
             data = self.sstgQ.get()
             if type(data) == int:
                 self.UpdateTotaljasan(data)
-            elif len(data) == 2:
-                self.UpdateList(data[0], data[1])
-            elif len(data) == 14:
-                self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-                                 data[8], data[9], data[10], data[11], data[12], data[13])
-            elif len(data) == 7:
-                self.SellStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
+            elif type(data) == list:
+                if len(data) == 2:
+                    self.UpdateList(data[0], data[1])
+                elif len(data) == 14:
+                    self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                                     data[8], data[9], data[10], data[11], data[12], data[13])
+                elif len(data) == 7:
+                    self.SellStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
+            elif data == '잔략프로세스종료':
+                break
 
             if now() > self.dict_time['관심종목']:
                 self.windowQ.put([ui_num['S관심종목'], self.dict_gsjm])
                 self.dict_time['관심종목'] = timedelta_sec(1)
 
-            if int_time < DICT_SET['잔고청산'] - 1 <= int(strf_time('%H%M%S')):
-                break
-            int_time = int(strf_time('%H%M%S'))
-        sys.exit()
+        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 트레이더를 종료합니다.'])
+        if DICT_SET['알림소리1']:
+            self.soundQ.put('주식 전략 연산 프로세스를 종료합니다.')
+        self.teleQ.put('주식 전략 연산 프로세스를 종료하였습니다.')
 
     def UpdateTotaljasan(self, data):
         self.int_tujagm = data
