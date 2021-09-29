@@ -341,8 +341,8 @@ class TraderKiwoom:
             df = self.dict_df['실현손익'][['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
             self.queryQ.put([2, df, 's_totaltradelist', 'append'])
         if DICT_SET['알림소리1']:
-            self.soundQ.put('데이터베이스를 저장하였습니다.')
-        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 저장 완료'])
+            self.soundQ.put('일별실현손익를 저장하였습니다.')
+        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 일별실현손익 저장 완료'])
 
     @thread_decorator
     def UpdateTotaljango(self):
