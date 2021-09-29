@@ -4,14 +4,15 @@ import logging
 import subprocess
 from PyQt5.QtTest import QTest
 from multiprocessing import Process, Queue
-from trader.trader_upbit import TraderUpbit
-from trader.trader_kiwoom import TraderKiwoom
-from trader.strategy_coin import StrategyCoin
-from trader.strategy_stock import StrategyStock
-from trader.updater_upbit import UpdaterUpbit
-from trader.updater_kiwoom import UpdaterKiwoom
-from trader.collector_kiwoom import CollectorKiwoom
-from trader.collector_upbit import WebsTicker, WebsOrderbook
+from coin.receiver_upbit import WebsTicker, WebsOrderbook
+from coin.collector_upbit import CollectorUpbit
+from coin.strategy_coin import StrategyCoin
+from coin.trader_upbit import TraderUpbit
+from stock.login_kiwoom.manuallogin import find_window
+from stock.receiver_kiwoom import ReceiverKiwoom
+from stock.collector_kiwoom import CollectorKiwoom
+from stock.strategy_stock import StrategyStock
+from stock.trader_kiwoom import TraderKiwoom
 from utility.setui import *
 from utility.sound import Sound
 from utility.query import Query
@@ -50,7 +51,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.qtimer1 = QtCore.QTimer()
         self.qtimer1.setInterval(1000)
-        self.qtimer1.timeout.connect(self.ProcessStart)
+        self.qtimer1.timeout.connect(self.ProcessStarter)
         self.qtimer1.start()
 
         self.qtimer2 = QtCore.QTimer()
@@ -63,108 +64,112 @@ class Window(QtWidgets.QMainWindow):
         self.qtimer3.timeout.connect(self.UpdateCpuper)
         self.qtimer3.start()
 
-        self.backtester_count = 0
         self.backtester_proc = None
 
-        self.collector_coin_tick_thread = WebsTicker(tick2Q)
-        self.collector_coin_order_thread = WebsOrderbook(tick2Q)
-        self.collector_stock_proc = Process(target=CollectorKiwoom,
-                                            args=(windowQ, collectorQ, sstgQ, soundQ, queryQ, teleQ, tick1Q),
-                                            daemon=True)
+        self.receiver_coin_thread1 = WebsTicker(qlist)
+        self.receiver_coin_thread2 = WebsOrderbook(qlist)
+        self.collector_coin_proc = Process(target=CollectorUpbit, args=(qlist,), daemon=True)
+        self.strategy_coin_proc = Process(target=StrategyCoin, args=(qlist,), daemon=True)
+        self.trader_coin_thread = TraderUpbit(qlist)
 
-        self.updater_coin_proc = Process(target=UpdaterUpbit, args=(windowQ, queryQ, tick2Q), daemon=True)
-        self.updater_stock_proc = Process(target=UpdaterKiwoom, args=(windowQ, queryQ, tick1Q), daemon=True)
+        self.receiver_stock_proc = Process(target=ReceiverKiwoom, args=(qlist,), daemon=True)
+        self.collector_stock_proc = Process(target=CollectorKiwoom, args=(qlist,), daemon=True)
+        self.strategy_stock_proc = Process(target=StrategyStock, args=(qlist,), daemon=True)
+        self.trader_stock_proc = Process(target=TraderKiwoom, args=(qlist,), daemon=True)
 
-        self.strategy_coin_proc = Process(target=StrategyCoin, args=(windowQ, coinQ, cstgQ), daemon=True)
-        self.strategy_stock_proc = Process(target=StrategyStock, args=(windowQ, stockQ, sstgQ), daemon=True)
-
-        self.trader_coin_thread = TraderUpbit(windowQ, coinQ, queryQ, soundQ, cstgQ, teleQ)
-        self.trader_stock_proc = \
-            Process(target=TraderKiwoom, args=(windowQ, stockQ, collectorQ, sstgQ, soundQ, queryQ, teleQ), daemon=True)
-
-    def ProcessStart(self):
+    def ProcessStarter(self):
         if now().weekday() not in [6, 7]:
-            if DICT_SET['키움콜렉터'] and self.int_time < DICT_SET['버전업'] <= int(strf_time('%H%M%S')):
-                self.backtester_count = 0
-                self.backtester_proc = None
-                if DICT_SET['아이디2'] is not None:
-                    subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
-                else:
-                    text = '키움증권 두번째 계정이 설정되지 않아 버전 업그레이드를 실행할 수 없습니다.'
-                    windowQ.put([ui_num['S단순텍스트'], text])
-
-            if DICT_SET['키움콜렉터'] and self.int_time < DICT_SET['자동로그인2'] <= int(strf_time('%H%M%S')):
-                if DICT_SET['아이디2'] is not None:
-                    subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
-                else:
-                    text = '키움증권 두번째 계정이 설정되지 않아 자동로그인설정을 실행할 수 없습니다.'
-                    windowQ.put([ui_num['S단순텍스트'], text])
-
             if DICT_SET['키움콜렉터'] and self.int_time < DICT_SET['콜렉터'] <= int(strf_time('%H%M%S')):
-                self.updater_stock_proc.start()
-                self.collector_stock_proc.start()
-                text = '주식 콜렉터를 시작하였습니다.'
-                soundQ.put(text)
-                teleQ.put(text)
-
-            if DICT_SET['키움트레이더'] and self.int_time < DICT_SET['자동로그인1'] <= int(strf_time('%H%M%S')):
-                if DICT_SET['아이디1'] is not None:
-                    subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
-                else:
-                    text = '키움증권 첫번째 계정이 설정되지 않아 자동로그인설정을 실행할 수 없습니다.'
-                    windowQ.put([ui_num['S로그텍스트'], text])
-
+                self.KiwoomCollectorStart()
             if DICT_SET['키움트레이더'] and self.int_time < DICT_SET['트레이더'] <= int(strf_time('%H%M%S')):
-                if DICT_SET['아이디1'] is not None:
-                    self.strategy_stock_proc.start()
-                    self.trader_stock_proc.start()
-                    text = '주식 트레이더를 시작하였습니다.'
-                    soundQ.put(text)
-                    teleQ.put(text)
-                else:
-                    text = '키움증권 첫번째 계정이 설정되지 않아 트레이더를 실행할 수 없습니다.'
-                    windowQ.put([ui_num['S로그텍스트'], text])
-
-        if DICT_SET['백테스터']:
-            if DICT_SET['백테스터시작시간'] < self.int_time < DICT_SET['버전업']:
-                if self.backtester_count == 0 and \
-                        (self.backtester_proc is None or self.backtester_proc.poll() == 0):
-                    self.ButtonClicked_8()
-                    QTest.qWait(3000)
-                    self.ButtonClicked_9()
-                    self.backtester_count = 1
-                if self.backtester_count == 1 and \
-                        (self.backtester_proc is None or self.backtester_proc.poll() == 0):
-                    self.ButtonClicked_13()
-                    QTest.qWait(3000)
-                    self.ButtonClicked_14()
-                    self.backtester_count = 2
-
+                self.KiwoomTraderStart()
+        if DICT_SET['백테스터'] and self.int_time < DICT_SET['백테스터시작시간'] <= int(strf_time('%H%M%S')):
+            self.BacktestStart()
         if DICT_SET['업비트콜렉터']:
-            if not self.collector_coin_tick_thread.isRunning():
-                self.collector_coin_tick_thread.start()
-            if not self.collector_coin_order_thread.isRunning():
-                self.collector_coin_order_thread.start()
-            if not self.updater_coin_proc.is_alive():
-                self.updater_coin_proc.start()
-                text = '코인 콜렉터를 시작하였습니다.'
+            self.UpbitCollectorStart()
+        if DICT_SET['업비트트레이더']:
+            self.UpbitTraderStart()
+        self.int_time = int(strf_time('%H%M%S'))
+
+    def KiwoomCollectorStart(self):
+        self.backtester_proc = None
+        if DICT_SET['아이디2'] is not None:
+            subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
+            self.WaitLogin()
+            QTest.qWait(10000)
+            subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
+            self.WaitLogin()
+            self.WaitAutologin()
+            if not self.collector_stock_proc.is_alive():
+                self.collector_stock_proc.start()
+            if not self.receiver_stock_proc.is_alive():
+                self.receiver_stock_proc.start()
+            text = '주식 리시버 및 콜렉터를 시작하였습니다.'
+            soundQ.put(text)
+            teleQ.put(text)
+        else:
+            text = '키움증권 두번째 계정이 설정되지 않아 자동로그인설정을 실행할 수 없습니다.'
+            windowQ.put([ui_num['S단순텍스트'], text])
+
+    def KiwoomTraderStart(self):
+        if DICT_SET['아이디1'] is not None:
+            subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
+            self.WaitLogin()
+            self.WaitAutologin()
+            if not self.strategy_stock_proc.is_alive():
+                self.strategy_stock_proc.start()
+            if not self.trader_stock_proc.is_alive():
+                self.trader_stock_proc.start()
+            text = '주식 트레이더를 시작하였습니다.'
+            soundQ.put(text)
+            teleQ.put(text)
+        else:
+            text = '키움증권 첫번째 계정이 설정되지 않아 트레이더를 실행할 수 없습니다.'
+            windowQ.put([ui_num['S로그텍스트'], text])
+
+    # noinspection PyMethodMayBeStatic
+    def WaitLogin(self):
+        while find_window('Open API login') == 0:
+            QTest.qWait(1000)
+        while find_window('Open API login') != 0:
+            QTest.qWait(1000)
+
+    # noinspection PyMethodMayBeStatic
+    def WaitAutologin(self):
+        while find_window('계좌비밀번호') == 0:
+            QTest.qWait(1000)
+        while find_window('계좌비밀번호') != 0:
+            QTest.qWait(1000)
+
+    def BacktestStart(self):
+        if self.backtester_proc is None or self.backtester_proc.poll() == 0:
+            self.ButtonClicked_8()
+            QTest.qWait(3000)
+            self.ButtonClicked_9()
+
+    def UpbitCollectorStart(self):
+        if not self.receiver_coin_thread1.isRunning():
+            self.receiver_coin_thread1.start()
+        if not self.receiver_coin_thread2.isRunning():
+            self.receiver_coin_thread2.start()
+        if not self.collector_coin_proc.is_alive():
+            self.collector_coin_proc.start()
+            text = '코인 리시버 및 콜렉터를 시작하였습니다.'
+            soundQ.put(text)
+            teleQ.put(text)
+
+    def UpbitTraderStart(self):
+        if DICT_SET['Access_key'] is not None:
+            if not self.strategy_coin_proc.is_alive():
+                self.strategy_coin_proc.start()
+            if not self.trader_coin_thread.isRunning():
+                self.trader_coin_thread.start()
+                text = '코인 트레이더를 시작하였습니다.'
                 soundQ.put(text)
                 teleQ.put(text)
-
-        if DICT_SET['업비트트레이더']:
-            if DICT_SET['Access_key'] is not None:
-                if not self.strategy_coin_proc.is_alive():
-                    self.strategy_coin_proc.start()
-                if not self.trader_coin_thread.isRunning():
-                    self.trader_coin_thread.start()
-                    text = '코인 트레이더를 시작하였습니다.'
-                    soundQ.put(text)
-                    teleQ.put(text)
-            else:
-                text = '업비트 계정이 설정되지 않아 트레이더를 실행할 수 없습니다.'
-                windowQ.put([ui_num['C로그텍스트'], text])
-
-        self.int_time = int(strf_time('%H%M%S'))
+        else:
+            text = '업비트 계정이 설정되지 않아 트레이더를 실행할 수 없습니다.'
+            windowQ.put([ui_num['C로그텍스트'], text])
 
     def UpdateProgressBar(self):
         self.progressBar.setValue(int(self.cpu_per))
@@ -224,6 +229,16 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, '오류 알림', '해당 버튼은 트레이더탭에서만 작동합니다.\n')
 
     def ButtonClicked_2(self):
+        buttonReply = QtWidgets.QMessageBox.question(
+            self, '주식 수동 시작', '주식 콜렉터 및 트레이더를 수동으로\n시작합니다.계속하시겠습니까?\n',
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+        )
+        if buttonReply == QtWidgets.QMessageBox.Yes:
+            self.KiwoomCollectorStart()
+            QTest.qWait(20000)
+            self.KiwoomTraderStart()
+
+    def ButtonClicked_3(self):
         if self.geometry().width() > 1000:
             self.setGeometry(self.geometry().x(), self.geometry().y(), 722, 383)
             self.zo_pushButton.setStyleSheet(style_bc_dk)
@@ -1126,23 +1141,18 @@ class Window(QtWidgets.QMainWindow):
         if len(df) > 0:
             self.sj_stock_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_stock_checkBox_01.setChecked(False)
             self.sj_stock_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_stock_checkBox_02.setChecked(False)
-            self.sj_stock_lineEdit_01.setText(str(df['버전업'][0]))
-            self.sj_stock_lineEdit_02.setText(str(df['자동로그인2'][0]))
-            self.sj_stock_lineEdit_03.setText(str(df['콜렉터'][0]))
-            self.sj_stock_lineEdit_04.setText(str(df['자동로그인1'][0]))
-            self.sj_stock_lineEdit_05.setText(str(df['트레이더'][0]))
-            self.sj_stock_lineEdit_06.setText(str(df['전략시작'][0]))
-            self.sj_stock_lineEdit_07.setText(str(df['잔고청산'][0]))
-            self.sj_stock_lineEdit_08.setText(str(df['전략종료'][0]))
-            self.sj_stock_lineEdit_09.setText(str(df['체결강도차이'][0]))
-            self.sj_stock_lineEdit_10.setText(str(df['평균시간'][0]))
-            self.sj_stock_lineEdit_11.setText(str(df['거래대금차이'][0]))
-            self.sj_stock_lineEdit_12.setText(str(df['체결강도하한'][0]))
-            self.sj_stock_lineEdit_13.setText(str(df['누적거래대금하한'][0]))
-            self.sj_stock_lineEdit_14.setText(str(df['등락율하한'][0]))
-            self.sj_stock_lineEdit_15.setText(str(df['등락율상한'][0]))
-            self.sj_stock_lineEdit_16.setText(str(df['청산수익률'][0]))
-            self.sj_stock_lineEdit_17.setText(str(df['최대매수종목수'][0]))
+            self.sj_stock_lineEdit_01.setText(str(df['콜렉터'][0]))
+            self.sj_stock_lineEdit_02.setText(str(df['트레이더'][0]))
+            self.sj_stock_lineEdit_03.setText(str(df['잔고청산'][0]))
+            self.sj_stock_lineEdit_04.setText(str(df['체결강도차이'][0]))
+            self.sj_stock_lineEdit_05.setText(str(df['평균시간'][0]))
+            self.sj_stock_lineEdit_06.setText(str(df['거래대금차이'][0]))
+            self.sj_stock_lineEdit_07.setText(str(df['체결강도하한'][0]))
+            self.sj_stock_lineEdit_08.setText(str(df['누적거래대금하한'][0]))
+            self.sj_stock_lineEdit_09.setText(str(df['등락율하한'][0]))
+            self.sj_stock_lineEdit_10.setText(str(df['등락율상한'][0]))
+            self.sj_stock_lineEdit_11.setText(str(df['청산수익률'][0]))
+            self.sj_stock_lineEdit_12.setText(str(df['최대매수종목수'][0]))
             self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 불러오기 완료'])
         else:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '주식 전략 설정값이\n존재하지 않습니다.\n')
@@ -1221,33 +1231,26 @@ class Window(QtWidgets.QMainWindow):
     def ButtonClicked_28(self):
         me = 1 if self.sj_stock_checkBox_01.isChecked() else 0
         sd = 1 if self.sj_stock_checkBox_02.isChecked() else 0
-        vu = self.sj_stock_lineEdit_01.text()
-        alg2 = self.sj_stock_lineEdit_02.text()
-        cl = self.sj_stock_lineEdit_03.text()
-        alg1 = self.sj_stock_lineEdit_04.text()
-        tr = self.sj_stock_lineEdit_05.text()
-        ss = self.sj_stock_lineEdit_06.text()
-        cs = self.sj_stock_lineEdit_07.text()
-        se = self.sj_stock_lineEdit_08.text()
-        gapch = self.sj_stock_lineEdit_09.text()
-        avgtime = self.sj_stock_lineEdit_10.text()
-        gapsm = self.sj_stock_lineEdit_11.text()
-        chlow = self.sj_stock_lineEdit_12.text()
-        dmlow = self.sj_stock_lineEdit_13.text()
-        plow = self.sj_stock_lineEdit_14.text()
-        phigh = self.sj_stock_lineEdit_15.text()
-        csper = self.sj_stock_lineEdit_16.text()
-        buyc = self.sj_stock_lineEdit_17.text()
-        if vu == '' or alg2 == '' or cl == '' or alg1 == '' or tr == '' or ss == '' or cs == '' or se == '' or \
-                gapch == '' or avgtime == '' or gapsm == '' or chlow == '' or dmlow == '' or plow == '' or \
-                phigh == '' or csper == '' or buyc == '':
+        cl = self.sj_stock_lineEdit_01.text()
+        tr = self.sj_stock_lineEdit_02.text()
+        cs = self.sj_stock_lineEdit_03.text()
+        gapch = self.sj_stock_lineEdit_04.text()
+        avgtime = self.sj_stock_lineEdit_05.text()
+        gapsm = self.sj_stock_lineEdit_06.text()
+        chlow = self.sj_stock_lineEdit_07.text()
+        dmlow = self.sj_stock_lineEdit_08.text()
+        plow = self.sj_stock_lineEdit_09.text()
+        phigh = self.sj_stock_lineEdit_10.text()
+        csper = self.sj_stock_lineEdit_11.text()
+        buyc = self.sj_stock_lineEdit_12.text()
+        if cl == '' or tr == '' or cs == '' or gapch == '' or avgtime == '' or gapsm == '' or chlow == '' or \
+                dmlow == '' or plow == '' or phigh == '' or csper == '' or buyc == '':
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
         else:
-            query = f"UPDATE stock SET 모의투자 = {me}, 알림소리 = {sd}, 버전업 = {vu}, 자동로그인2 = {alg2}," \
-                    f"콜렉터 = {cl}, 자동로그인1 = {alg1}, 트레이더 = {tr}, 전략시작 = {ss}, 잔고청산 = {cs}," \
-                    f"전략종료 = {se}, 체결강도차이 = {gapch}, 평균시간 = {avgtime}, 거래대금차이 = {gapsm}, " \
-                    f"체결강도하한 = {chlow}, 누적거래대금하한 = {dmlow}, 등락율하한 = {plow}, 등락율상한 = {phigh}, " \
-                    f"청산수익률 = {csper}, 최대매수종목수 = {buyc}"
+            query = f"UPDATE stock SET 모의투자 = {me}, 알림소리 = {sd}, 콜렉터 = {cl}, 트레이더 = {tr}, 잔고청산 = {cs}," \
+                    f"체결강도차이 = {gapch}, 평균시간 = {avgtime}, 거래대금차이 = {gapsm}, 체결강도하한 = {chlow}, " \
+                    f"누적거래대금하한 = {dmlow}, 등락율하한 = {plow}, 등락율상한 = {phigh}, 청산수익률 = {csper}, " \
+                    f"최대매수종목수 = {buyc}"
             queryQ.put([1, query])
             self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 저장하기 완료'])
 
@@ -1513,18 +1516,18 @@ class Window(QtWidgets.QMainWindow):
                 self.strategy_coin_proc.kill()
             if self.strategy_stock_proc.is_alive():
                 self.strategy_stock_proc.kill()
-            if self.updater_coin_proc.is_alive():
-                self.updater_coin_proc.kill()
-            if self.updater_stock_proc.is_alive():
-                self.updater_stock_proc.kill()
+            if self.collector_coin_proc.is_alive():
+                self.collector_coin_proc.kill()
             if self.collector_stock_proc.is_alive():
                 self.collector_stock_proc.kill()
-            if self.collector_coin_tick_thread.isRunning():
-                self.collector_coin_tick_thread.websQ_ticker.terminate()
-                self.collector_coin_tick_thread.terminate()
-            if self.collector_coin_order_thread.isRunning():
-                self.collector_coin_order_thread.websQ_order.terminate()
-                self.collector_coin_order_thread.terminate()
+            if self.receiver_stock_proc.is_alive():
+                self.receiver_stock_proc.kill()
+            if self.receiver_coin_thread1.isRunning():
+                self.receiver_coin_thread1.websQ_ticker.terminate()
+                self.receiver_coin_thread1.terminate()
+            if self.receiver_coin_thread2.isRunning():
+                self.receiver_coin_thread2.websQ_order.terminate()
+                self.receiver_coin_thread2.terminate()
             if self.trader_coin_thread.isRunning():
                 self.trader_coin_thread.websocketQ.terminate()
                 self.trader_coin_thread.terminate()
@@ -1557,12 +1560,13 @@ class Writer(QtCore.QThread):
 
 
 if __name__ == '__main__':
-    windowQ, stockQ, coinQ, collectorQ, sstgQ, cstgQ, soundQ, queryQ, teleQ, tick1Q, tick2Q = \
+    windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q = \
         Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue()
+    qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
 
-    sound_process = Process(target=Sound, args=(soundQ,), daemon=True)
-    query_process = Process(target=Query, args=(windowQ, queryQ), daemon=True)
-    telegram_process = Process(target=TelegramMsg, args=(windowQ, stockQ, coinQ, teleQ), daemon=True)
+    sound_process = Process(target=Sound, args=(qlist,), daemon=True)
+    query_process = Process(target=Query, args=(qlist,), daemon=True)
+    telegram_process = Process(target=TelegramMsg, args=(qlist,), daemon=True)
     sound_process.start()
     query_process.start()
     telegram_process.start()
