@@ -3,9 +3,13 @@ from utility.setting import ui_num, DB_TRADELIST, DB_STOCK_TICK, DB_COIN_TICK, D
 
 
 class Query:
-    def __init__(self, windowQ, queryQ):
-        self.windowQ = windowQ
-        self.queryQ = queryQ
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.queryQ = qlist[2]
         self.con1 = sqlite3.connect(DB_SETTING)
         self.cur1 = self.con1.cursor()
         self.con2 = sqlite3.connect(DB_TRADELIST)
