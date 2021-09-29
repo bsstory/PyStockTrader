@@ -6,11 +6,15 @@ from utility.setting import ui_num
 from utility.static import now, timedelta_sec, timedelta_hour, strp_time, strf_time
 
 
-class UpdaterUpbit:
-    def __init__(self, windowQ, queryQ, tick2Q):
-        self.windowQ = windowQ
-        self.queryQ = queryQ
-        self.tick2Q = tick2Q
+class CollectorUpbit:
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.queryQ = qlist[2]
+        self.tick2Q = qlist[10]
 
         self.dict_df = {}                   # 틱데이터 저장용 딕셔너리 key: ticker, value: datafame
         self.dict_orderbook = {}            # 오더북 저장용 딕셔너리

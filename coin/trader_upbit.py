@@ -10,14 +10,18 @@ from utility.static import now, timedelta_sec, strf_time, timedelta_hour, strp_t
 
 
 class TraderUpbit(QThread):
-    def __init__(self, windowQ, coinQ, queryQ, soundQ, cstgQ, teleQ):
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
         super().__init__()
-        self.windowQ = windowQ
-        self.coinQ = coinQ
-        self.queryQ = queryQ
-        self.soundQ = soundQ
-        self.cstgQ = cstgQ
-        self.teleQ = teleQ
+        self.windowQ = qlist[0]
+        self.queryQ = qlist[2]
+        self.soundQ = qlist[1]
+        self.teleQ = qlist[3]
+        self.coinQ = qlist[6]
+        self.cstgQ = qlist[8]
 
         self.upbit = None                               # 매도수 주문 및 체결 확인용 객체
         self.buy_uuid = None                            # 매수 주문 저장용 list: [티커명, uuid]
@@ -139,7 +143,12 @@ class TraderUpbit(QThread):
 
                 """ 잔고목록 갱신 및 매도조건 확인 """
                 if injango:
-                    ch = round(bid / ask * 100, 2)
+                    try:
+                        ch = round(bid / ask * 100, 2)
+                    except ZeroDivisionError:
+                        ch = 500.
+                    if ch > 500:
+                        ch = 500.
                     self.UpdateJango(ticker, c, ch)
 
             """ 주문의 체결확인은 1초마다 반복한다. """
@@ -290,6 +299,11 @@ class TraderUpbit(QThread):
 
     def UpdateBuy(self, ticker, cp, cc, cancle=False):
         dt = strf_time('%Y%m%d%H%M%S%f')
+        if DICT_SET['모의투자2'] and len(self.df_cj) > 0:
+            if dt in self.df_cj['체결시간'].values:
+                while dt in self.df_cj['체결시간'].values:
+                    dt = str(int(dt) + 1)
+
         order_gubun = '매수' if not cancle else '시드부족'
         self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
         self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
@@ -310,6 +324,11 @@ class TraderUpbit(QThread):
 
     def UpdateSell(self, ticker, cp, cc):
         dt = strf_time('%Y%m%d%H%M%S%f')
+        if DICT_SET['모의투자2'] and len(self.df_cj) > 0:
+            if dt in self.df_cj['체결시간'].values:
+                while dt in self.df_cj['체결시간'].values:
+                    dt = str(int(dt) + 1)
+
         bp = self.df_jg['매입가'][ticker]
         bg = bp * cc
         pg, sg, sp = self.GetPgSgSp(bg, cp * cc)

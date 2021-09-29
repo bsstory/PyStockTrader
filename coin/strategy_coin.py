@@ -8,10 +8,14 @@ from utility.static import now, timedelta_sec, strf_time, timedelta_hour
 
 
 class StrategyCoin:
-    def __init__(self, windowQ, coinQ, cstgQ):
-        self.windowQ = windowQ
-        self.coinQ = coinQ
-        self.cstgQ = cstgQ
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
+        self.windowQ = qlist[0]
+        self.coinQ = qlist[6]
+        self.cstgQ = qlist[8]
 
         self.list_buy = []
         self.list_sell = []
@@ -29,13 +33,14 @@ class StrategyCoin:
             data = self.cstgQ.get()
             if type(data) == int:
                 self.UpdateTotaljasan(data)
-            elif len(data) == 2:
-                self.UpdateList(data[0], data[1])
-            elif len(data) == 12:
-                self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6],
-                                 data[7], data[8], data[9], data[10], data[11])
-            elif len(data) == 5:
-                self.SellStrategy(data[0], data[1], data[2], data[3], data[4])
+            elif type(data) == list:
+                if len(data) == 2:
+                    self.UpdateList(data[0], data[1])
+                elif len(data) == 12:
+                    self.BuyStrategy(data[0], data[1], data[2], data[3], data[4], data[5], data[6],
+                                     data[7], data[8], data[9], data[10], data[11])
+                elif len(data) == 5:
+                    self.SellStrategy(data[0], data[1], data[2], data[3], data[4])
 
             if now() > self.dict_time['관심종목']:
                 self.windowQ.put([ui_num['C관심종목'], self.dict_gsjm])

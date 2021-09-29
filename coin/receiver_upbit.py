@@ -8,9 +8,13 @@ from utility.static import now
 
 
 class WebsTicker(QThread):
-    def __init__(self, tick2Q):
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
         super().__init__()
-        self.tick2Q = tick2Q
+        self.tick2Q = qlist[10]
         self.websQ_ticker = None
 
     def run(self):
@@ -43,9 +47,13 @@ class WebsTicker(QThread):
 
 
 class WebsOrderbook(QThread):
-    def __init__(self, tick2Q):
+    def __init__(self, qlist):
+        """
+        number      0        1       2      3       4       5       6      7      8      9       10
+        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+        """
         super().__init__()
-        self.tick2Q = tick2Q
+        self.tick2Q = qlist[10]
         self.websQ_order = None
 
     def run(self):
