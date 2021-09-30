@@ -1252,6 +1252,15 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([1, df, 'main', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 저장하기 완료'])
 
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['키움콜렉터'] = kc
+            DICT_SET['키움트레이더'] = kt
+            DICT_SET['업비트콜렉터'] = cc
+            DICT_SET['업비트트레이더'] = ct
+            DICT_SET['백테스터'] = bt
+            DICT_SET['백테스터시작시간'] = int(t)
+
     def ButtonClicked_25(self):
         id1 = self.sj_sacc_lineEdit_01.text()
         ps1 = self.sj_sacc_lineEdit_02.text()
@@ -1268,6 +1277,17 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([1, df, 'kiwoom', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '키움증권 계정 설정값 저장하기 완료'])
 
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['아이디1'] = id1
+            DICT_SET['비밀번호1'] = ps1
+            DICT_SET['인증서비밀번호1'] = cp1
+            DICT_SET['계좌비밀번호1'] = ap1
+            DICT_SET['아이디2'] = id2
+            DICT_SET['비밀번호2'] = ps2
+            DICT_SET['인증서비밀번호2'] = cp2
+            DICT_SET['계좌비밀번호2'] = ap2
+
     def ButtonClicked_26(self):
         access_key = self.sj_cacc_lineEdit_01.text()
         secret_key = self.sj_cacc_lineEdit_02.text()
@@ -1278,9 +1298,14 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([1, df, 'upbit', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '업비트 계정 설정값 저장하기 완료'])
 
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['Access_key'] = access_key
+            DICT_SET['Secret_key'] = secret_key
+
     def ButtonClicked_27(self):
         str_bot = self.sj_tele_lineEdit_01.text()
-        int_id = self.sj_tele_lineEdit_02.text()
+        int_id = int(self.sj_tele_lineEdit_02.text())
         if str_bot == '' or int_id == '':
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
         else:
@@ -1288,21 +1313,26 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([1, df, 'telegram', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 저장하기 완료'])
 
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['텔레그램봇토큰'] = str_bot
+            DICT_SET['텔레그램사용자아이디'] = int_id
+
     def ButtonClicked_28(self):
         me = 1 if self.sj_stock_checkBox_01.isChecked() else 0
         sd = 1 if self.sj_stock_checkBox_02.isChecked() else 0
-        cl = self.sj_stock_lineEdit_01.text()
-        tr = self.sj_stock_lineEdit_02.text()
-        cs = self.sj_stock_lineEdit_03.text()
-        gapch = self.sj_stock_lineEdit_04.text()
-        avgtime = self.sj_stock_lineEdit_05.text()
-        gapsm = self.sj_stock_lineEdit_06.text()
-        chlow = self.sj_stock_lineEdit_07.text()
-        dmlow = self.sj_stock_lineEdit_08.text()
-        plow = self.sj_stock_lineEdit_09.text()
-        phigh = self.sj_stock_lineEdit_10.text()
-        csper = self.sj_stock_lineEdit_11.text()
-        buyc = self.sj_stock_lineEdit_12.text()
+        cl = int(self.sj_stock_lineEdit_01.text())
+        tr = int(self.sj_stock_lineEdit_02.text())
+        cs = int(self.sj_stock_lineEdit_03.text())
+        gapch = float(self.sj_stock_lineEdit_04.text())
+        avgtime = int(self.sj_stock_lineEdit_05.text())
+        gapsm = int(self.sj_stock_lineEdit_06.text())
+        chlow = float(self.sj_stock_lineEdit_07.text())
+        dmlow = int(self.sj_stock_lineEdit_08.text())
+        plow = float(self.sj_stock_lineEdit_09.text())
+        phigh = float(self.sj_stock_lineEdit_10.text())
+        csper = float(self.sj_stock_lineEdit_11.text())
+        buyc = int(self.sj_stock_lineEdit_12.text())
         if cl == '' or tr == '' or cs == '' or gapch == '' or avgtime == '' or gapsm == '' or chlow == '' or \
                 dmlow == '' or plow == '' or phigh == '' or csper == '' or buyc == '':
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
@@ -1314,18 +1344,35 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([1, query])
             self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 저장하기 완료'])
 
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['모의투자1'] = me
+            DICT_SET['알림소리1'] = sd
+            DICT_SET['콜렉터'] = cl
+            DICT_SET['트레이더'] = tr
+            DICT_SET['잔고청산'] = cs
+            DICT_SET['체결강도차이1'] = gapch
+            DICT_SET['평균시간1'] = avgtime
+            DICT_SET['거래대금차이1'] = gapsm
+            DICT_SET['체결강도하한1'] = chlow
+            DICT_SET['누적거래대금하한1'] = dmlow
+            DICT_SET['등락율하한1'] = plow
+            DICT_SET['등락율상한1'] = phigh
+            DICT_SET['청산수익률1'] = csper
+            DICT_SET['최대매수종목수1'] = buyc
+
     def ButtonClicked_29(self):
         me = 1 if self.sj_coin_checkBox_01.isChecked() else 0
         sd = 1 if self.sj_coin_checkBox_02.isChecked() else 0
-        gapch = self.sj_coin_lineEdit_01.text()
-        avgtime = self.sj_coin_lineEdit_02.text()
-        gapsm = self.sj_coin_lineEdit_03.text()
-        chlow = self.sj_coin_lineEdit_04.text()
-        dmlow = self.sj_coin_lineEdit_05.text()
-        plow = self.sj_coin_lineEdit_06.text()
-        phigh = self.sj_coin_lineEdit_07.text()
-        csper = self.sj_coin_lineEdit_08.text()
-        buyc = self.sj_coin_lineEdit_09.text()
+        gapch = float(self.sj_coin_lineEdit_01.text())
+        avgtime = int(self.sj_coin_lineEdit_02.text())
+        gapsm = int(self.sj_coin_lineEdit_03.text())
+        chlow = float(self.sj_coin_lineEdit_04.text())
+        dmlow = int(self.sj_coin_lineEdit_05.text())
+        plow = float(self.sj_coin_lineEdit_06.text())
+        phigh = float(self.sj_coin_lineEdit_07.text())
+        csper = float(self.sj_coin_lineEdit_08.text())
+        buyc = int(self.sj_coin_lineEdit_09.text())
         if gapch == '' or avgtime == '' or gapsm == '' or chlow == '' or \
                 dmlow == '' or plow == '' or phigh == '' or csper == '' or buyc == '':
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
@@ -1335,6 +1382,20 @@ class Window(QtWidgets.QMainWindow):
                     f"등락율상한 = {phigh}, 청산수익률 = {csper}, 최대매수종목수 = {buyc}"
             queryQ.put([1, query])
             self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 저장하기 완료'])
+
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['모의투자2'] = me
+            DICT_SET['알림소리2'] = sd
+            DICT_SET['체결강도차이2'] = gapch
+            DICT_SET['평균시간2'] = avgtime
+            DICT_SET['거래대금차이2'] = gapsm
+            DICT_SET['체결강도하한2'] = chlow
+            DICT_SET['누적거래대금하한2'] = dmlow
+            DICT_SET['등락율하한2'] = plow
+            DICT_SET['등락율상한2'] = phigh
+            DICT_SET['청산수익률2'] = csper
+            DICT_SET['최대매수종목수2'] = buyc
 
     def UpdateTexedit(self, data):
         text = f'[{now()}] {data[1]}'
