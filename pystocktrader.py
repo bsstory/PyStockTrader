@@ -261,10 +261,10 @@ class Window(QtWidgets.QMainWindow):
 
     def ButtonClicked_3(self):
         if self.geometry().width() > 1000:
-            self.setGeometry(self.geometry().x(), self.geometry().y(), 722, 383)
+            self.setFixedSize(722, 383)
             self.zo_pushButton.setStyleSheet(style_bc_dk)
         else:
-            self.setGeometry(self.geometry().x(), self.geometry().y(), 1403, 763)
+            self.setFixedSize(1403, 763)
             self.zo_pushButton.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_4(self):

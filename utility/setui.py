@@ -631,7 +631,7 @@ def SetUI(self):
     self.sc_textEdit = setTextEdit(self.lg_tab)
     self.cc_textEdit = setTextEdit(self.lg_tab)
 
-    self.resize(1403, 763)
+    self.setFixedSize(1403, 763)
     self.geometry().center()
     self.main_tabWidget.setGeometry(5, 5, 1393, 753)
     self.tt_pushButton.setGeometry(5, 260, 35, 32)
