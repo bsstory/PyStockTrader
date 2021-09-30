@@ -69,7 +69,10 @@ class StrategyCoin:
             return
 
         hlm = round((h + low) / 2)
-        hlmp = round((c / hlm - 1) * 100, 2)
+        try:
+            hlmp = round((c / hlm - 1) * 100, 2)
+        except ZeroDivisionError:
+            hlmp = 0.
         predm = self.dict_gsjm[ticker]['누적거래대금'][1]
         sm = 0 if predm == 0 else int(dm - predm)
         try:
