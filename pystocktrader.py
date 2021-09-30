@@ -205,7 +205,7 @@ class Window(QtWidgets.QMainWindow):
             df = pd.read_sql('SELECT * FROM kiwoom', con).set_index('index')
             con.close()
             if len(df) == 0 or df['아이디2'][0] == '':
-                self.sj_main_checkBox_01.setChecked(False)
+                self.sj_main_checkBox_01.nextCheckState()
                 QtWidgets.QMessageBox.critical(
                     self, '오류 알림',
                     '키움 두번째 계정이 설정되지 않아\n콜렉터를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
@@ -217,7 +217,7 @@ class Window(QtWidgets.QMainWindow):
             df = pd.read_sql('SELECT * FROM kiwoom', con).set_index('index')
             con.close()
             if len(df) == 0 or df['아이디1'][0] == '':
-                self.sj_main_checkBox_02.setChecked(False)
+                self.sj_main_checkBox_02.nextCheckState()
                 QtWidgets.QMessageBox.critical(
                     self, '오류 알림',
                     '키움 첫번째 계정이 설정되지 않아\n트레이더를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
@@ -229,7 +229,7 @@ class Window(QtWidgets.QMainWindow):
             df = pd.read_sql('SELECT * FROM upbit', con).set_index('index')
             con.close()
             if len(df) == 0 or df['Access_key'][0] == '':
-                self.sj_main_checkBox_04.setChecked(False)
+                self.sj_main_checkBox_04.nextCheckState()
                 QtWidgets.QMessageBox.critical(
                     self, '오류 알림',
                     '업비트 계정이 설정되지 않아\n트레이더를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
@@ -1255,24 +1255,20 @@ class Window(QtWidgets.QMainWindow):
         ct = 1 if self.sj_main_checkBox_04.isChecked() else 0
         bt = 1 if self.sj_main_checkBox_05.isChecked() else 0
         t = self.sj_main_lineEdit_01.text()
-        if t in ['0', '']:
-            QtWidgets.QMessageBox.critical(
-                self, '오류 알림',
-                '백테스터 시작시간이 입력되지 않았습니다.\n사용하지 않더라도 입력해야 DB로 저장됩니다.\n'
-            )
-        else:
-            df = pd.DataFrame([[kc, kt, cc, ct, bt, int(t)]], columns=columns_sm, index=[0])
-            queryQ.put([1, df, 'main', 'replace'])
-            self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 저장하기 완료'])
+        if t == '':
+            t = 0
+        df = pd.DataFrame([[kc, kt, cc, ct, bt, int(t)]], columns=columns_sm, index=[0])
+        queryQ.put([1, df, 'main', 'replace'])
+        self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 저장하기 완료'])
 
-            # noinspection PyGlobalUndefined
-            global DICT_SET
-            DICT_SET['키움콜렉터'] = kc
-            DICT_SET['키움트레이더'] = kt
-            DICT_SET['업비트콜렉터'] = cc
-            DICT_SET['업비트트레이더'] = ct
-            DICT_SET['백테스터'] = bt
-            DICT_SET['백테스터시작시간'] = int(t)
+        # noinspection PyGlobalUndefined
+        global DICT_SET
+        DICT_SET['키움콜렉터'] = kc
+        DICT_SET['키움트레이더'] = kt
+        DICT_SET['업비트콜렉터'] = cc
+        DICT_SET['업비트트레이더'] = ct
+        DICT_SET['백테스터'] = bt
+        DICT_SET['백테스터시작시간'] = int(t)
 
     def ButtonClicked_25(self):
         id1 = self.sj_sacc_lineEdit_01.text()
