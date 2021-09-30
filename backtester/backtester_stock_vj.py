@@ -82,7 +82,6 @@ class BackTester1mStock:
                     continue
                 self.index = index
                 self.indexn = h
-                self.ccond += 1
                 if not self.hold and self.starttime < int(index[8:]) < self.endtime and self.BuyTerm():
                     self.Buy()
                 elif self.hold and self.starttime < int(index[8:]) < self.endtime and self.SellTerm():
