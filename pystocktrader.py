@@ -64,6 +64,7 @@ class Window(QtWidgets.QMainWindow):
         self.qtimer3.timeout.connect(self.UpdateCpuper)
         self.qtimer3.start()
 
+        self.showqsize = False
         self.backtester_proc = None
 
         self.receiver_coin_thread1 = WebsTicker(qlist)
@@ -89,6 +90,15 @@ class Window(QtWidgets.QMainWindow):
             self.UpbitCollectorStart()
         if DICT_SET['업비트트레이더']:
             self.UpbitTraderStart()
+        if self.showqsize:
+            text = f'PyStockTrader                                                                            '\
+                   f'windowQ[{windowQ.qsize()}], soundQ[{soundQ.qsize()}], '\
+                   f'queryQ[{queryQ.qsize()}], teleQ[{teleQ.qsize()}], receivQ[{receivQ.qsize()}], '\
+                   f'stockQ[{stockQ.qsize()}], coinQ[{coinQ.qsize()}], sstgQ[{sstgQ.qsize()}], '\
+                   f'cstgQ[{cstgQ.qsize()}], tick1Q[{tick1Q.qsize()}], tick2Q[{tick2Q.qsize()}]'
+            self.setWindowTitle(text)
+        elif self.windowTitle() != 'PyStockTrader':
+            self.setWindowTitle('PyStockTrader')
         self.int_time = int(strf_time('%H%M%S'))
 
     # noinspection PyArgumentList
@@ -185,6 +195,9 @@ class Window(QtWidgets.QMainWindow):
     @thread_decorator
     def UpdateCpuper(self):
         self.cpu_per = psutil.cpu_percent(interval=1)
+
+    def ShowQsize(self):
+        self.showqsize = True if not self.showqsize else False
 
     def CheckboxChanged_01(self, state):
         if state == Qt.Checked:

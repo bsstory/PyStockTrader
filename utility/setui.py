@@ -197,6 +197,8 @@ def SetUI(self):
     self.bd_pushButton = setPushbutton('', click=self.ButtonClicked_4, icon=icon_backdel, tip='  백데이터 삭제 및 초기화')
     self.dd_pushButton = setPushbutton('', click=self.ButtonClicked_5, icon=icon_dbdel, tip='  거래목록 데이터 삭제 및 초기화')
     self.sd_pushButton = setPushbutton('', click=self.ButtonClicked_6, icon=icon_accdel, tip='  모든 계정 설정 삭제 및 초기화')
+    self.qs_pushButton = setPushbutton('', click=self.ShowQsize)
+    self.qs_pushButton.setShortcut('Alt+Q')
 
     self.progressBar = QtWidgets.QProgressBar(self)
     self.progressBar.setAlignment(Qt.AlignCenter)
@@ -644,6 +646,7 @@ def SetUI(self):
     self.bd_pushButton.setGeometry(5, 650, 35, 32)
     self.dd_pushButton.setGeometry(5, 687, 35, 32)
     self.sd_pushButton.setGeometry(5, 724, 35, 32)
+    self.qs_pushButton.setGeometry(0, 0, 0, 0)
 
     self.stt_tableWidget.setGeometry(5, 5, 668, 42)
     self.std_tableWidget.setGeometry(5, 52, 668, 320)
