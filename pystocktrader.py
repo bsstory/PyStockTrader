@@ -1206,8 +1206,11 @@ class Window(QtWidgets.QMainWindow):
         ct = 1 if self.sj_main_checkBox_04.isChecked() else 0
         bt = 1 if self.sj_main_checkBox_05.isChecked() else 0
         t = self.sj_main_lineEdit_01.text()
-        if bt and t in ['0', '']:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '백테스터 시작시간이 입력되지 않았습니다.\n')
+        if t in ['0', '']:
+            QtWidgets.QMessageBox.critical(
+                self, '오류 알림',
+                '백테스터 시작시간이 입력되지 않았습니다.\n사용하지 않더라도 입력해야 DB로 저장됩니다.\n'
+            )
         else:
             df = pd.DataFrame([[kc, kt, cc, ct, bt, int(t)]], columns=columns_sm, index=[0])
             queryQ.put([1, df, 'main', 'replace'])
