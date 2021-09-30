@@ -91,11 +91,11 @@ class Window(QtWidgets.QMainWindow):
         if DICT_SET['업비트트레이더']:
             self.UpbitTraderStart()
         if self.showqsize:
-            text = f'PyStockTrader                                                                            '\
-                   f'windowQ[{windowQ.qsize()}], soundQ[{soundQ.qsize()}], '\
-                   f'queryQ[{queryQ.qsize()}], teleQ[{teleQ.qsize()}], receivQ[{receivQ.qsize()}], '\
-                   f'stockQ[{stockQ.qsize()}], coinQ[{coinQ.qsize()}], sstgQ[{sstgQ.qsize()}], '\
-                   f'cstgQ[{cstgQ.qsize()}], tick1Q[{tick1Q.qsize()}], tick2Q[{tick2Q.qsize()}]'
+            text = f'PyStockTrader                                                                   '\
+                   f'windowQ[{windowQ.qsize()}] | soundQ[{soundQ.qsize()}] | '\
+                   f'queryQ[{queryQ.qsize()}] | teleQ[{teleQ.qsize()}] | receivQ[{receivQ.qsize()}] | '\
+                   f'stockQ[{stockQ.qsize()}] | coinQ[{coinQ.qsize()}] | sstgQ[{sstgQ.qsize()}] | '\
+                   f'cstgQ[{cstgQ.qsize()}] | tick1Q[{tick1Q.qsize()}] | tick2Q[{tick2Q.qsize()}]'
             self.setWindowTitle(text)
         elif self.windowTitle() != 'PyStockTrader':
             self.setWindowTitle('PyStockTrader')
