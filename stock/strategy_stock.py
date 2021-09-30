@@ -86,8 +86,7 @@ class StrategyStock:
         predm = self.dict_gsjm[code]['누적거래대금'][1]
         sm = 0 if predm == 0 else int(dm - predm)
         self.dict_gsjm[code] = self.dict_gsjm[code].shift(1)
-        if len(self.dict_gsjm[code]) == DICT_SET['평균시간1'] + 2 and \
-                self.dict_gsjm[code]['체결강도'][DICT_SET[f'평균시간1']] != 0.:
+        if self.dict_gsjm[code]['체결강도'][DICT_SET[f'평균시간1']] != 0.:
             avg_sm = int(self.dict_gsjm[code]['거래대금'][1:DICT_SET['평균시간1'] + 1].mean())
             avg_ch = round(self.dict_gsjm[code]['체결강도'][1:DICT_SET['평균시간1'] + 1].mean(), 2)
             high_ch = round(self.dict_gsjm[code]['체결강도'][1:DICT_SET['평균시간1'] + 1].max(), 2)
