@@ -4,6 +4,7 @@ from PyQt5.QtGui import QFont, QColor
 
 OPENAPI_PATH = 'D:/OpenAPI'
 SYSTEM_PATH = 'D:/PythonProjects/PyStockTrader'
+ICON_PATH = f'{SYSTEM_PATH}/utility/icon'
 LOGIN_PATH = f'{SYSTEM_PATH}/stock/login_kiwoom'
 GRAPH_PATH = f'{SYSTEM_PATH}/backtester/graph'
 DB_SETTING = f'{SYSTEM_PATH}/database/setting.db'

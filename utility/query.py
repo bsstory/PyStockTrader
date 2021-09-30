@@ -32,7 +32,7 @@ class Query:
                     try:
                         self.cur1.execute(query[1])
                     except Exception as e:
-                        self.windowQ.put([ui_num['설정텍스트'], f'시스템 명령 오류 알림 - 입력값이 잘못되었습니다. {e}'])
+                        self.windowQ.put([ui_num['설정텍스트'], f'시스템 명령 오류 알림 - 쿼리 입력값이 잘못되었습니다. {e}'])
                     else:
                         self.con1.commit()
                 elif len(query) == 4:
@@ -45,7 +45,7 @@ class Query:
                     try:
                         self.cur2.execute(query[1])
                     except Exception as e:
-                        self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - 입력값이 잘못되었습니다. {e}'])
+                        self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - 쿼리 입력값이 잘못되었습니다. {e}'])
                     else:
                         self.con2.commit()
                 elif len(query) == 4:

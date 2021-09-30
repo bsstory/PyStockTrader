@@ -54,7 +54,7 @@ class ProxyStyle(QtWidgets.QProxyStyle):
 
 
 def SetUI(self):
-    def setPushbutton(name, box=None, click=None, cmd=None):
+    def setPushbutton(name, box=None, click=None, cmd=None, icon=None, tip=None):
         if box is not None:
             pushbutton = QtWidgets.QPushButton(name, box)
         else:
@@ -66,6 +66,10 @@ def SetUI(self):
                 pushbutton.clicked.connect(lambda: click(cmd))
             else:
                 pushbutton.clicked.connect(click)
+        if icon is not None:
+            pushbutton.setIcon(icon)
+        if tip is not None:
+            pushbutton.setToolTip(tip)
         return pushbutton
 
     def setTextEdit(tab):
@@ -147,9 +151,22 @@ def SetUI(self):
                 tableWidget.setItem(i, 0, tableitem)
         return tableWidget
 
+    icon_main = QtGui.QIcon(f'{ICON_PATH}/python.png')
+    icon_stock = QtGui.QIcon(f'{ICON_PATH}/stock.png')
+    icon_coin = QtGui.QIcon(f'{ICON_PATH}/coin.png')
+    icon_back = QtGui.QIcon(f'{ICON_PATH}/back.png')
+    icon_set = QtGui.QIcon(f'{ICON_PATH}/set.png')
+    icon_log = QtGui.QIcon(f'{ICON_PATH}/log.png')
+    icon_total = QtGui.QIcon(f'{ICON_PATH}/total.png')
+    icon_start = QtGui.QIcon(f'{ICON_PATH}/start.png')
+    icon_zoom = QtGui.QIcon(f'{ICON_PATH}/zoom.png')
+    icon_backdel = QtGui.QIcon(f'{ICON_PATH}/backdel.png')
+    icon_dbdel = QtGui.QIcon(f'{ICON_PATH}/dbdel.png')
+    icon_accdel = QtGui.QIcon(f'{ICON_PATH}/accdel.png')
+
     self.setFont(qfont)
     self.setWindowTitle('PyStockTrader')
-    self.setWindowIcon(QtGui.QIcon(f'{SYSTEM_PATH}/utility/python.png'))
+    self.setWindowIcon(icon_main)
 
     self.main_tabWidget = TabWidget(self)
     self.st_tab = QtWidgets.QWidget()
@@ -158,18 +175,28 @@ def SetUI(self):
     self.sj_tab = QtWidgets.QWidget()
     self.lg_tab = QtWidgets.QWidget()
 
-    self.main_tabWidget.addTab(self.st_tab, 'ST')
-    self.main_tabWidget.addTab(self.ct_tab, 'CT')
-    self.main_tabWidget.addTab(self.bt_tab, 'BT')
-    self.main_tabWidget.addTab(self.sj_tab, 'SJ')
-    self.main_tabWidget.addTab(self.lg_tab, 'LO')
+    self.main_tabWidget.addTab(self.st_tab, '')
+    self.main_tabWidget.addTab(self.ct_tab, '')
+    self.main_tabWidget.addTab(self.bt_tab, '')
+    self.main_tabWidget.addTab(self.sj_tab, '')
+    self.main_tabWidget.addTab(self.lg_tab, '')
+    self.main_tabWidget.setTabIcon(0, icon_stock)
+    self.main_tabWidget.setTabIcon(1, icon_coin)
+    self.main_tabWidget.setTabIcon(2, icon_back)
+    self.main_tabWidget.setTabIcon(3, icon_set)
+    self.main_tabWidget.setTabIcon(4, icon_log)
+    self.main_tabWidget.setTabToolTip(0, '  주식 트레이더')
+    self.main_tabWidget.setTabToolTip(1, '  코인 트레이더')
+    self.main_tabWidget.setTabToolTip(2, '  백테스터')
+    self.main_tabWidget.setTabToolTip(3, '  설정')
+    self.main_tabWidget.setTabToolTip(4, '  로그')
 
-    self.tt_pushButton = setPushbutton('T', click=self.ButtonClicked_1)
-    self.ss_pushButton = setPushbutton('S', click=self.ButtonClicked_2)
-    self.zo_pushButton = setPushbutton('Z', click=self.ButtonClicked_3)
-    self.bd_pushButton = setPushbutton('BD', click=self.ButtonClicked_4)
-    self.dd_pushButton = setPushbutton('DD', click=self.ButtonClicked_5)
-    self.sd_pushButton = setPushbutton('AD', click=self.ButtonClicked_6)
+    self.tt_pushButton = setPushbutton('', click=self.ButtonClicked_1, icon=icon_total, tip='  수익집계')
+    self.ss_pushButton = setPushbutton('', click=self.ButtonClicked_2, icon=icon_start, tip='  주식수동시작')
+    self.zo_pushButton = setPushbutton('', click=self.ButtonClicked_3, icon=icon_zoom, tip='  축소확대')
+    self.bd_pushButton = setPushbutton('', click=self.ButtonClicked_4, icon=icon_backdel, tip='  백데이터 삭제 및 초기화')
+    self.dd_pushButton = setPushbutton('', click=self.ButtonClicked_5, icon=icon_dbdel, tip='  거래목록 데이터 삭제 및 초기화')
+    self.sd_pushButton = setPushbutton('', click=self.ButtonClicked_6, icon=icon_accdel, tip='  모든 계정 설정 삭제 및 초기화')
 
     self.progressBar = QtWidgets.QProgressBar(self)
     self.progressBar.setAlignment(Qt.AlignCenter)
