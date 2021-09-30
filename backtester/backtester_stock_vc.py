@@ -354,7 +354,7 @@ class Total:
             conn = sqlite3.connect(DB_SETTING)
             cur = conn.cursor()
 
-            query = f"UPDATE stock SET 종목당투자금 = {self.batting}, 백테스팅기간 = {self.testperiod}, "\
+            query = f"UPDATE stock SET 종목당투자금 = {int(self.batting / 1000000)}, 백테스팅기간 = {self.testperiod}, "\
                     f"백테스팅시간 = {self.totaltime}, 시작시간 = {self.starttime}, 종료시간 = {self.endtime}, "\
                     f"체결강도차이 = {self.gap_ch}, 평균시간 = {self.avg_time}, 거래대금차이 = {self.gap_sm}, "\
                     f"체결강도하한 = {self.ch_low}, 누적거래대금하한 = {self.dm_low}, 등락율하한 = {self.per_low}, "\
