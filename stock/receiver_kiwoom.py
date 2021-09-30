@@ -224,8 +224,8 @@ class ReceiverKiwoom:
         curr_time = self.str_jcct
         curr_datetime = strp_time(timetype, curr_time)
         last_datetime = strp_time(timetype, self.df_mt.index[-1])
-        gap_seconds = int((curr_datetime - last_datetime).total_seconds())
-        while gap_seconds > 1:
+        gap_seconds = (curr_datetime - last_datetime).total_seconds()
+        while gap_seconds > 2:
             pre_time = strf_time(timetype, timedelta_sec(-gap_seconds, curr_datetime))
             self.df_mt.at[pre_time] = list_text
             gap_seconds -= 1
