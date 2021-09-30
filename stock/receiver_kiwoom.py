@@ -223,14 +223,11 @@ class ReceiverKiwoom:
         list_text = ';'.join(self.list_gsjm)
         curr_datetime = strp_time(timetype, self.str_jcct)
         last_datetime = strp_time(timetype, self.df_mt.index[-1])
-        gap_seconds = (curr_datetime - last_datetime).total_seconds()
-        pre_time2 = strf_time(timetype, timedelta_sec(-2, curr_datetime))
-        pre_time1 = strf_time(timetype, timedelta_sec(-1, curr_datetime))
-        if 1 <= gap_seconds < 2:
-            self.df_mt.at[pre_time1] = list_text
-        elif 2 <= gap_seconds < 3:
-            self.df_mt.at[pre_time2] = list_text
-            self.df_mt.at[pre_time1] = list_text
+        gap_seconds = int((curr_datetime - last_datetime).total_seconds())
+        while gap_seconds > 1:
+            pre_time = strf_time(timetype, timedelta_sec(-gap_seconds, curr_datetime))
+            self.df_mt.at[pre_time] = list_text
+            gap_seconds -= 1
         self.df_mt.at[self.str_jcct] = list_text
 
     def OnEventConnect(self, err_code):
