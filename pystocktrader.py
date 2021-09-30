@@ -186,6 +186,42 @@ class Window(QtWidgets.QMainWindow):
     def UpdateCpuper(self):
         self.cpu_per = psutil.cpu_percent(interval=1)
 
+    def CheckboxChanged_01(self, state):
+        if state == Qt.Checked:
+            con = sqlite3.connect(DB_SETTING)
+            df = pd.read_sql('SELECT * FROM kiwoom', con).set_index('index')
+            con.close()
+            self.sj_main_checkBox_01.setChecked(False)
+            if len(df) == 0 or df['아이디2'][0] == '':
+                QtWidgets.QMessageBox.critical(
+                    self, '오류 알림',
+                    '키움 두번째 계정이 설정되지 않아\n콜렉터를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
+                )
+
+    def CheckboxChanged_02(self, state):
+        if state == Qt.Checked:
+            con = sqlite3.connect(DB_SETTING)
+            df = pd.read_sql('SELECT * FROM kiwoom', con).set_index('index')
+            con.close()
+            self.sj_main_checkBox_02.setChecked(False)
+            if len(df) == 0 or df['아이디1'][0] == '':
+                QtWidgets.QMessageBox.critical(
+                    self, '오류 알림',
+                    '키움 첫번째 계정이 설정되지 않아\n트레이더를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
+                )
+
+    def CheckboxChanged_03(self, state):
+        if state == Qt.Checked:
+            con = sqlite3.connect(DB_SETTING)
+            df = pd.read_sql('SELECT * FROM upbit', con).set_index('index')
+            con.close()
+            self.sj_main_checkBox_04.setChecked(False)
+            if len(df) == 0 or df['Access_key'][0] == '':
+                QtWidgets.QMessageBox.critical(
+                    self, '오류 알림',
+                    '업비트 계정이 설정되지 않아\n트레이더를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
+                )
+
     def ButtonClicked_1(self):
         if self.main_tabWidget.currentWidget() == self.st_tab:
             if not self.s_calendarWidget.isVisible():

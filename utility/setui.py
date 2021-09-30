@@ -530,9 +530,12 @@ def SetUI(self):
     self.sj_textEdit = setTextEdit(self.sj_tab)
 
     self.sj_main_checkBox_01 = QtWidgets.QCheckBox('주식 콜렉터', self.sj_groupBox_01)
+    self.sj_main_checkBox_01.stateChanged.connect(self.CheckboxChanged_01)
     self.sj_main_checkBox_02 = QtWidgets.QCheckBox('주식 트레이더', self.sj_groupBox_01)
+    self.sj_main_checkBox_02.stateChanged.connect(self.CheckboxChanged_02)
     self.sj_main_checkBox_03 = QtWidgets.QCheckBox('코인 콜렉터', self.sj_groupBox_01)
     self.sj_main_checkBox_04 = QtWidgets.QCheckBox('코인 트레이더', self.sj_groupBox_01)
+    self.sj_main_checkBox_04.stateChanged.connect(self.CheckboxChanged_03)
     self.sj_main_checkBox_05 = QtWidgets.QCheckBox('백테스터  :', self.sj_groupBox_01)
     self.sj_main_labellll_01 = QtWidgets.QLabel('시작시간', self.sj_groupBox_01)
     self.sj_main_lineEdit_01 = setLineedit(self.sj_groupBox_01)
