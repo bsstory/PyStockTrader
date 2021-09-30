@@ -346,6 +346,7 @@ class Window(QtWidgets.QMainWindow):
                     0, 10, 1, 0.1, 25, 15, -1, -1, 3, 10, 1, 0.2, 6]
             df = pd.DataFrame([data], columns=columns, index=[0])
             queryQ.put([1, df, 'coinback_jjv', 'replace'])
+            self.bd_pushButton.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_5(self):
         buttonReply = QtWidgets.QMessageBox.warning(
@@ -361,6 +362,7 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([2, 'DELETE FROM c_tradelist'])
             queryQ.put([2, 'DELETE FROM c_chegeollist'])
             queryQ.put([2, 'DELETE FROM c_totaltradelist'])
+            self.dd_pushButton.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_6(self):
         buttonReply = QtWidgets.QMessageBox.warning(
@@ -371,6 +373,7 @@ class Window(QtWidgets.QMainWindow):
             queryQ.put([1, 'DELETE FROM kiwoom'])
             queryQ.put([1, 'DELETE FROM upbit'])
             queryQ.put([1, 'DELETE FROM telegram'])
+            self.sd_pushButton.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_7(self, cmd):
         if '집계' in cmd:
