@@ -221,14 +221,15 @@ class ReceiverKiwoom:
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'
         list_text = ';'.join(self.list_gsjm)
-        curr_datetime = strp_time(timetype, self.str_jcct)
+        curr_time = self.str_jcct
+        curr_datetime = strp_time(timetype, curr_time)
         last_datetime = strp_time(timetype, self.df_mt.index[-1])
         gap_seconds = int((curr_datetime - last_datetime).total_seconds())
         while gap_seconds > 1:
             pre_time = strf_time(timetype, timedelta_sec(-gap_seconds, curr_datetime))
             self.df_mt.at[pre_time] = list_text
             gap_seconds -= 1
-        self.df_mt.at[self.str_jcct] = list_text
+        self.df_mt.at[curr_time] = list_text
 
     def OnEventConnect(self, err_code):
         if err_code == 0:
