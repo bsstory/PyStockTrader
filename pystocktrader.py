@@ -91,6 +91,7 @@ class Window(QtWidgets.QMainWindow):
             self.UpbitTraderStart()
         self.int_time = int(strf_time('%H%M%S'))
 
+    # noinspection PyArgumentList
     def KiwoomCollectorStart(self):
         self.backtester_proc = None
         if DICT_SET['아이디2'] is not None:
@@ -129,20 +130,21 @@ class Window(QtWidgets.QMainWindow):
                 self, '오류 알림', '키움 첫번째 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
             )
 
-    # noinspection PyMethodMayBeStatic
+    # noinspection PyMethodMayBeStatic, PyArgumentList
     def WaitLogin(self):
         while find_window('Open API login') == 0:
             QTest.qWait(1000)
         while find_window('Open API login') != 0:
             QTest.qWait(1000)
 
-    # noinspection PyMethodMayBeStatic
+    # noinspection PyMethodMayBeStatic, PyArgumentList
     def WaitAutologin(self):
         while find_window('계좌비밀번호') == 0:
             QTest.qWait(1000)
         while find_window('계좌비밀번호') != 0:
             QTest.qWait(1000)
 
+    # noinspection PyArgumentList
     def BacktestStart(self):
         if self.backtester_proc is None or self.backtester_proc.poll() == 0:
             self.ButtonClicked_8()
@@ -231,6 +233,7 @@ class Window(QtWidgets.QMainWindow):
         else:
             QtWidgets.QMessageBox.warning(self, '오류 알림', '해당 버튼은 트레이더탭에서만 작동합니다.\n')
 
+    # noinspection PyArgumentList
     def ButtonClicked_2(self):
         buttonReply = QtWidgets.QMessageBox.question(
             self, '주식 수동 시작', '주식 콜렉터 또는 트레이더를 시작합니다.\n계속하시겠습니까?\n',
