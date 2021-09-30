@@ -226,9 +226,9 @@ class ReceiverKiwoom:
         last_datetime = strp_time(timetype, self.df_mt.index[-1])
         gap_seconds = (curr_datetime - last_datetime).total_seconds()
         while gap_seconds > 2:
+            gap_seconds -= 1
             pre_time = strf_time(timetype, timedelta_sec(-gap_seconds, curr_datetime))
             self.df_mt.at[pre_time] = list_text
-            gap_seconds -= 1
         self.df_mt.at[curr_time] = list_text
 
     def OnEventConnect(self, err_code):
