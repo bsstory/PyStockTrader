@@ -39,7 +39,7 @@ class Query:
                     try:
                         query[1].to_sql(query[2], self.con1, if_exists=query[3], chunksize=1000)
                     except Exception as e:
-                        self.windowQ.put([ui_num['설정텍스트'], f'시스템 명령 오류 알림 - {e}'])
+                        self.windowQ.put([ui_num['설정텍스트'], f'시스템 명령 오류 알림 - Query {e}'])
             elif query[0] == 2:
                 if len(query) == 2:
                     try:
@@ -52,7 +52,7 @@ class Query:
                     try:
                         query[1].to_sql(query[2], self.con2, if_exists=query[3], chunksize=1000)
                     except Exception as e:
-                        self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - {e}'])
+                        self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - Query {e}'])
             elif query[0] == 3:
                 try:
                     if len(query) == 2:
@@ -64,11 +64,11 @@ class Query:
                     elif len(query) == 4:
                         query[1].to_sql(query[2], self.con3, if_exists=query[3], chunksize=1000)
                 except Exception as e:
-                    self.windowQ.put([ui_num['S단순텍스트'], f'시스템 명령 오류 알림 - {e}'])
+                    self.windowQ.put([ui_num['S단순텍스트'], f'시스템 명령 오류 알림 - Query {e}'])
             elif query[0] == 4:
                 try:
                     for ticker in list(query[1].keys()):
                         query[1][ticker].to_sql(ticker, self.con4, if_exists='append', chunksize=1000)
                     self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 실행 알림 - 틱데이터 저장 완료'])
                 except Exception as e:
-                    self.windowQ.put([ui_num['C단순텍스트'], f'시스템 명령 오류 알림 - {e}'])
+                    self.windowQ.put([ui_num['C단순텍스트'], f'시스템 명령 오류 알림 - Query {e}'])
