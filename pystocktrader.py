@@ -90,15 +90,9 @@ class Window(QtWidgets.QMainWindow):
             self.UpbitCollectorStart()
         if DICT_SET['업비트트레이더']:
             self.UpbitTraderStart()
-        if self.showqsize:
-            text = f'PyStockTrader                                                                   '\
-                   f'windowQ[{windowQ.qsize()}] | soundQ[{soundQ.qsize()}] | '\
-                   f'queryQ[{queryQ.qsize()}] | teleQ[{teleQ.qsize()}] | receivQ[{receivQ.qsize()}] | '\
-                   f'stockQ[{stockQ.qsize()}] | coinQ[{coinQ.qsize()}] | sstgQ[{sstgQ.qsize()}] | '\
-                   f'cstgQ[{cstgQ.qsize()}] | tick1Q[{tick1Q.qsize()}] | tick2Q[{tick2Q.qsize()}]'
-            self.setWindowTitle(text)
-        elif self.windowTitle() != 'PyStockTrader':
-            self.setWindowTitle('PyStockTrader')
+        if self.int_time < 83000 <= int(strf_time('%H%M%S')):
+            self.ClearTextEdit()
+        self.ChangeWindowTitle()
         self.int_time = int(strf_time('%H%M%S'))
 
     # noinspection PyArgumentList
@@ -188,6 +182,23 @@ class Window(QtWidgets.QMainWindow):
                 self, '오류 알림',
                 '업비트 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
             )
+
+    def ClearTextEdit(self):
+        self.st_textEdit.clear()
+        self.ct_textEdit.clear()
+        self.sc_textEdit.clear()
+        self.cc_textEdit.clear()
+
+    def ChangeWindowTitle(self):
+        if self.showqsize:
+            text = f'PyStockTrader                                                                   '\
+                   f'windowQ[{windowQ.qsize()}] | soundQ[{soundQ.qsize()}] | '\
+                   f'queryQ[{queryQ.qsize()}] | teleQ[{teleQ.qsize()}] | receivQ[{receivQ.qsize()}] | '\
+                   f'stockQ[{stockQ.qsize()}] | coinQ[{coinQ.qsize()}] | sstgQ[{sstgQ.qsize()}] | '\
+                   f'cstgQ[{cstgQ.qsize()}] | tick1Q[{tick1Q.qsize()}] | tick2Q[{tick2Q.qsize()}]'
+            self.setWindowTitle(text)
+        elif self.windowTitle() != 'PyStockTrader':
+            self.setWindowTitle('PyStockTrader')
 
     def UpdateProgressBar(self):
         self.progressBar.setValue(int(self.cpu_per))
