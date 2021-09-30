@@ -54,18 +54,21 @@ class Query:
                     except Exception as e:
                         self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - {e}'])
             elif query[0] == 3:
-                if len(query) == 2:
-                    count = len(query[1])
-                    for i, code in enumerate(list(query[1].keys())):
-                        query[1][code].to_sql(code, self.con3, if_exists='append', chunksize=1000)
-                        text = f'시스템 명령 실행 알림 - 틱데이터 저장 중 ... [{i+1}/{count}]'
-                        self.windowQ.put([ui_num['S단순텍스트'], text])
-                elif len(query) == 4:
-                    try:
+                try:
+                    if len(query) == 2:
+                        count = len(query[1])
+                        for i, code in enumerate(list(query[1].keys())):
+                            query[1][code].to_sql(code, self.con3, if_exists='append', chunksize=1000)
+                            text = f'시스템 명령 실행 알림 - 틱데이터 저장 중 ... [{i+1}/{count}]'
+                            self.windowQ.put([ui_num['S단순텍스트'], text])
+                    elif len(query) == 4:
                         query[1].to_sql(query[2], self.con3, if_exists=query[3], chunksize=1000)
-                    except Exception as e:
-                        self.windowQ.put([ui_num['S단순텍스트'], f'시스템 명령 오류 알림 - {e}'])
+                except Exception as e:
+                    self.windowQ.put([ui_num['S단순텍스트'], f'시스템 명령 오류 알림 - {e}'])
             elif query[0] == 4:
-                for ticker in list(query[1].keys()):
-                    query[1][ticker].to_sql(ticker, self.con4, if_exists='append', chunksize=1000)
-                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 실행 알림 - 틱데이터 저장 완료'])
+                try:
+                    for ticker in list(query[1].keys()):
+                        query[1][ticker].to_sql(ticker, self.con4, if_exists='append', chunksize=1000)
+                    self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 실행 알림 - 틱데이터 저장 완료'])
+                except Exception as e:
+                    self.windowQ.put([ui_num['C단순텍스트'], f'시스템 명령 오류 알림 - {e}'])
