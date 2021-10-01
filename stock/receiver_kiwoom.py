@@ -183,7 +183,6 @@ class ReceiverKiwoom:
     def OperationRealreg(self):
         self.receivQ.put([sn_oper, ' ', '215;20;214', 0])
         self.list_code = self.SendCondition(sn_oper, self.dict_cond[1], 1, 0)
-        self.tick1Q.put(['데이터프레임생성', self.list_code])
         k = 0
         for i in range(0, len(self.list_code), 100):
             self.receivQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
