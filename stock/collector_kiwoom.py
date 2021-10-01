@@ -49,6 +49,7 @@ class CollectorKiwoom:
             hlmp = round((c / hlm - 1) * 100, 2)
         except ZeroDivisionError:
             return
+
         d = self.str_tday + d
         if code not in self.dict_df.keys():
             self.dict_df[code] = pd.DataFrame(
