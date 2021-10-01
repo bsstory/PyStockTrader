@@ -104,6 +104,12 @@ class ReceiverKiwoom:
             cond_index, cond_name = condition.split('^')
             self.dict_cond[int(cond_index)] = cond_name
 
+        print(self.dict_cond)
+        print('위 조건검색의 번호와 이름은 두번째 계정의 조건검색식들입니다.')
+        print('조건검색식 번호를 확인하여 OperationRealreg 함수에 검색식번호를 감시검색식 번호로')
+        print('예: self.list_code = self.SendCondition(sn_oper, self.dict_cond[1], 1, 0) 여기서 1 숫자 두개만 수정')
+        print('ConditionSearchStart 함수에 검색식번호를 매매검색식 번호로 설정하십시오.')
+        print('예: codes = self.SendCondition(sn_cond, self.dict_cond[0], 0, 1) 여기서 0 숫자 두개만 수정')
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - OpenAPI 로그인 완료'])
 
     def EventLoop(self):
