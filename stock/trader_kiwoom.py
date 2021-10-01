@@ -97,7 +97,7 @@ class TraderKiwoom:
         if len(self.dict_df['체결목록']) > 0:
             self.windowQ.put([ui_num['S체결목록'], self.dict_df['체결목록']])
         if len(self.dict_df['거래목록']) > 0:
-            self.windowQ.put([ui_num['C거래목록'], self.dict_df['거래목록']])
+            self.windowQ.put([ui_num['S거래목록'], self.dict_df['거래목록']])
         if len(self.dict_df['잔고목록']) > 0:
             for code in self.dict_df['잔고목록'].index:
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
@@ -182,6 +182,11 @@ class TraderKiwoom:
             self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - {name} {order[5]}주 {order[0]} 주문 실패'])
 
     def BuySell(self, gubun, code, name, c, oc):
+        if gubun == '매수' and code in self.dict_df['잔고목록'].index:
+            return
+        elif gubun == '매도' and code not in self.dict_df['잔고목록'].index:
+            return
+
         if gubun == '매수':
             if self.dict_intg['추정예수금'] < oc * c:
                 cond = (self.dict_df['체결목록']['주문구분'] == '시드부족') & (self.dict_df['체결목록']['종목명'] == name)
@@ -604,6 +609,7 @@ class TraderKiwoom:
                 self.dict_df['잔고목록'].at[code] = name, cp, cp, sp, sg, bg, pg, oc
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
                 self.receivQ.put(f'잔고편입 {code}')
+                self.sstgQ.put(['매수완료', code])
             else:
                 jc = self.dict_df['잔고목록']['보유수량'][code]
                 bg = self.dict_df['잔고목록']['매입금액'][code]
@@ -612,6 +618,7 @@ class TraderKiwoom:
                 bp = int(bg / jc)
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
+            self.list_buy.remove(code)
 
         elif og == '매도':
             jc = self.dict_df['잔고목록']['보유수량'][code]
@@ -619,12 +626,14 @@ class TraderKiwoom:
                 self.dict_df['잔고목록'].drop(index=code, inplace=True)
                 self.stockQ.put([sn_jscg, code])
                 self.receivQ.put(f'잔고청산 {code}')
+                self.sstgQ.put(['매도완료', code])
             else:
                 bp = self.dict_df['잔고목록']['매입가'][code]
                 jc = jc - oc
                 bg = jc * bp
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
+            self.list_sell.remove(code)
 
         columns = ['매입가', '현재가', '평가손익', '매입금액']
         self.dict_df['잔고목록'][columns] = self.dict_df['잔고목록'][columns].astype(int)
@@ -632,13 +641,6 @@ class TraderKiwoom:
         self.queryQ.put([2, self.dict_df['잔고목록'], 's_jangolist', 'replace'])
         if DICT_SET['알림소리1']:
             self.soundQ.put(f'{name} {oc}주를 {og}하였습니다')
-
-        if og == '매수':
-            self.sstgQ.put(['매수완료', code])
-            self.list_buy.remove(code)
-        elif og == '매도':
-            self.sstgQ.put(['매도완료', code])
-            self.list_sell.remove(code)
 
     def UpdateTradelist(self, name, oc, sp, sg, bg, pg, on):
         d = strf_time('%Y%m%d%H%M%S')
