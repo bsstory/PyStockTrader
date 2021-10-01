@@ -22,6 +22,7 @@ class CollectorKiwoom:
         self.tick1Q = qlist[9]
 
         self.dict_df = {}
+        self.dict_dm = {}
         self.time_info = now()
         self.str_tday = strf_time('%Y%m%d')
         self.Start()
@@ -45,15 +46,23 @@ class CollectorKiwoom:
     def UpdateTickData(self, code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
                        s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, d, receiv_time):
         try:
-            hlm = int(round((h + low) / 2))
+            hlm = round((h + low) / 2)
             hlmp = round((c / hlm - 1) * 100, 2)
         except ZeroDivisionError:
             return
 
+        try:
+            predm = self.dict_dm[code]
+        except KeyError:
+            predm = dm
+
+        self.dict_dm[code] = dm
+        sm = dm - predm
         d = self.str_tday + d
+
         if code not in self.dict_df.keys():
             self.dict_df[code] = pd.DataFrame(
-                [[c, o, h, per, hlmp, dm, dm, ch, vp, bids, asks, vitime, vid5,
+                [[c, o, h, per, hlmp, sm, dm, ch, vp, bids, asks, vitime, vid5,
                   s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr]],
                 columns=['현재가', '시가', '고가', '등락율', '고저평균대비등락율', '거래대금', '누적거래대금', '체결강도',
                          '전일거래량대비', '매수수량', '매도수량', 'VI발동시간', '상승VID5가격',
@@ -69,15 +78,12 @@ class CollectorKiwoom:
         if now() > self.time_info:
             gap = (now() - receiv_time).total_seconds()
             self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
+            self.queryQ.put([3, self.dict_df])
+            self.dict_df = {}
             self.time_info = timedelta_sec(60)
 
     def SaveTickData(self, codes):
-        for code in list(self.dict_df.keys()):
-            columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
-                       '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
-            self.dict_df[code][columns] = self.dict_df[code][columns].astype(int)
         """
-        당일 거래목록만 저장하기
         for code in list(self.dict_df.keys()):
             if code in codes:
                 columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
@@ -85,5 +91,6 @@ class CollectorKiwoom:
                 self.dict_df[code][columns] = self.dict_df[code][columns].astype(int)
             else:
                 del self.dict_df[code]
+        self.queryQ.put([3, self.dict_df])
         """
         self.queryQ.put([3, self.dict_df])

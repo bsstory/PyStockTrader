@@ -216,6 +216,7 @@ class ReceiverKiwoom:
 
     def SaveDatabase(self):
         self.queryQ.put([3, self.df_mt, 'moneytop', 'append'])
+        """
         con = sqlite3.connect(DB_TRADELIST)
         df = pd.read_sql(f"SELECT * FROM s_tradelist WHERE 체결시간 LIKE '{self.str_tday}%'", con)
         con.close()
@@ -226,6 +227,8 @@ class ReceiverKiwoom:
             if code not in codes:
                 codes.append(code)
         self.tick1Q.put(['틱데이터저장', codes])
+        """
+        self.tick1Q.put(['틱데이터저장', ''])
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'
