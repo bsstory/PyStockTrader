@@ -103,6 +103,8 @@ class StrategyCoin:
             self.dict_time['연산시간'] = timedelta_sec(60)
 
     def SellStrategy(self, ticker, sp, jc, ch, c):
+        if ticker not in self.dict_gsjm.keys():
+            return
         if ticker in self.list_sell:
             return
 

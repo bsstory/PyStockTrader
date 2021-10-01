@@ -165,6 +165,9 @@ class ReceiverKiwoom:
         code = work.split(' ')[1]
         if '잔고편입' in work and code not in self.list_jang:
             self.list_jang.append(code)
+            if code not in self.dict_gsjm.keys():
+                self.dict_gsjm[code] = '090000'
+                self.sstgQ.put(['조건진입', code])
         elif '잔고청산' in work and code in self.list_jang:
             self.list_jang.remove(code)
             if code not in self.list_gsjm and code in self.dict_gsjm.keys():

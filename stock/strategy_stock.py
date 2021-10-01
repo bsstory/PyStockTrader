@@ -111,6 +111,8 @@ class StrategyStock:
             self.dict_time['연산시간'] = timedelta_sec(60)
 
     def SellStrategy(self, code, name, per, sp, jc, ch, c):
+        if code not in self.dict_gsjm.keys():
+            return
         if code in self.list_sell:
             return
 
