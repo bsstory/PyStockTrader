@@ -101,10 +101,8 @@ class Window(QtWidgets.QMainWindow):
     def KiwoomCollectorStart(self):
         self.backtester_proc = None
         if DICT_SET['아이디2'] is not None:
-            subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
-            self.WaitLogin()
-            QTest.qWait(10000)
             if 'AMD64 Family 23 Model 113' in platform.processor():
+                print('경고!! 특정 AMD CPU는 자동 버전업그레이드가 되지 않으니 수동으로 관리하셔야합니다.')
                 auto_info = f'{LOGIN_PATH}/Autologin2.dat'
                 if os.path.isfile(auto_info):
                     subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
@@ -119,6 +117,9 @@ class Window(QtWidgets.QMainWindow):
                     )
                     return
             else:
+                subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
+                self.WaitLogin()
+                QTest.qWait(10000)
                 subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
                 self.WaitLogin()
                 self.WaitAutologin()
