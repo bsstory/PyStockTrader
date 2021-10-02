@@ -94,8 +94,8 @@ class StrategyCoin:
 
         # 전략 비공개
 
-        oc = int(self.int_tujagm / c)
-        if oc > 0:
+        oc = float(self.int_tujagm / c)
+        if oc > 0.00000001:
             self.list_buy.append(ticker)
             self.coinQ.put(['매수', ticker, c, oc])
 
