@@ -230,6 +230,9 @@ class ReceiverKiwoom:
     def SaveDatabase(self):
         self.query2Q.put([1, self.df_mt, 'moneytop', 'append'])
         self.tick1Q.put('틱데이터저장')
+        self.tick2Q.put('틱데이터저장')
+        self.tick3Q.put('틱데이터저장')
+        self.tick4Q.put('틱데이터저장')
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'
