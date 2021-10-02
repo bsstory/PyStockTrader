@@ -17,16 +17,21 @@ class ReceiverKiwoom:
 
     def __init__(self, qlist):
         """
-        number      0        1       2      3       4       5       6      7      8      9       10
-        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+                    0        1       2        3       4       5       6       7      8      9
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
+                   10       11      12     13      14
         """
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
-        self.queryQ = qlist[2]
-        self.teleQ = qlist[3]
-        self.receivQ = qlist[4]
-        self.sstgQ = qlist[7]
-        self.tick1Q = qlist[9]
+        self.query2Q = qlist[3]
+        self.teleQ = qlist[4]
+        self.receivQ = qlist[5]
+        self.sstgQ = qlist[8]
+        self.tick1Q = qlist[10]
+        self.tick2Q = qlist[11]
+        self.tick3Q = qlist[12]
+        self.tick4Q = qlist[13]
 
         self.dict_bool = {
             '실시간조건검색시작': False,
@@ -48,8 +53,12 @@ class ReceiverKiwoom:
         self.list_gsjm = []
         self.list_trcd = []
         self.list_jang = []
-        self.list_code = None
         self.list_kosd = None
+        self.list_code = None
+        self.list_code1 = None
+        self.list_code2 = None
+        self.list_code3 = None
+        self.list_code4 = None
 
         self.df_tr = None
         self.dict_item = None
@@ -96,7 +105,7 @@ class ReceiverKiwoom:
             df.at[code] = name
             self.name_code[name] = code
 
-        self.queryQ.put([3, df, 'codename', 'replace'])
+        self.query2Q.put([1, df, 'codename', 'replace'])
 
         data = self.ocx.dynamicCall('GetConditionNameList()')
         conditions = data.split(';')[:-1]
@@ -183,6 +192,10 @@ class ReceiverKiwoom:
     def OperationRealreg(self):
         self.receivQ.put([sn_oper, ' ', '215;20;214', 0])
         self.list_code = self.SendCondition(sn_oper, self.dict_cond[1], 1, 0)
+        self.list_code1 = [code for i, code in enumerate(self.list_code) if i % 4 == 0]
+        self.list_code2 = [code for i, code in enumerate(self.list_code) if i % 4 == 1]
+        self.list_code3 = [code for i, code in enumerate(self.list_code) if i % 4 == 2]
+        self.list_code4 = [code for i, code in enumerate(self.list_code) if i % 4 == 3]
         k = 0
         for i in range(0, len(self.list_code), 100):
             self.receivQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
@@ -215,7 +228,7 @@ class ReceiverKiwoom:
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
 
     def SaveDatabase(self):
-        self.queryQ.put([3, self.df_mt, 'moneytop', 'append'])
+        self.query2Q.put([1, self.df_mt, 'moneytop', 'append'])
         self.tick1Q.put('틱데이터저장')
 
     def UpdateMoneyTop(self):
@@ -406,8 +419,16 @@ class ReceiverKiwoom:
             s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = self.dict_hoga[code]
         except KeyError:
             s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = 0, 0, 0, 0, 0, 0, 0, 0
-        self.tick1Q.put([code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
-                         s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime])
+        data = [code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
+                s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime]
+        if code in self.list_code1:
+            self.tick1Q.put(data)
+        elif code in self.list_code2:
+            self.tick2Q.put(data)
+        elif code in self.list_code3:
+            self.tick3Q.put(data)
+        elif code in self.list_code4:
+            self.tick4Q.put(data)
 
     def OnReceiveTrData(self, screen, rqname, trcode, record, nnext):
         if screen == '' and record == '':

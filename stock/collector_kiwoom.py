@@ -10,16 +10,25 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
 class CollectorKiwoom:
-    def __init__(self, qlist):
+    def __init__(self, gubun, qlist):
         """
-        number      0        1       2      3       4       5       6      7      8      9       10
-        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+                    0        1       2        3       4       5       6       7      8      9
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
+                   10       11      12     13      14
         """
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
-        self.queryQ = qlist[2]
-        self.teleQ = qlist[3]
-        self.tick1Q = qlist[9]
+        self.query2Q = qlist[3]
+        self.teleQ = qlist[4]
+        if gubun == 1:
+            self.tickQ = qlist[10]
+        elif gubun == 2:
+            self.tickQ = qlist[11]
+        elif gubun == 3:
+            self.tickQ = qlist[12]
+        elif gubun == 4:
+            self.tickQ = qlist[13]
 
         self.dict_df = {}
         self.dict_dm = {}
@@ -29,13 +38,13 @@ class CollectorKiwoom:
 
     def Start(self):
         while True:
-            tick = self.tick1Q.get()
+            tick = self.tickQ.get()
             if type(tick) == list:
                 self.UpdateTickData(tick[0], tick[1], tick[2], tick[3], tick[4], tick[5], tick[6], tick[7],
                                     tick[8], tick[9], tick[10], tick[11], tick[12], tick[13], tick[14],
                                     tick[15], tick[16], tick[17], tick[18], tick[19], tick[20], tick[21], tick[22])
             elif tick == '틱데이터저장':
-                self.queryQ.put([3, self.dict_df])
+                self.query2Q.put([1, self.dict_df])
                 break
 
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터를 종료합니다.'])
@@ -77,6 +86,6 @@ class CollectorKiwoom:
         if now() > self.time_info:
             gap = (now() - receiv_time).total_seconds()
             self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
-            self.queryQ.put([3, self.dict_df])
+            self.query2Q.put([1, self.dict_df])
             self.dict_df = {}
             self.time_info = timedelta_sec(60)

@@ -16,6 +16,7 @@ from stock.trader_kiwoom import TraderKiwoom
 from utility.setui import *
 from utility.sound import Sound
 from utility.query import Query
+from utility.query_tick import QueryTick
 from utility.telegram_msg import TelegramMsg
 from utility.static import now, strf_time, strp_time, changeFormat, thread_decorator
 
@@ -74,7 +75,10 @@ class Window(QtWidgets.QMainWindow):
         self.trader_coin_thread = TraderUpbit(qlist)
 
         self.receiver_stock_proc = Process(target=ReceiverKiwoom, args=(qlist,), daemon=True)
-        self.collector_stock_proc = Process(target=CollectorKiwoom, args=(qlist,), daemon=True)
+        self.collector_stock_proc1 = Process(target=CollectorKiwoom, args=(1, qlist), daemon=True)
+        self.collector_stock_proc2 = Process(target=CollectorKiwoom, args=(2, qlist), daemon=True)
+        self.collector_stock_proc3 = Process(target=CollectorKiwoom, args=(3, qlist), daemon=True)
+        self.collector_stock_proc4 = Process(target=CollectorKiwoom, args=(4, qlist), daemon=True)
         self.strategy_stock_proc = Process(target=StrategyStock, args=(qlist,), daemon=True)
         self.trader_stock_proc = Process(target=TraderKiwoom, args=(qlist,), daemon=True)
 
@@ -101,8 +105,14 @@ class Window(QtWidgets.QMainWindow):
         if DICT_SET['아이디2'] is not None:
             os.system(f'python {LOGIN_PATH}/versionupdater.py')
             os.system(f'python {LOGIN_PATH}/autologin2.py')
-            if not self.collector_stock_proc.is_alive():
-                self.collector_stock_proc.start()
+            if not self.collector_stock_proc1.is_alive():
+                self.collector_stock_proc1.start()
+            if not self.collector_stock_proc2.is_alive():
+                self.collector_stock_proc2.start()
+            if not self.collector_stock_proc3.is_alive():
+                self.collector_stock_proc3.start()
+            if not self.collector_stock_proc4.is_alive():
+                self.collector_stock_proc4.start()
             if not self.receiver_stock_proc.is_alive():
                 self.receiver_stock_proc.start()
             text = '주식 리시버 및 콜렉터를 시작하였습니다.'
@@ -172,11 +182,13 @@ class Window(QtWidgets.QMainWindow):
 
     def ChangeWindowTitle(self):
         if self.showqsize:
+            queryQ_size = query1Q.qsize() + query2Q.qsize()
+            stocktickQ_size = tick1Q.qsize() + tick2Q.qsize() + tick3Q.qsize() + tick4Q.qsize()
             text = f'PyStockTrader                                                                   '\
                    f'windowQ[{windowQ.qsize()}] | soundQ[{soundQ.qsize()}] | '\
-                   f'queryQ[{queryQ.qsize()}] | teleQ[{teleQ.qsize()}] | receivQ[{receivQ.qsize()}] | '\
+                   f'queryQ[{queryQ_size}] | teleQ[{teleQ.qsize()}] | receivQ[{receivQ.qsize()}] | '\
                    f'stockQ[{stockQ.qsize()}] | coinQ[{coinQ.qsize()}] | sstgQ[{sstgQ.qsize()}] | '\
-                   f'cstgQ[{cstgQ.qsize()}] | tick1Q[{tick1Q.qsize()}] | tick2Q[{tick2Q.qsize()}]'
+                   f'cstgQ[{cstgQ.qsize()}] | stocktickQ[{stocktickQ_size}] | cointickQ[{tick5Q.qsize()}]'
             self.setWindowTitle(text)
         elif self.windowTitle() != 'PyStockTrader':
             self.setWindowTitle('PyStockTrader')
@@ -320,13 +332,13 @@ class Window(QtWidgets.QMainWindow):
                     30, 60, 90, 120, 150, 180, 30, 3, 0, 500, 50, 10, 50, 100, 10, 10,
                     0, 100000, 10000, 1000, 0, 10, 1, 0.1, 25, 15, -1, -1, 3, 10, 1, 0.2, 6]
             df = pd.DataFrame([data], columns=columns, index=[0])
-            queryQ.put([1, df, 'stockback_jcv', 'replace'])
+            query1Q.put([1, df, 'stockback_jcv', 'replace'])
             data = [10, 14, 1008000, 90000, 100000, 3, 4, 5, 6, 7, 8, 9, 0.1, 0.1,
                     30, 60, 90, 120, 150, 180, 30, 3, 0, 100000000, 10000000, 10000000,
                     50, 100, 10, 10, 0, 1000000000, 100000000, 100000000,
                     0, 10, 1, 0.1, 25, 15, -1, -1, 3, 10, 1, 0.2, 6]
             df = pd.DataFrame([data], columns=columns, index=[0])
-            queryQ.put([1, df, 'coinback_jjv', 'replace'])
+            query1Q.put([1, df, 'coinback_jjv', 'replace'])
             self.bd_pushButton.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_5(self):
@@ -335,14 +347,14 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
         if buttonReply == QtWidgets.QMessageBox.Yes:
-            queryQ.put([2, 'DELETE FROM s_jangolist'])
-            queryQ.put([2, 'DELETE FROM s_tradelist'])
-            queryQ.put([2, 'DELETE FROM s_chegeollist'])
-            queryQ.put([2, 'DELETE FROM s_totaltradelist'])
-            queryQ.put([2, 'DELETE FROM c_jangolist'])
-            queryQ.put([2, 'DELETE FROM c_tradelist'])
-            queryQ.put([2, 'DELETE FROM c_chegeollist'])
-            queryQ.put([2, 'DELETE FROM c_totaltradelist'])
+            query1Q.put([2, 'DELETE FROM s_jangolist'])
+            query1Q.put([2, 'DELETE FROM s_tradelist'])
+            query1Q.put([2, 'DELETE FROM s_chegeollist'])
+            query1Q.put([2, 'DELETE FROM s_totaltradelist'])
+            query1Q.put([2, 'DELETE FROM c_jangolist'])
+            query1Q.put([2, 'DELETE FROM c_tradelist'])
+            query1Q.put([2, 'DELETE FROM c_chegeollist'])
+            query1Q.put([2, 'DELETE FROM c_totaltradelist'])
             self.dd_pushButton.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_6(self):
@@ -351,9 +363,9 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
         if buttonReply == QtWidgets.QMessageBox.Yes:
-            queryQ.put([1, 'DELETE FROM kiwoom'])
-            queryQ.put([1, 'DELETE FROM upbit'])
-            queryQ.put([1, 'DELETE FROM telegram'])
+            query1Q.put([1, 'DELETE FROM kiwoom'])
+            query1Q.put([1, 'DELETE FROM upbit'])
+            query1Q.put([1, 'DELETE FROM telegram'])
             self.sd_pushButton.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_7(self, cmd):
@@ -711,7 +723,7 @@ class Window(QtWidgets.QMainWindow):
         columns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
                    26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]
         df = pd.DataFrame([data], columns=columns, index=[0])
-        queryQ.put([1, df, 'stockback_jcv', 'replace'])
+        query1Q.put([1, df, 'stockback_jcv', 'replace'])
 
     def ButtonClicked_11(self):
         con = sqlite3.connect(DB_SETTING)
@@ -1073,7 +1085,7 @@ class Window(QtWidgets.QMainWindow):
         columns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
                    26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]
         df = pd.DataFrame([data], columns=columns, index=[0])
-        queryQ.put([1, df, 'coinback_jjv', 'replace'])
+        query1Q.put([1, df, 'coinback_jjv', 'replace'])
 
     def ButtonClicked_16(self):
         con = sqlite3.connect(DB_SETTING)
@@ -1253,7 +1265,7 @@ class Window(QtWidgets.QMainWindow):
         if t == '':
             t = 0
         df = pd.DataFrame([[kc, kt, cc, ct, bt, int(t)]], columns=columns_sm, index=[0])
-        queryQ.put([1, df, 'main', 'replace'])
+        query1Q.put([1, df, 'main', 'replace'])
         self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 저장하기 완료'])
 
         # noinspection PyGlobalUndefined
@@ -1278,7 +1290,7 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
         else:
             df = pd.DataFrame([[id1, ps1, cp1, ap1, id2, ps2, cp2, ap2]], columns=columns_sk, index=[0])
-            queryQ.put([1, df, 'kiwoom', 'replace'])
+            query1Q.put([1, df, 'kiwoom', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '키움증권 계정 설정값 저장하기 완료'])
 
             # noinspection PyGlobalUndefined
@@ -1299,7 +1311,7 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
         else:
             df = pd.DataFrame([[access_key, secret_key]], columns=columns_su, index=[0])
-            queryQ.put([1, df, 'upbit', 'replace'])
+            query1Q.put([1, df, 'upbit', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '업비트 계정 설정값 저장하기 완료'])
 
             # noinspection PyGlobalUndefined
@@ -1314,7 +1326,7 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
         else:
             df = pd.DataFrame([[str_bot, int_id]], columns=columns_st, index=[0])
-            queryQ.put([1, df, 'telegram', 'replace'])
+            query1Q.put([1, df, 'telegram', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 저장하기 완료'])
 
             # noinspection PyGlobalUndefined
@@ -1345,7 +1357,7 @@ class Window(QtWidgets.QMainWindow):
                     f"체결강도차이 = {gapch}, 평균시간 = {avgtime}, 거래대금차이 = {gapsm}, 체결강도하한 = {chlow}, " \
                     f"누적거래대금하한 = {dmlow}, 등락율하한 = {plow}, 등락율상한 = {phigh}, 청산수익률 = {csper}, " \
                     f"최대매수종목수 = {buyc}"
-            queryQ.put([1, query])
+            query1Q.put([1, query])
             self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 저장하기 완료'])
 
             # noinspection PyGlobalUndefined
@@ -1384,7 +1396,7 @@ class Window(QtWidgets.QMainWindow):
             query = f"UPDATE coin SET 모의투자 = {me}, 알림소리 = {sd}, 체결강도차이 = {gapch}, 평균시간 = {avgtime}," \
                     f"거래대금차이 = {gapsm}, 체결강도하한 = {chlow}, 누적거래대금하한 = {dmlow}, 등락율하한 = {plow}," \
                     f"등락율상한 = {phigh}, 청산수익률 = {csper}, 최대매수종목수 = {buyc}"
-            queryQ.put([1, query])
+            query1Q.put([1, query])
             self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 저장하기 완료'])
 
             # noinspection PyGlobalUndefined
@@ -1624,9 +1636,10 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
         if buttonReply == QtWidgets.QMessageBox.Yes:
-            sound_process.kill()
-            query_process.kill()
-            telegram_process.kill()
+            sound_proc.kill()
+            query_proc1.kill()
+            query_proc2.kill()
+            tele_proc.kill()
             if self.qtimer1.isActive():
                 self.qtimer1.stop()
             if self.qtimer2.isActive():
@@ -1643,8 +1656,14 @@ class Window(QtWidgets.QMainWindow):
                 self.strategy_stock_proc.kill()
             if self.collector_coin_proc.is_alive():
                 self.collector_coin_proc.kill()
-            if self.collector_stock_proc.is_alive():
-                self.collector_stock_proc.kill()
+            if self.collector_stock_proc1.is_alive():
+                self.collector_stock_proc1.kill()
+            if self.collector_stock_proc2.is_alive():
+                self.collector_stock_proc2.kill()
+            if self.collector_stock_proc3.is_alive():
+                self.collector_stock_proc3.kill()
+            if self.collector_stock_proc4.is_alive():
+                self.collector_stock_proc4.kill()
             if self.receiver_stock_proc.is_alive():
                 self.receiver_stock_proc.kill()
             if self.receiver_coin_thread1.isRunning():
@@ -1685,16 +1704,20 @@ class Writer(QtCore.QThread):
 
 
 if __name__ == '__main__':
-    windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q = \
-        Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue()
-    qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+    windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q, tick3Q,\
+        tick4Q, tick5Q = Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), Queue(), \
+        Queue(), Queue(), Queue(), Queue(), Queue()
+    qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+             tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
 
-    sound_process = Process(target=Sound, args=(qlist,), daemon=True)
-    query_process = Process(target=Query, args=(qlist,), daemon=True)
-    telegram_process = Process(target=TelegramMsg, args=(qlist,), daemon=True)
-    sound_process.start()
-    query_process.start()
-    telegram_process.start()
+    sound_proc = Process(target=Sound, args=(qlist,), daemon=True)
+    query_proc1 = Process(target=Query, args=(qlist,), daemon=True)
+    query_proc2 = Process(target=QueryTick, args=(qlist,), daemon=True)
+    tele_proc = Process(target=TelegramMsg, args=(qlist,), daemon=True)
+    sound_proc.start()
+    query_proc1.start()
+    query_proc2.start()
+    tele_proc.start()
 
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle(ProxyStyle())
