@@ -38,6 +38,7 @@ class TraderUpbit(QThread):
 
         self.str_today = strf_time('%Y%m%d')
 
+        self.bool_opdl = False
         self.bool_save = False
         self.dict_jcdt = {}                             # 종목별 체결시간 저장용
         self.dict_intg = {
@@ -100,6 +101,8 @@ class TraderUpbit(QThread):
             self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않았습니다.'])
         self.cstgQ.put(self.dict_intg['종목당투자금'])
 
+        if self.dict_intg['종목당투자금'] > 5000:
+            self.bool_opdl = True
         if len(self.df_td) > 0:
             self.UpdateTotaltradelist(first=True)
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 예수금 조회 완료'])
@@ -170,12 +173,14 @@ class TraderUpbit(QThread):
                 self.dict_time['거래정보'] = timedelta_sec(1)
 
             """
-            오전 9시에 일별 일현손익 저장, 날짜 변경, 체결목록 및 거래목록 초기화가 진행된다.
+            오전 9시에 일별 일현손익 저장, 날짜 변경, 종목당투자금 재계산, 체결목록 및 거래목록 초기화가 진행된다.
             저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
             """
             if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
                 self.query1Q.put([2, self.df_tt, 'c_totaltradelist', 'append'])
                 self.str_today = strf_time('%Y%m%d')
+                self.dict_intg['종목당투자금'] = int(self.df_tj['추정예탁자산'][0] * 0.99 / DICT_SET['최대매수종목수2'])
+                self.bool_opdl = True if self.dict_intg['종목당투자금'] > 5000 else False
                 self.df_cj = pd.DataFrame(columns=columns_cj)
                 self.df_td = pd.DataFrame(columns=columns_td)
                 self.bool_save = True
@@ -194,6 +199,10 @@ class TraderUpbit(QThread):
     """
     def Buy(self, ticker, c, oc):
         if self.buy_uuid is not None:
+            self.cstgQ.put(['매수완료', ticker])
+            return
+        if not self.bool_opdl:
+            self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
             self.cstgQ.put(['매수완료', ticker])
             return
 
@@ -242,7 +251,7 @@ class TraderUpbit(QThread):
         prec = self.df_jg['현재가'][ticker]
         if prec != c:
             bg = self.df_jg['매입금액'][ticker]
-            jc = int(self.df_jg['보유수량'][ticker])
+            jc = self.df_jg['보유수량'][ticker]
             pg, sg, sp = self.GetPgSgSp(bg, jc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.df_jg.at[ticker, columns] = c, sp, sg, pg
