@@ -1321,18 +1321,18 @@ class Window(QtWidgets.QMainWindow):
 
     def ButtonClicked_27(self):
         str_bot = self.sj_tele_lineEdit_01.text()
-        int_id = int(self.sj_tele_lineEdit_02.text())
+        int_id = self.sj_tele_lineEdit_02.text()
         if str_bot == '' or int_id == '':
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
         else:
-            df = pd.DataFrame([[str_bot, int_id]], columns=columns_st, index=[0])
+            df = pd.DataFrame([[str_bot, int(int_id)]], columns=columns_st, index=[0])
             query1Q.put([1, df, 'telegram', 'replace'])
             self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 저장하기 완료'])
 
             # noinspection PyGlobalUndefined
             global DICT_SET
             DICT_SET['텔레그램봇토큰'] = str_bot
-            DICT_SET['텔레그램사용자아이디'] = int_id
+            DICT_SET['텔레그램사용자아이디'] = int(int_id)
 
     def ButtonClicked_28(self):
         me = 1 if self.sj_stock_checkBox_01.isChecked() else 0
