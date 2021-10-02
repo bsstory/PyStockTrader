@@ -23,10 +23,10 @@ class TraderKiwoom:
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
         self.query1Q = qlist[2]
-        self.teleQ = qlist[3]
-        self.receivQ = qlist[4]
-        self.stockQ = qlist[5]
-        self.sstgQ = qlist[7]
+        self.teleQ = qlist[4]
+        self.receivQ = qlist[5]
+        self.stockQ = qlist[6]
+        self.sstgQ = qlist[8]
         self.lock = Lock()
 
         self.dict_name = {}     # key: 종목코드, value: 종목명
