@@ -1,10 +1,23 @@
 import os
 import sys
+import time
 import win32api
 import win32con
 import win32gui
+import platform
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from utility.setting import *
+
+
+def leftClick(x, y, hwnd):
+    lParam = win32api.MAKELONG(x, y)
+    win32gui.SendMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
+    win32gui.SendMessage(hwnd, win32con.WM_LBUTTONUP, 0, lParam)
+
+
+def doubleClick(x, y, hwnd):
+    leftClick(x, y, hwnd)
+    leftClick(x, y, hwnd)
 
 
 def window_enumeration_handler(hwndd, top_windows):
@@ -60,6 +73,14 @@ def manual_login(gubun):
         enter_keys(win32gui.GetDlgItem(hwnd, 0x3E9), DICT_SET['비밀번호1'])
         if gubun == 2:
             enter_keys(win32gui.GetDlgItem(hwnd, 0x3EA), DICT_SET['인증서비밀번호1'])
+            # AMD 자동로그인 설정 로그인창 닫힘 인식 실패 문제 회피 - 데빌퀸트
+            if 'AMD' in platform.processor():
+                doubleClick(15, 15, win32gui.GetDlgItem(hwnd, 0x3E9))
+                time.sleep(1)
+                doubleClick(15, 15, win32gui.GetDlgItem(hwnd, 0x3EA))
+                time.sleep(0.3)
+                enter_keys(win32gui.GetDlgItem(hwnd, 0x3EA), DICT_SET['인증서비밀번호1'])
+                time.sleep(0.3)
             click_button(win32gui.GetDlgItem(hwnd, 0x1))
     elif gubun in [3, 4]:
         enter_keys(win32gui.GetDlgItem(hwnd, 0x3E8), DICT_SET['아이디2'])

@@ -1,5 +1,3 @@
-import time
-import platform
 import pythoncom
 import pywintypes
 from manuallogin import *
