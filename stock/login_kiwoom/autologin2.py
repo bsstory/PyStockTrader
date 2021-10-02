@@ -41,8 +41,26 @@ class Window(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     login_info = f'{OPENAPI_PATH}/system/Autologin.dat'
+    if os.path.isfile(login_info):
+        os.remove(f'{OPENAPI_PATH}/system/Autologin.dat')
+    print('\n 자동 로그인 설정 파일 삭제 완료\n')
+
+    Process(target=Window).start()
+    print(' 자동 로그인 설정용 프로세스 시작\n')
+
+    while find_window('Open API login') == 0:
+        print(' 로그인창 열림 대기 중 ...\n')
+        time.sleep(1)
+
+    print(' 아이디 및 패스워드 입력 대기 중 ...\n')
+    time.sleep(5)
+
+    manual_login(4)
+    print(' 아이디 및 패스워드 입력 완료\n')
+
+    """
     if 'AMD64 Family 23 Model 113' in platform.processor():
-        auto_info = f'{LOGIN_PATH}/Autologin2.dat'
+        auto_info = f'{OPENAPI_PATH}/system/Autologin2.dat'
         shutil.copy(auto_info, login_info)
         print(' 자동로그인1 설정파일 복사 완료\n')
     else:
@@ -62,3 +80,4 @@ if __name__ == '__main__':
 
         manual_login(4)
         print(' 아이디 및 패스워드 입력 완료\n')
+    """
