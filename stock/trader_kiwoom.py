@@ -257,21 +257,15 @@ class TraderKiwoom:
                 self.JangoChungsan()
 
     def GetAccountjanGo(self):
-        jggm = 0
-        pggm = 0
-        sigm = 0
-        if len(self.dict_df['잔고목록']) > 0:
-            jggm = self.dict_df['잔고목록']['매입금액'].sum()
-            pggm = self.dict_df['잔고목록']['평가금액'].sum()
-        if len(self.dict_df['거래목록']) > 0:
-            sigm = self.dict_df['거래목록']['수익금'].sum()
-
         while True:
             df = self.Block_Request('opw00004', 계좌번호=self.dict_strg['계좌번호'], 비밀번호='', 상장폐지조회구분=0,
                                     비밀번호입력매체구분='00', output='계좌평가현황', next=0)
             if df['D+2추정예수금'][0] != '':
                 if DICT_SET['모의투자1']:
-                    self.dict_intg['예수금'] = 100000000 - jggm + sigm
+                    con = sqlite3.connect(DB_TRADELIST)
+                    df = pd.read_sql('SELECT * FROM s_tradelist', con)
+                    con.close()
+                    self.dict_intg['예수금'] = 100000000 - self.dict_df['잔고목록']['매입금액'].sum() + df['수익금'].sum()
                 else:
                     self.dict_intg['예수금'] = int(df['D+2추정예수금'][0])
                 self.dict_intg['추정예수금'] = self.dict_intg['예수금']
@@ -285,7 +279,7 @@ class TraderKiwoom:
                                     조회구분=2, output='계좌평가결과', next=0)
             if df['추정예탁자산'][0] != '':
                 if DICT_SET['모의투자1']:
-                    self.dict_intg['추정예탁자산'] = self.dict_intg['예수금'] + pggm
+                    self.dict_intg['추정예탁자산'] = self.dict_intg['예수금'] + self.dict_df['잔고목록']['평가금액'].sum()
                 else:
                     self.dict_intg['추정예탁자산'] = int(df['추정예탁자산'][0])
 
