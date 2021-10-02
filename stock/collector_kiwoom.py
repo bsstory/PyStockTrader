@@ -70,7 +70,6 @@ class CollectorKiwoom:
                          '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2'],
                 index=[d])
         else:
-            sm = int(dm - self.dict_df[code]['누적거래대금'][-1])
             self.dict_df[code].at[d] = \
                 c, o, h, per, hlmp, sm, dm, ch, vp, bids, asks, vitime, vid5,\
                 s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr
@@ -84,6 +83,7 @@ class CollectorKiwoom:
 
     def SaveTickData(self, codes):
         """
+        당일 거래종목만 저장
         for code in list(self.dict_df.keys()):
             if code in codes:
                 columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
