@@ -19,7 +19,7 @@ from utility.setui import *
 from utility.sound import Sound
 from utility.query import Query
 from utility.telegram_msg import TelegramMsg
-from utility.static import now, strf_time, strp_time, changeFormat, thread_decorator
+from utility.static import now, strf_time, strp_time, changeFormat, thread_decorator, timedelta_sec
 
 
 class Window(QtWidgets.QMainWindow):
@@ -101,8 +101,10 @@ class Window(QtWidgets.QMainWindow):
     def KiwoomCollectorStart(self):
         self.backtester_proc = None
         if DICT_SET['아이디2'] is not None:
+            proc = subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
+            self.WaitLogin(proc=proc)
+            QTest.qWait(10000)
             if 'AMD64 Family 23 Model 113' in platform.processor():
-                print('경고!! 특정 AMD CPU는 자동 버전업그레이드가 되지 않으니 수동으로 관리하셔야합니다.')
                 auto_info = f'{LOGIN_PATH}/Autologin2.dat'
                 if os.path.isfile(auto_info):
                     subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
@@ -117,9 +119,6 @@ class Window(QtWidgets.QMainWindow):
                     )
                     return
             else:
-                subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
-                self.WaitLogin()
-                QTest.qWait(10000)
                 subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
                 self.WaitLogin()
                 self.WaitAutologin()
@@ -171,11 +170,14 @@ class Window(QtWidgets.QMainWindow):
             )
 
     # noinspection PyMethodMayBeStatic, PyArgumentList
-    def WaitLogin(self):
+    def WaitLogin(self, proc=None):
+        endtime = timedelta_sec(120)
         while find_window('Open API login') == 0:
             QTest.qWait(1000)
         while find_window('Open API login') != 0:
             QTest.qWait(1000)
+            if now() > endtime:
+                break
 
     # noinspection PyMethodMayBeStatic, PyArgumentList
     def WaitAutologin(self):
@@ -1246,7 +1248,7 @@ class Window(QtWidgets.QMainWindow):
         con.close()
         if len(df) > 0:
             self.sj_tele_lineEdit_01.setText(df['str_bot'][0])
-            self.sj_tele_lineEdit_02.setText(df['int_id'][0])
+            self.sj_tele_lineEdit_02.setText(str(df['int_id'][0]))
             self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 불러오기 완료'])
         else:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '텔레그램 봇토큰 및 사용자 아이디\n설정값이 존재하지 않습니다.\n')
