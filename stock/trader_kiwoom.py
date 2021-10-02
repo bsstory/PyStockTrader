@@ -15,12 +15,14 @@ class TraderKiwoom:
 
     def __init__(self, qlist):
         """
-        number      0        1       2      3       4       5       6      7      8      9       10
-        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+                    0        1       2        3       4       5       6       7      8      9
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
+                   10       11      12     13      14
         """
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
-        self.queryQ = qlist[2]
+        self.query1Q = qlist[2]
         self.teleQ = qlist[3]
         self.receivQ = qlist[4]
         self.stockQ = qlist[5]
@@ -342,7 +344,7 @@ class TraderKiwoom:
     def SaveDatabase(self):
         if len(self.dict_df['거래목록']) > 0:
             df = self.dict_df['실현손익'][['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
-            self.queryQ.put([2, df, 's_totaltradelist', 'append'])
+            self.query1Q.put([2, df, 's_totaltradelist', 'append'])
         if DICT_SET['알림소리1']:
             self.soundQ.put('일별실현손익를 저장하였습니다.')
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 일별실현손익 저장 완료'])
@@ -632,7 +634,7 @@ class TraderKiwoom:
         columns = ['매입가', '현재가', '평가손익', '매입금액']
         self.dict_df['잔고목록'][columns] = self.dict_df['잔고목록'][columns].astype(int)
         self.dict_df['잔고목록'].sort_values(by=['매입금액'], inplace=True)
-        self.queryQ.put([2, self.dict_df['잔고목록'], 's_jangolist', 'replace'])
+        self.query1Q.put([2, self.dict_df['잔고목록'], 's_jangolist', 'replace'])
         if DICT_SET['알림소리1']:
             self.soundQ.put(f'{name} {oc}주를 {og}하였습니다')
 
@@ -651,7 +653,7 @@ class TraderKiwoom:
         self.windowQ.put([ui_num['S거래목록'], self.dict_df['거래목록']])
 
         df = pd.DataFrame([[name, bg, pg, oc, sp, sg, d]], columns=columns_td, index=[on])
-        self.queryQ.put([2, df, 's_tradelist', 'append'])
+        self.query1Q.put([2, df, 's_tradelist', 'append'])
         self.UpdateTotaltradelist()
 
     def UpdateTotaltradelist(self, first=False):
@@ -690,7 +692,7 @@ class TraderKiwoom:
 
         if omc == 0:
             df = pd.DataFrame([[name, og, oc, omc, op, cp, dt]], columns=columns_cj, index=[on])
-            self.queryQ.put([2, df, 's_chegeollist', 'append'])
+            self.query1Q.put([2, df, 's_chegeollist', 'append'])
 
     def OnReceiveConditionVer(self, ret, msg):
         if msg == '':

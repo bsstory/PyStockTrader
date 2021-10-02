@@ -10,11 +10,13 @@ from utility.static import now
 class WebsTicker(QThread):
     def __init__(self, qlist):
         """
-        number      0        1       2      3       4       5       6      7      8      9       10
-        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+                    0        1       2        3       4       5       6       7      8      9
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
+                   10       11      12     13      14
         """
         super().__init__()
-        self.tick2Q = qlist[10]
+        self.tick5Q = qlist[14]
         self.websQ_ticker = None
 
     def run(self):
@@ -43,7 +45,7 @@ class WebsTicker(QThread):
                 data['매수수량'] = dict_askbid[ticker][1]
                 data['매도수량'] = dict_askbid[ticker][2]
                 dict_askbid[ticker] = [t, 0, 0]
-                self.tick2Q.put([data, now()])
+                self.tick5Q.put([data, now()])
 
 
 class WebsOrderbook(QThread):
@@ -53,7 +55,7 @@ class WebsOrderbook(QThread):
         qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
         """
         super().__init__()
-        self.tick2Q = qlist[10]
+        self.tick5Q = qlist[14]
         self.websQ_order = None
 
     def run(self):
@@ -61,4 +63,4 @@ class WebsOrderbook(QThread):
         self.websQ_order = WebSocketManager('orderbook', tickers)
         while True:
             data = self.websQ_order.get()
-            self.tick2Q.put(data)
+            self.tick5Q.put(data)

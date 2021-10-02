@@ -12,16 +12,18 @@ from utility.static import now, timedelta_sec, strf_time, timedelta_hour, strp_t
 class TraderUpbit(QThread):
     def __init__(self, qlist):
         """
-        number      0        1       2      3       4       5       6      7      8      9       10
-        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+                    0        1       2        3       4       5       6       7      8      9
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
+                   10       11      12     13      14
         """
         super().__init__()
         self.windowQ = qlist[0]
-        self.queryQ = qlist[2]
         self.soundQ = qlist[1]
-        self.teleQ = qlist[3]
-        self.coinQ = qlist[6]
-        self.cstgQ = qlist[8]
+        self.query1Q = qlist[2]
+        self.teleQ = qlist[4]
+        self.coinQ = qlist[7]
+        self.cstgQ = qlist[9]
 
         self.upbit = None                               # 매도수 주문 및 체결 확인용 객체
         self.buy_uuid = None                            # 매수 주문 저장용 list: [티커명, uuid]
@@ -172,7 +174,7 @@ class TraderUpbit(QThread):
             저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
             """
             if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
-                self.queryQ.put([2, self.df_tt, 'c_totaltradelist', 'append'])
+                self.query1Q.put([2, self.df_tt, 'c_totaltradelist', 'append'])
                 self.str_today = strf_time('%Y%m%d')
                 self.df_cj = pd.DataFrame(columns=columns_cj)
                 self.df_td = pd.DataFrame(columns=columns_td)
@@ -317,13 +319,13 @@ class TraderUpbit(QThread):
             self.dict_intg['예수금'] -= bg
             self.df_jg.at[ticker] = ticker, cp, cp, sp, sg, bg, pg, cc
             self.df_jg.sort_values(by=['매입금액'], ascending=False, inplace=True)
-            self.queryQ.put([2, self.df_jg, 'c_jangolist', 'replace'])
+            self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
             self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - {ticker} {cc}코인 매수'])
             if DICT_SET['알림소리2']:
                 self.soundQ.put(f'{ticker} {cc}코인을 매수하였습니다.')
             self.teleQ.put(f'매수 알림 - {ticker} {cp} {cc}')
         df = pd.DataFrame([[ticker, order_gubun, cc, 0, cp, cp, dt]], columns=columns_cj, index=[dt])
-        self.queryQ.put([2, df, 'c_chegeollist', 'append'])
+        self.query1Q.put([2, df, 'c_chegeollist', 'append'])
 
     def UpdateSell(self, ticker, cp, cc):
         dt = strf_time('%Y%m%d%H%M%S%f')
@@ -349,11 +351,11 @@ class TraderUpbit(QThread):
         if DICT_SET['알림소리2']:
             self.soundQ.put(f'{ticker} {cc}코인을 매도하였습니다.')
 
-        self.queryQ.put([2, self.df_jg, 'c_jangolist', 'replace'])
+        self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
         df = pd.DataFrame([[ticker, '매도', cc, 0, cp, cp, dt]], columns=columns_cj, index=[dt])
-        self.queryQ.put([2, df, 'c_chegeollist', 'append'])
+        self.query1Q.put([2, df, 'c_chegeollist', 'append'])
         df = pd.DataFrame([[ticker, bg, pg, cc, sp, sg, dt]], columns=columns_td, index=[dt])
-        self.queryQ.put([2, df, 'c_tradelist', 'append'])
+        self.query1Q.put([2, df, 'c_tradelist', 'append'])
         self.teleQ.put(f'매도 알림 - {ticker} {cp} {cc}')
         self.UpdateTotaltradelist()
 

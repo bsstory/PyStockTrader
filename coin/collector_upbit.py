@@ -9,12 +9,14 @@ from utility.static import now, timedelta_sec, timedelta_hour, strp_time, strf_t
 class CollectorUpbit:
     def __init__(self, qlist):
         """
-        number      0        1       2      3       4       5       6      7      8      9       10
-        qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
+                    0        1       2        3       4       5       6       7      8      9
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                 tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
+                   10       11      12     13      14
         """
         self.windowQ = qlist[0]
-        self.queryQ = qlist[2]
-        self.tick2Q = qlist[10]
+        self.query2Q = qlist[3]
+        self.tick5Q = qlist[14]
 
         self.dict_df = {}                   # 틱데이터 저장용 딕셔너리 key: ticker, value: datafame
         self.dict_orderbook = {}            # 오더북 저장용 딕셔너리
@@ -23,7 +25,7 @@ class CollectorUpbit:
 
     def Start(self):
         while True:
-            data = self.tick2Q.get()
+            data = self.tick5Q.get()
             if type(data) == list:
                 self.UpdateTickData(data[0], data[1])
             else:
@@ -58,7 +60,7 @@ class CollectorUpbit:
         if now() > self.time_save:
             gap = (now() - receiv_time).total_seconds()
             self.windowQ.put([ui_num['C단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
-            self.queryQ.put([4, self.dict_df])
+            self.query2Q.put([2, self.dict_df])
             self.dict_df = {}
             self.time_save = timedelta_sec(60)
 
