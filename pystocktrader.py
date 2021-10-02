@@ -176,7 +176,7 @@ class Window(QtWidgets.QMainWindow):
             QTest.qWait(1000)
         while find_window('Open API login') != 0:
             QTest.qWait(1000)
-            if now() > endtime and proc is not None:
+            if proc is not None and now() > endtime:
                 proc.kill()
                 break
 
