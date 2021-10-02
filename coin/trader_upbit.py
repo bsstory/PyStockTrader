@@ -209,7 +209,7 @@ class TraderUpbit(QThread):
         elif self.upbit is not None:
             ret = self.upbit.buy_market_order(ticker, self.dict_intg['종목당투자금'])
             if ret is not None:
-                self.buy_uuid = [ticker, ret[0]['uuid']]
+                self.buy_uuid = [ticker, ret['uuid']]
                 self.dict_time['매수체결확인'] = timedelta_sec(1)
             else:
                 self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
@@ -230,7 +230,7 @@ class TraderUpbit(QThread):
         elif self.upbit is not None:
             ret = self.upbit.sell_market_order(ticker, oc)
             if ret is not None:
-                self.sell_uuid = [ticker, ret[0]['uuid']]
+                self.sell_uuid = [ticker, ret['uuid']]
                 self.dict_time['매도체결확인'] = timedelta_sec(1)
             else:
                 self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
