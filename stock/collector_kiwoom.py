@@ -30,12 +30,12 @@ class CollectorKiwoom:
     def Start(self):
         while True:
             tick = self.tick1Q.get()
-            if len(tick) != 2:
+            if type(tick) == list:
                 self.UpdateTickData(tick[0], tick[1], tick[2], tick[3], tick[4], tick[5], tick[6], tick[7],
                                     tick[8], tick[9], tick[10], tick[11], tick[12], tick[13], tick[14],
                                     tick[15], tick[16], tick[17], tick[18], tick[19], tick[20], tick[21], tick[22])
-            elif tick[0] == '틱데이터저장':
-                self.SaveTickData(tick[1])
+            elif tick == '틱데이터저장':
+                self.queryQ.put([3, self.dict_df])
                 break
 
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터를 종료합니다.'])
@@ -80,17 +80,3 @@ class CollectorKiwoom:
             self.queryQ.put([3, self.dict_df])
             self.dict_df = {}
             self.time_info = timedelta_sec(60)
-
-    def SaveTickData(self, codes):
-        """
-        당일 거래종목만 저장
-        for code in list(self.dict_df.keys()):
-            if code in codes:
-                columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
-                           '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
-                self.dict_df[code][columns] = self.dict_df[code][columns].astype(int)
-            else:
-                del self.dict_df[code]
-        self.queryQ.put([3, self.dict_df])
-        """
-        self.queryQ.put([3, self.dict_df])
