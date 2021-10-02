@@ -1,6 +1,8 @@
+import os
 import sys
 import psutil
 import logging
+import platform
 import subprocess
 from PyQt5.QtTest import QTest
 from multiprocessing import Process, Queue
@@ -102,9 +104,24 @@ class Window(QtWidgets.QMainWindow):
             subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
             self.WaitLogin()
             QTest.qWait(10000)
-            subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
-            self.WaitLogin()
-            self.WaitAutologin()
+            if 'AMD64 Family 23 Model 113' in platform.system():
+                auto_info = f'{LOGIN_PATH}/Autologin2.dat'
+                if os.path.isfile(auto_info):
+                    subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
+                    QTest.qWait(3000)
+                else:
+                    QtWidgets.QMessageBox.critical(
+                        self, '오류 알림',
+                        '키움 두번째 계정용 자동로그인 설정파일이 존재하지 않아\n로그인을 진행할 수 없습니다.\n'
+                        '키움 두번째 계정으로 로그인하여\n자동로그인을 수동설정한 다음\n'
+                        f'{OPENAPI_PATH}/system/Autologin.dat 파일을\n'
+                        f'{LOGIN_PATH} 폴더로 복사하고\n Autologin2.dat로 이름변경하십시오.'
+                    )
+                    return
+            else:
+                subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
+                self.WaitLogin()
+                self.WaitAutologin()
             if not self.collector_stock_proc.is_alive():
                 self.collector_stock_proc.start()
             if not self.receiver_stock_proc.is_alive():
@@ -118,11 +135,27 @@ class Window(QtWidgets.QMainWindow):
                 '키움 두번째 계정이 설정되지 않아\n콜렉터를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
             )
 
+    # noinspection PyArgumentList
     def KiwoomTraderStart(self):
         if DICT_SET['아이디1'] is not None:
-            subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
-            self.WaitLogin()
-            self.WaitAutologin()
+            if 'AMD64 Family 23 Model 113' in platform.system():
+                auto_info = f'{LOGIN_PATH}/Autologin1.dat'
+                if os.path.isfile(auto_info):
+                    subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
+                    QTest.qWait(3000)
+                else:
+                    QtWidgets.QMessageBox.critical(
+                        self, '오류 알림',
+                        '키움 첫번째 계정용 자동로그인 설정파일이 존재하지 않아\n로그인을 진행할 수 없습니다.\n'
+                        '키움 첫번째 계정으로 로그인하여\n자동로그인을 수동설정한 다음\n'
+                        f'{OPENAPI_PATH}/system/Autologin.dat 파일을\n'
+                        f'{LOGIN_PATH} 폴더로 복사하고\n Autologin1.dat로 이름변경하십시오.'
+                    )
+                    return
+            else:
+                subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
+                self.WaitLogin()
+                self.WaitAutologin()
             if not self.strategy_stock_proc.is_alive():
                 self.strategy_stock_proc.start()
             if not self.trader_stock_proc.is_alive():
