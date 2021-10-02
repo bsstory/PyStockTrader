@@ -41,7 +41,7 @@ class Window(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     login_info = f'{OPENAPI_PATH}/system/Autologin.dat'
-    if 'AMD64 Family 23 Model 113' in platform.system():
+    if 'AMD64 Family 23 Model 113' in platform.processor():
         auto_info = f'{LOGIN_PATH}/Autologin2.dat'
         shutil.copy(auto_info, login_info)
         print(' 자동로그인1 설정파일 복사 완료\n')

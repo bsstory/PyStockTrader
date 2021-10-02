@@ -104,7 +104,7 @@ class Window(QtWidgets.QMainWindow):
             subprocess.Popen(f'python {LOGIN_PATH}/versionupdater.py')
             self.WaitLogin()
             QTest.qWait(10000)
-            if 'AMD64 Family 23 Model 113' in platform.system():
+            if 'AMD64 Family 23 Model 113' in platform.processor():
                 auto_info = f'{LOGIN_PATH}/Autologin2.dat'
                 if os.path.isfile(auto_info):
                     subprocess.Popen(f'python {LOGIN_PATH}/autologin2.py')
@@ -138,7 +138,7 @@ class Window(QtWidgets.QMainWindow):
     # noinspection PyArgumentList
     def KiwoomTraderStart(self):
         if DICT_SET['아이디1'] is not None:
-            if 'AMD64 Family 23 Model 113' in platform.system():
+            if 'AMD64 Family 23 Model 113' in platform.processor():
                 auto_info = f'{LOGIN_PATH}/Autologin1.dat'
                 if os.path.isfile(auto_info):
                     subprocess.Popen(f'python {LOGIN_PATH}/autologin1.py')
