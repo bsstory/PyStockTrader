@@ -5,6 +5,7 @@ import warnings
 import pythoncom
 import numpy as np
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer
 from PyQt5.QAxContainer import QAxWidget
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -44,6 +45,7 @@ class ReceiverKiwoom:
             'CR수신': False
         }
         self.dict_gsjm = {}
+        self.dict_cdjm = {}
         self.dict_vipr = {}
         self.dict_tick = {}
         self.dict_hoga = {}
@@ -53,6 +55,7 @@ class ReceiverKiwoom:
         self.list_gsjm = []
         self.list_trcd = []
         self.list_jang = []
+        self.pre_top = []
         self.list_kosd = None
         self.list_code = None
         self.list_code1 = None
@@ -66,6 +69,7 @@ class ReceiverKiwoom:
 
         self.operation = 1
         self.df_mt = pd.DataFrame(columns=['거래대금상위100'])
+        self.df_mc = pd.DataFrame(columns=['최근거래대금'])
         self.str_tday = strf_time('%Y%m%d')
         self.str_jcct = self.str_tday + '090000'
 
@@ -73,6 +77,10 @@ class ReceiverKiwoom:
         exittime = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
         self.exit_time = exittime
         self.time_mtop = now()
+
+        self.timer = QTimer()
+        self.timer.setInterval(60000)
+        self.timer.timeout.connect(self.ConditionInsertDelete)
 
         self.ocx = QAxWidget('KHOPENAPI.KHOpenAPICtrl.1')
         self.ocx.OnEventConnect.connect(self.OnEventConnect)
@@ -137,11 +145,14 @@ class ReceiverKiwoom:
                 break
 
             if self.operation == 3:
-                if not self.dict_bool['실시간조건검색시작']:
-                    self.ConditionSearchStart()
-            if self.operation == 2:
-                if not self.dict_bool['실시간조건검색중단']:
-                    self.ConditionSearchStop()
+                if int(strf_time('%H%M%S')) < 10000:
+                    if not self.dict_bool['실시간조건검색시작']:
+                        self.ConditionSearchStart()
+                if 10000 <= int(strf_time('%H%M%S')):
+                    if self.dict_bool['실시간조건검색시작'] and not self.dict_bool['실시간조건검색중단']:
+                        self.ConditionSearchStop()
+                    if not self.dict_bool['장중단타전략시작']:
+                        self.StartJangjungStrategy()
             if self.operation == 8:
                 self.AllRemoveRealreg()
                 self.SaveDatabase()
@@ -222,6 +233,48 @@ class ReceiverKiwoom:
     def ConditionSearchStop(self):
         self.dict_bool['실시간조건검색중단'] = True
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[0], 0)
+
+    def StartJangjungStrategy(self):
+        self.dict_bool['장중단타전략시작'] = True
+        self.df_mc.sort_values(by=['최근거래대금'], ascending=False, inplace=True)
+        list_top = list(self.df_mc.index[:30])
+        insert_list = set(list_top) - set(self.list_gsjm)
+        if len(insert_list) > 0:
+            for code in list(insert_list):
+                self.list_gsjm.append(code)
+                if code not in self.list_jang and code not in self.dict_gsjm.keys():
+                    self.sstgQ.put(['조건진입', code])
+                    self.dict_gsjm[code] = '090000'
+        delete_list = set(self.list_gsjm) - set(list_top)
+        if len(delete_list) > 0:
+            for code in list(delete_list):
+                self.list_gsjm.remove(code)
+                if code not in self.list_jang and code in self.dict_gsjm.keys():
+                    self.sstgQ.put(['조건이탈', code])
+                    del self.dict_gsjm[code]
+        self.pre_top = list_top
+        self.timer.start()
+
+    def ConditionInsertDelete(self):
+        self.df_mc.sort_values(by=['최근거래대금'], ascending=False, inplace=True)
+        list_top = list(self.df_mc.index[:30])
+        insert_list = set(list_top) - set(self.pre_top)
+        if len(insert_list) > 0:
+            for code in list(insert_list):
+                if code not in self.list_gsjm:
+                    self.list_gsjm.append(code)
+                if code not in self.list_jang and code not in self.dict_gsjm.keys():
+                    self.sstgQ.put(['조건진입', code])
+                    self.dict_gsjm[code] = '090000'
+        delete_list = set(self.pre_top) - set(list_top)
+        if len(delete_list) > 0:
+            for code in list(delete_list):
+                if code in self.list_gsjm:
+                    self.list_gsjm.remove(code)
+                if code not in self.list_jang and code in self.dict_gsjm.keys():
+                    self.sstgQ.put(['조건이탈', code])
+                    del self.dict_gsjm[code]
+        self.pre_top = list_top
 
     def AllRemoveRealreg(self):
         self.receivQ.put(['ALL', 'ALL'])
@@ -410,11 +463,27 @@ class ReceiverKiwoom:
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
 
     def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, receivetime):
-        if DICT_SET['키움트레이더'] and code in self.dict_gsjm.keys():
-            injango = code in self.list_jang
-            vitimedown = now() < timedelta_sec(180, self.dict_vipr[code][1])
-            vid5priceup = c >= self.dict_vipr[code][2]
-            self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup, receivetime])
+        if DICT_SET['키움트레이더']:
+            dt = self.str_tday + t[:4]
+            if code not in self.dict_cdjm.keys():
+                columns = ['1분누적거래대금', '1분전당일거래대금']
+                self.dict_cdjm[code] = pd.DataFrame([[0, dm]], columns=columns, index=[dt])
+            elif dt == self.dict_cdjm[code].index[-1]:
+                predm = self.dict_cdjm[code]['1분전당일거래대금'][-1]
+                self.dict_cdjm[code].at[dt] = dm - predm, predm
+            else:
+                if len(self.dict_cdjm[code]) >= 15:
+                    if per > 0:
+                        self.df_mc.at[code] = self.dict_cdjm[code]['1분누적거래대금'].sum()
+                    self.dict_cdjm[code].drop(index=self.dict_cdjm[code].index[0], inplace=True)
+                predm = self.dict_cdjm[code]['1분전당일거래대금'][-1] + self.dict_cdjm[code]['1분누적거래대금'][-1]
+                self.dict_cdjm[code].at[dt] = dm - predm, predm
+
+            if code in self.dict_gsjm.keys():
+                injango = code in self.list_jang
+                vitimedown = now() < timedelta_sec(180, self.dict_vipr[code][1])
+                vid5priceup = c >= self.dict_vipr[code][2]
+                self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup, receivetime])
 
         vitime = strf_time('%Y%m%d%H%M%S', self.dict_vipr[code][1])
         vid5 = self.dict_vipr[code][2]
