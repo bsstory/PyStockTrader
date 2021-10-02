@@ -89,6 +89,10 @@ class StrategyCoin:
 
         if self.dict_gsjm[ticker]['체결강도'][DICT_SET['평균시간2']] == 0:
             return
+        if not uuidnone:
+            return
+        if injango:
+            return
         if ticker in self.list_buy:
             return
 
