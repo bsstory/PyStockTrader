@@ -1,5 +1,5 @@
-import sys
 import time
+import platform
 import pythoncom
 import pywintypes
 from manuallogin import *
@@ -8,6 +8,7 @@ from multiprocessing import Process
 from PyQt5.QAxContainer import QAxWidget
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from utility.setting import OPENAPI_PATH
+from utility.static import timedelta_sec, now
 
 
 class Window(QtWidgets.QMainWindow):
@@ -37,8 +38,10 @@ class Window(QtWidgets.QMainWindow):
 
 
 if __name__ == '__main__':
+    autofile = False
     login_info = f'{OPENAPI_PATH}/system/Autologin.dat'
     if os.path.isfile(login_info):
+        autofile = True
         os.remove(f'{OPENAPI_PATH}/system/Autologin.dat')
     print('\n 자동 로그인 설정 파일 삭제 완료\n')
 
@@ -53,6 +56,8 @@ if __name__ == '__main__':
     manual_login(4)
     print(' 아이디 및 패스워드 입력 완료\n')
 
+    amd_cpu = True if 'AMD' in platform.processor() else False
+    endtime = timedelta_sec(60) if autofile else timedelta_sec(120)
     update = False
     while find_window('Open API login') != 0:
         hwnd = find_window('opstarter')
@@ -70,12 +75,14 @@ if __name__ == '__main__':
                 pass
         print(' 버전처리 및 로그인창 닫힘 대기 중 ...\n')
         time.sleep(1)
+        if amd_cpu and now() > endtime:
+            break
     if update:
         time.sleep(5)
         hwnd = find_window('업그레이드 확인')
         if hwnd != 0:
             win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
         print(' 버전 업그레이드 확인 완료\n')
-    else:
+    elif proc.is_alive():
         proc.kill()
-        print(' 버전처리용 로그인 프로세스 종료\n')
+    print(' 버전 업그레이드 프로세스 종료\n')

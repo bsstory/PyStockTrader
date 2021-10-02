@@ -18,14 +18,14 @@ def enum_windows():
 
 
 def find_window(caption):
-    hwndd = win32gui.FindWindow(None, caption)
-    if hwndd == 0:
+    hwnd = win32gui.FindWindow(None, caption)
+    if hwnd == 0:
         windows = enum_windows()
         for handle, title in windows:
             if caption in title:
-                hwndd = handle
+                hwnd = handle
                 break
-    return hwndd
+    return hwnd
 
 
 def enter_keys(hwndd, data):
@@ -48,26 +48,26 @@ def manual_login(gubun):
     gubun == 3 : 두번째 계정 모의서버
     gubun == 4 : 두번째 계정 본서버
     """
-    hwndd = find_window('Open API login')
+    hwnd = find_window('Open API login')
     if gubun in [1, 3]:
-        if win32gui.IsWindowEnabled(win32gui.GetDlgItem(hwndd, 0x3EA)):
-            click_button(win32gui.GetDlgItem(hwndd, 0x3ED))
+        if win32gui.IsWindowEnabled(win32gui.GetDlgItem(hwnd, 0x3EA)):
+            click_button(win32gui.GetDlgItem(hwnd, 0x3ED))
     elif gubun in [2, 4]:
-        if not win32gui.IsWindowEnabled(win32gui.GetDlgItem(hwndd, 0x3EA)):
-            click_button(win32gui.GetDlgItem(hwndd, 0x3ED))
+        if not win32gui.IsWindowEnabled(win32gui.GetDlgItem(hwnd, 0x3EA)):
+            click_button(win32gui.GetDlgItem(hwnd, 0x3ED))
     if gubun in [1, 2]:
-        enter_keys(win32gui.GetDlgItem(hwndd, 0x3E8), DICT_SET['아이디1'])
-        enter_keys(win32gui.GetDlgItem(hwndd, 0x3E9), DICT_SET['비밀번호1'])
+        enter_keys(win32gui.GetDlgItem(hwnd, 0x3E8), DICT_SET['아이디1'])
+        enter_keys(win32gui.GetDlgItem(hwnd, 0x3E9), DICT_SET['비밀번호1'])
         if gubun == 2:
-            enter_keys(win32gui.GetDlgItem(hwndd, 0x3EA), DICT_SET['인증서비밀번호1'])
-            click_button(win32gui.GetDlgItem(hwndd, 0x1))
+            enter_keys(win32gui.GetDlgItem(hwnd, 0x3EA), DICT_SET['인증서비밀번호1'])
+            click_button(win32gui.GetDlgItem(hwnd, 0x1))
     elif gubun in [3, 4]:
-        enter_keys(win32gui.GetDlgItem(hwndd, 0x3E8), DICT_SET['아이디2'])
-        enter_keys(win32gui.GetDlgItem(hwndd, 0x3E9), DICT_SET['비밀번호2'])
+        enter_keys(win32gui.GetDlgItem(hwnd, 0x3E8), DICT_SET['아이디2'])
+        enter_keys(win32gui.GetDlgItem(hwnd, 0x3E9), DICT_SET['비밀번호2'])
         if gubun == 4:
-            enter_keys(win32gui.GetDlgItem(hwndd, 0x3EA), DICT_SET['인증서비밀번호2'])
-            click_button(win32gui.GetDlgItem(hwndd, 0x1))
-    click_button(win32gui.GetDlgItem(hwndd, 0x1))
+            enter_keys(win32gui.GetDlgItem(hwnd, 0x3EA), DICT_SET['인증서비밀번호2'])
+            click_button(win32gui.GetDlgItem(hwnd, 0x1))
+    click_button(win32gui.GetDlgItem(hwnd, 0x1))
 
 
 def auto_on(gubun):
@@ -75,13 +75,13 @@ def auto_on(gubun):
     gubun == 1 : 첫번째 계정
     gubun == 2 : 두번째 계정
     """
-    hwndd = find_window('계좌비밀번호')
-    if hwndd != 0:
-        edit = win32gui.GetDlgItem(hwndd, 0xCC)
+    hwnd = find_window('계좌비밀번호')
+    if hwnd != 0:
+        edit = win32gui.GetDlgItem(hwnd, 0xCC)
         if gubun == 1:
             win32gui.SendMessage(edit, win32con.WM_SETTEXT, 0, DICT_SET['계좌비밀번호1'])
         elif gubun == 2:
             win32gui.SendMessage(edit, win32con.WM_SETTEXT, 0, DICT_SET['계좌비밀번호2'])
-        click_button(win32gui.GetDlgItem(hwndd, 0xD4))
-        click_button(win32gui.GetDlgItem(hwndd, 0xD3))
-        click_button(win32gui.GetDlgItem(hwndd, 0x01))
+        click_button(win32gui.GetDlgItem(hwnd, 0xD4))
+        click_button(win32gui.GetDlgItem(hwnd, 0xD3))
+        click_button(win32gui.GetDlgItem(hwnd, 0x01))
