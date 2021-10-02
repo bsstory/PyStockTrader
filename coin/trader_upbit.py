@@ -331,7 +331,7 @@ class TraderUpbit(QThread):
             self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
             self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - {ticker} {cc}코인 매수'])
             if DICT_SET['알림소리2']:
-                self.soundQ.put(f'{ticker} 코인, {cc}개를 매수하였습니다.')
+                self.soundQ.put(f'{ticker[4:]} 코인을 매수하였습니다.')
             self.teleQ.put(f'매수 알림 - {ticker} {cp} {cc}')
         df = pd.DataFrame([[ticker, order_gubun, cc, 0, cp, cp, dt]], columns=columns_cj, index=[dt])
         self.query1Q.put([2, df, 'c_chegeollist', 'append'])
@@ -358,7 +358,7 @@ class TraderUpbit(QThread):
 
         self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - {ticker} {bp}코인 매도'])
         if DICT_SET['알림소리2']:
-            self.soundQ.put(f'{ticker} 코인, {cc}개를 매도하였습니다.')
+            self.soundQ.put(f'{ticker[4:]} 코인을 매도하였습니다.')
 
         self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
         df = pd.DataFrame([[ticker, '매도', cc, 0, cp, cp, dt]], columns=columns_cj, index=[dt])
