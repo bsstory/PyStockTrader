@@ -268,7 +268,7 @@ class TraderUpbit(QThread):
 
     def CheckBuyChegeol(self, ticker):
         ret = self.upbit.get_order(self.buy_uuid[1])
-        if ret is not None and ret['state'] == 'done':
+        if ret is not None:
             trades = ret['trades']
             if len(trades) == 1:
                 cp = float(trades[0]['price'])
