@@ -92,17 +92,18 @@ class TraderUpbit(QThread):
             con = sqlite3.connect(DB_TRADELIST)
             df = pd.read_sql('SELECT * FROM c_tradelist', con)
             con.close()
-            self.dict_intg['예수금'] = 100000000 - self.df_jg['매입금액'].sum() + df['수익금'].sum()
-            self.dict_intg['종목당투자금'] = int(100000000 * 0.99 / DICT_SET['최대매수종목수2'])
+            self.dict_intg['예수금'] = 100000000 + df['수익금'].sum() - self.df_jg['매입금액'].sum()
+            self.dict_intg['종목당투자금'] = \
+                int((100000000 + df['수익금'].sum()) * 0.99 / DICT_SET['최대매수종목수2'])
         elif self.upbit is not None:
             self.dict_intg['예수금'] = int(float(self.upbit.get_balances()[0]['balance']))
             self.dict_intg['종목당투자금'] = int(self.dict_intg['예수금'] * 0.99 / DICT_SET['최대매수종목수2'])
         else:
             self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않았습니다.'])
-        self.cstgQ.put(self.dict_intg['종목당투자금'])
 
-        if self.dict_intg['종목당투자금'] > 5000:
-            self.bool_opdl = True
+        self.cstgQ.put(self.dict_intg['종목당투자금'])
+        self.bool_opdl = True if self.dict_intg['종목당투자금'] > 5000 else False
+
         if len(self.df_td) > 0:
             self.UpdateTotaltradelist(first=True)
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 예수금 조회 완료'])
@@ -172,19 +173,9 @@ class TraderUpbit(QThread):
                 self.UpdateTotaljango()
                 self.dict_time['거래정보'] = timedelta_sec(1)
 
-            """
-            오전 9시에 일별 일현손익 저장, 날짜 변경, 종목당투자금 재계산, 체결목록 및 거래목록 초기화가 진행된다.
-            저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
-            """
+            """ 9시 초기화 """
             if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
-                df = self.df_tt[['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
-                self.query1Q.put([2, df, 'c_totaltradelist', 'append'])
-                self.str_today = strf_time('%Y%m%d')
-                self.dict_intg['종목당투자금'] = int(self.df_tj['추정예탁자산'][0] * 0.99 / DICT_SET['최대매수종목수2'])
-                self.bool_opdl = True if self.dict_intg['종목당투자금'] > 5000 else False
-                self.df_cj = pd.DataFrame(columns=columns_cj)
-                self.df_td = pd.DataFrame(columns=columns_td)
-                self.bool_save = True
+                self.SaveTotalGetbalDelcjtd()
 
     """
     모의투자 시 실제 매도수 주문을 전송하지 않고 바로 체결목록, 잔고목록 등을 갱신한다.
@@ -403,3 +394,16 @@ class TraderUpbit(QThread):
             self.df_tj.at[self.str_today] = self.dict_intg['예수금'], self.dict_intg['예수금'], 0, 0.0, 0, 0, 0
         self.windowQ.put([ui_num['C잔고목록'], self.df_jg])
         self.windowQ.put([ui_num['C잔고평가'], self.df_tj])
+
+    """
+    일별 일현손익 저장, 날짜 변경, 종목당투자금 재계산, 체결목록 및 거래목록 초기화가 진행된다.
+    저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
+    """
+    def SaveTotalGetbalDelcjtd(self):
+        df = self.df_tt[['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
+        self.query1Q.put([2, df, 'c_totaltradelist', 'append'])
+        self.str_today = strf_time('%Y%m%d')
+        self.df_cj = pd.DataFrame(columns=columns_cj)
+        self.df_td = pd.DataFrame(columns=columns_td)
+        self.GetBalances()
+        self.bool_save = True
