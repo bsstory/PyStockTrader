@@ -1492,10 +1492,15 @@ class Window(QtWidgets.QMainWindow):
                     item = QtWidgets.QTableWidgetItem(day)
                 elif column in ['종목명', '주문구분', '기간']:
                     item = QtWidgets.QTableWidgetItem(str(df[column][index]))
-                elif gubun == ui_num['C잔고목록'] and column in ['매입가', '현재가', '보유수량']:
+                elif (gubun == ui_num['C잔고목록'] and column == '보유수량') or \
+                        (gubun == ui_num['C체결목록'] and column == '주문수량') or \
+                        (gubun == ui_num['C거래목록'] and column == '주문수량'):
+                    item = QtWidgets.QTableWidgetItem(changeFormat(df[column][index], dotdown8=True))
+                elif (gubun == ui_num['C잔고목록'] and column in ['매입가', '현재가']) or \
+                        (gubun == ui_num['C체결목록'] and column in ['체결가', '주문가격']):
                     item = QtWidgets.QTableWidgetItem(changeFormat(df[column][index]))
                 elif column not in ['수익률', '등락율', '고저평균대비등락율', '체결강도', '최고체결강도']:
-                    item = QtWidgets.QTableWidgetItem(changeFormat(df[column][index]).split('.')[0])
+                    item = QtWidgets.QTableWidgetItem(changeFormat(df[column][index], dotdowndel=True))
                 else:
                     item = QtWidgets.QTableWidgetItem(changeFormat(df[column][index]))
 
