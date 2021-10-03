@@ -97,7 +97,8 @@ class TraderUpbit(QThread):
                 int((100000000 + df['수익금'].sum()) * 0.99 / DICT_SET['최대매수종목수2'])
         elif self.upbit is not None:
             self.dict_intg['예수금'] = int(float(self.upbit.get_balances()[0]['balance']))
-            self.dict_intg['종목당투자금'] = int(self.dict_intg['예수금'] * 0.99 / DICT_SET['최대매수종목수2'])
+            self.dict_intg['종목당투자금'] = \
+                int((self.dict_intg['예수금'] + self.df_jg['매입금액'].sum()) * 0.99 / DICT_SET['최대매수종목수2'])
         else:
             self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않았습니다.'])
 
