@@ -177,7 +177,8 @@ class TraderUpbit(QThread):
             저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
             """
             if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
-                self.query1Q.put([2, self.df_tt, 'c_totaltradelist', 'append'])
+                df = self.df_tt[['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
+                self.query1Q.put([2, df, 'c_totaltradelist', 'append'])
                 self.str_today = strf_time('%Y%m%d')
                 self.dict_intg['종목당투자금'] = int(self.df_tj['추정예탁자산'][0] * 0.99 / DICT_SET['최대매수종목수2'])
                 self.bool_opdl = True if self.dict_intg['종목당투자금'] > 5000 else False
@@ -385,7 +386,7 @@ class TraderUpbit(QThread):
         sfee = cg * self.dict_intg['업비트수수료']
         bfee = bg * self.dict_intg['업비트수수료']
         pg = int(cg - sfee - bfee)
-        sg = pg - bg
+        sg = int(round(pg - bg))
         sp = round(sg / bg * 100, 2)
         return pg, sg, sp
 
