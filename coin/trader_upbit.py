@@ -210,7 +210,7 @@ class TraderUpbit(QThread):
         elif self.upbit is not None:
             ret = self.upbit.buy_market_order(ticker, self.dict_intg['종목당투자금'])
             if ret is not None:
-                if list(ret.ket())[0] != 'error':
+                if list(ret.key())[0] != 'error':
                     self.buy_uuid = [ticker, ret['uuid']]
                     self.dict_time['매수체결확인'] = timedelta_sec(1)
                 else:
@@ -235,7 +235,7 @@ class TraderUpbit(QThread):
         elif self.upbit is not None:
             ret = self.upbit.sell_market_order(ticker, oc)
             if ret is not None:
-                if list(ret.ket())[0] != 'error':
+                if list(ret.key())[0] != 'error':
                     self.sell_uuid = [ticker, ret['uuid']]
                     self.dict_time['매도체결확인'] = timedelta_sec(1)
                 else:
@@ -278,7 +278,7 @@ class TraderUpbit(QThread):
     def CheckBuyChegeol(self, ticker):
         ret = self.upbit.get_order(self.buy_uuid[1])
         if ret is not None:
-            if list(ret.ket())[0] != 'error':
+            if list(ret.key())[0] != 'error':
                 trades = ret['trades']
                 if len(trades) == 1:
                     cp = float(trades[0]['price'])
@@ -299,7 +299,7 @@ class TraderUpbit(QThread):
     def CheckSellChegeol(self, ticker):
         ret = self.upbit.get_order(self.sell_uuid[1])
         if ret is not None:
-            if list(ret.ket())[0] != 'error':
+            if list(ret.key())[0] != 'error':
                 if ret['state'] == 'done':
                     trades = ret['trades']
                     if len(trades) == 1:
