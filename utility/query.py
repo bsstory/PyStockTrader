@@ -39,10 +39,18 @@ class Query:
                     except Exception as e:
                         self.windowQ.put([ui_num['설정텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
             elif query[0] == 2:
-                try:
-                    query[1].to_sql(query[2], self.con2, if_exists=query[3], chunksize=1000)
-                except Exception as e:
-                    if 's_' in query[2]:
-                        self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
+                if len(query) == 2:
+                    try:
+                        self.cur2.execute(query[1])
+                    except Exception as e:
+                        self.windowQ.put([ui_num['설정텍스트'], f'시스템 명령 오류 알림 - execute {e}'])
                     else:
-                        self.windowQ.put([ui_num['C로그텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
+                        self.con2.commit()
+                elif len(query) == 4:
+                    try:
+                        query[1].to_sql(query[2], self.con2, if_exists=query[3], chunksize=1000)
+                    except Exception as e:
+                        if 's_' in query[2]:
+                            self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
+                        else:
+                            self.windowQ.put([ui_num['C로그텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
