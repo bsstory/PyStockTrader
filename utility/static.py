@@ -50,14 +50,32 @@ def strf_time(timetype, std_time=None):
     return str_time
 
 
-def changeFormat(text):
+def changeFormat(text, dotdowndel=False, dotdown8=False):
     text = str(text)
     try:
         format_data = format(int(text), ',')
     except ValueError:
         format_data = format(float(text), ',')
-        if len(format_data.split('.')) >= 2 and len(format_data.split('.')[1]) == 1:
-            format_data += '0'
+        if len(format_data.split('.')) >= 2:
+            if dotdowndel:
+                format_data = format_data.split('.')[0]
+            elif dotdown8:
+                if len(format_data.split('.')[1]) == 1:
+                    format_data += '0000000'
+                elif len(format_data.split('.')[1]) == 2:
+                    format_data += '000000'
+                elif len(format_data.split('.')[1]) == 3:
+                    format_data += '00000'
+                elif len(format_data.split('.')[1]) == 4:
+                    format_data += '0000'
+                elif len(format_data.split('.')[1]) == 5:
+                    format_data += '000'
+                elif len(format_data.split('.')[1]) == 6:
+                    format_data += '00'
+                elif len(format_data.split('.')[1]) == 7:
+                    format_data += '0'
+            elif len(format_data.split('.')[1]) == 1:
+                format_data += '0'
     return format_data
 
 
