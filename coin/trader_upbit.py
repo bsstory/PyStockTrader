@@ -333,6 +333,7 @@ class TraderUpbit(QThread):
         self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
         self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
+
         if not cancle:
             bg = cp * cc
             pg, sg, sp = self.GetPgSgSp(bg, bg)
@@ -344,6 +345,7 @@ class TraderUpbit(QThread):
             if DICT_SET['알림소리2']:
                 self.soundQ.put(f'{ticker[4:]} 코인을 매수하였습니다.')
             self.teleQ.put(f'매수 알림 - {ticker} {cp} {cc}')
+
         df = pd.DataFrame([[ticker, order_gubun, cc, 0, cp, cp, dt]], columns=columns_cj, index=[dt])
         self.query1Q.put([2, df, 'c_chegeollist', 'append'])
 
@@ -362,6 +364,7 @@ class TraderUpbit(QThread):
         self.df_jg.drop(index=ticker, inplace=True)
         self.df_cj.at[dt] = ticker, '매도', cc, 0, cp, cp, dt
         self.df_td.at[dt] = ticker, bg, pg, cc, sp, sg, dt
+        self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
         self.df_td.sort_values(by=['체결시간'], ascending=False, inplace=True)
 
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
@@ -376,6 +379,7 @@ class TraderUpbit(QThread):
         self.query1Q.put([2, df, 'c_chegeollist', 'append'])
         df = pd.DataFrame([[ticker, bg, pg, cc, sp, sg, dt]], columns=columns_td, index=[dt])
         self.query1Q.put([2, df, 'c_tradelist', 'append'])
+
         self.teleQ.put(f'매도 알림 - {ticker} {cp} {cc}')
         self.UpdateTotaltradelist()
 
