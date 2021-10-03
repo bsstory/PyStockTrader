@@ -231,7 +231,7 @@ def SetUI(self):
     self.stt_tableWidget = setTablewidget(self.st_tab, columns_tt, 1)
     self.std_tableWidget = setTablewidget(self.st_tab, columns_td, 13)
     self.stj_tableWidget = setTablewidget(self.st_tab, columns_tj, 1)
-    self.sjg_tableWidget = setTablewidget(self.st_tab, columns_jg, 13)
+    self.sjg_tableWidget = setTablewidget(self.st_tab, columns_jg, 13, clicked=self.CellClicked_01)
     self.sgj_tableWidget = setTablewidget(self.st_tab, columns_gj3, 15)
     self.scj_tableWidget = setTablewidget(self.st_tab, columns_cj, 15)
 
@@ -260,7 +260,7 @@ def SetUI(self):
     self.ctt_tableWidget = setTablewidget(self.ct_tab, columns_tt, 1)
     self.ctd_tableWidget = setTablewidget(self.ct_tab, columns_td, 13)
     self.ctj_tableWidget = setTablewidget(self.ct_tab, columns_tj, 1)
-    self.cjg_tableWidget = setTablewidget(self.ct_tab, columns_jg, 13)
+    self.cjg_tableWidget = setTablewidget(self.ct_tab, columns_jg, 13, clicked=self.CellClicked_02)
     self.cgj_tableWidget = setTablewidget(self.ct_tab, columns_gj3, 15)
     self.ccj_tableWidget = setTablewidget(self.ct_tab, columns_cj, 15)
 

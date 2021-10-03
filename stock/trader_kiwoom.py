@@ -186,7 +186,14 @@ class TraderKiwoom:
     def BuySell(self, gubun, code, name, c, oc):
         if gubun == '매수' and code in self.dict_df['잔고목록'].index:
             return
-        elif gubun == '매도' and code not in self.dict_df['잔고목록'].index:
+        if gubun == '매도' and code not in self.dict_df['잔고목록'].index:
+            return
+
+        if gubun == '매수' and code in self.list_sell:
+            self.windowQ.put([ui_num['S로그텍스트'], '매매 시스템 오류 알림 - 현재 매도 주문중인 종목입니다.'])
+            return
+        if gubun == '매도' and code in self.list_buy:
+            self.windowQ.put([ui_num['S로그텍스트'], '매매 시스템 오류 알림 - 현재 매수 주문중인 종목입니다.'])
             return
 
         if gubun == '매수':

@@ -6,7 +6,7 @@ from PyQt5.QtCore import QThread
 from pyupbit import WebSocketManager
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.setting import *
-from utility.static import now, timedelta_sec, strf_time, timedelta_hour, strp_time
+from utility.static import now, timedelta_sec, strf_time, strp_time
 
 
 class TraderUpbit(QThread):
@@ -191,11 +191,11 @@ class TraderUpbit(QThread):
     그러므로 재차 시드부족이 발생한 종목은 체결목록에서 마지막 체결시간이 3분이내면 체결목록에 기록하지 않는다.
     """
     def Buy(self, ticker, c, oc):
-        if self.buy_uuid is not None:
-            self.cstgQ.put(['매수완료', ticker])
-            return
         if not self.bool_opdl:
             self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
+            self.cstgQ.put(['매수완료', ticker])
+            return
+        if self.buy_uuid is not None:
             self.cstgQ.put(['매수완료', ticker])
             return
 

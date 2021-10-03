@@ -18,7 +18,7 @@ from utility.sound import Sound
 from utility.query import Query
 from utility.query_tick import QueryTick
 from utility.telegram_msg import TelegramMsg
-from utility.static import now, strf_time, strp_time, changeFormat, thread_decorator
+from utility.static import now, strf_time, strp_time, changeFormat, thread_decorator, comma2int, comma2float
 
 
 class Window(QtWidgets.QMainWindow):
@@ -238,6 +238,36 @@ class Window(QtWidgets.QMainWindow):
                     self, '오류 알림',
                     '업비트 계정이 설정되지 않아\n트레이더를 선택할 수 없습니다.\n계정 설정 후 다시 선택하십시오.\n'
                 )
+
+    @QtCore.pyqtSlot(int)
+    def CellClicked_01(self, row):
+        item = self.sjg_tableWidget.item(row, 0)
+        if item is None:
+            return
+        name = item.text()
+        oc = comma2int(self.sjg_tableWidget.item(row, columns_jg.index('보유수량')).text())
+        c = comma2int(self.sjg_tableWidget.item(row, columns_jg.index('현재가')).text())
+        buttonReply = QtWidgets.QMessageBox.question(
+            self, '주식 시장가 매도', f'{name} {oc}주를 시장가매도합니다.\n계속하시겠습니까?\n',
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+        )
+        if buttonReply == QtWidgets.QMessageBox.Yes:
+            stockQ.put(['매도', self.dict_code[name], name, c, oc])
+
+    @QtCore.pyqtSlot(int)
+    def CellClicked_02(self, row):
+        item = self.cjg_tableWidget.item(row, 0)
+        if item is None:
+            return
+        ticker = item.text()
+        oc = comma2float(self.cjg_tableWidget.item(row, columns_jg.index('보유수량')).text())
+        c = comma2float(self.cjg_tableWidget.item(row, columns_jg.index('현재가')).text())
+        buttonReply = QtWidgets.QMessageBox.question(
+            self, '코인 시장가 매도', f'{ticker} {oc}개를 시장가매도합니다.\n계속하시겠습니까?\n',
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+        )
+        if buttonReply == QtWidgets.QMessageBox.Yes:
+            coinQ.put(['매도', ticker, c, oc])
 
     def ButtonClicked_1(self):
         if self.main_tabWidget.currentWidget() == self.st_tab:

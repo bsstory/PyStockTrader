@@ -79,6 +79,22 @@ def changeFormat(text, dotdowndel=False, dotdown8=False):
     return format_data
 
 
+def comma2int(t):
+    if ' ' in t:
+        t = t.split(' ')[1]
+    if ',' in t:
+        t = t.replace(',', '')
+    return int(t)
+
+
+def comma2float(t):
+    if ' ' in t:
+        t = t.split(' ')[1]
+    if ',' in t:
+        t = t.replace(',', '')
+    return float(t)
+
+
 def readEnc(trcode):
     enc = zipfile.ZipFile(f'{OPENAPI_PATH}/data/{trcode}.enc')
     lines = enc.read(trcode.upper() + '.dat').decode('cp949')
