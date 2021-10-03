@@ -210,9 +210,13 @@ class TraderUpbit(QThread):
         elif self.upbit is not None:
             ret = self.upbit.buy_market_order(ticker, self.dict_intg['종목당투자금'])
             if ret is not None:
-                self.buy_uuid = [ticker, ret['uuid']]
-                self.dict_time['매수체결확인'] = timedelta_sec(1)
+                if list(ret.ket())[0] != 'error':
+                    self.buy_uuid = [ticker, ret['uuid']]
+                    self.dict_time['매수체결확인'] = timedelta_sec(1)
+                else:
+                    self.ErrorCode(ret['error'])
             else:
+                self.cstgQ.put(['매수완료', ticker])
                 self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
@@ -231,9 +235,13 @@ class TraderUpbit(QThread):
         elif self.upbit is not None:
             ret = self.upbit.sell_market_order(ticker, oc)
             if ret is not None:
-                self.sell_uuid = [ticker, ret['uuid']]
-                self.dict_time['매도체결확인'] = timedelta_sec(1)
+                if list(ret.ket())[0] != 'error':
+                    self.sell_uuid = [ticker, ret['uuid']]
+                    self.dict_time['매도체결확인'] = timedelta_sec(1)
+                else:
+                    self.ErrorCode(ret['error'])
             else:
+                self.cstgQ.put(['매도완료', ticker])
                 self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
@@ -270,38 +278,48 @@ class TraderUpbit(QThread):
     def CheckBuyChegeol(self, ticker):
         ret = self.upbit.get_order(self.buy_uuid[1])
         if ret is not None:
-            trades = ret['trades']
-            if len(trades) == 1:
-                cp = float(trades[0]['price'])
-                cc = float(trades[0]['volume'])
+            if list(ret.ket())[0] != 'error':
+                trades = ret['trades']
+                if len(trades) == 1:
+                    cp = float(trades[0]['price'])
+                    cc = float(trades[0]['volume'])
+                else:
+                    tg = 0
+                    cc = 0
+                    for i in range(len(trades)):
+                        tg += float(trades[i]['price']) * float(trades[i]['volume'])
+                        cc += float(trades[i]['volume'])
+                    cp = round(tg / cc, 2)
+                self.UpdateBuy(ticker, cp, cc)
+                self.cstgQ.put(['매수완료', ticker])
+                self.buy_uuid = None
             else:
-                tg = 0
-                cc = 0
-                for i in range(len(trades)):
-                    tg += float(trades[i]['price']) * float(trades[i]['volume'])
-                    cc += float(trades[i]['volume'])
-                cp = round(tg / cc, 2)
-            self.UpdateBuy(ticker, cp, cc)
-            self.cstgQ.put(['매수완료', ticker])
-            self.buy_uuid = None
+                self.ErrorCode(ret['error'])
 
     def CheckSellChegeol(self, ticker):
         ret = self.upbit.get_order(self.sell_uuid[1])
-        if ret is not None and ret['state'] == 'done':
-            trades = ret['trades']
-            if len(trades) == 1:
-                cp = float(trades[0]['price'])
-                cc = float(trades[0]['volume'])
+        if ret is not None:
+            if list(ret.ket())[0] != 'error':
+                if ret['state'] == 'done':
+                    trades = ret['trades']
+                    if len(trades) == 1:
+                        cp = float(trades[0]['price'])
+                        cc = float(trades[0]['volume'])
+                    else:
+                        tg = 0
+                        cc = 0
+                        for i in range(len(trades)):
+                            tg += float(trades[i]['price']) * float(trades[i]['volume'])
+                            cc += float(trades[i]['volume'])
+                        cp = round(tg / cc, 2)
+                    self.UpdateSell(ticker, cp, cc)
+                    self.cstgQ.put(['매도완료', ticker])
+                    self.sell_uuid = None
             else:
-                tg = 0
-                cc = 0
-                for i in range(len(trades)):
-                    tg += float(trades[i]['price']) * float(trades[i]['volume'])
-                    cc += float(trades[i]['volume'])
-                cp = round(tg / cc, 2)
-            self.UpdateSell(ticker, cp, cc)
-            self.cstgQ.put(['매도완료', ticker])
-            self.sell_uuid = None
+                self.ErrorCode(ret['error'])
+
+    def ErrorCode(self, error):
+        self.windowQ.put([ui_num['C로그텍스트'], f"{error['name']} : {error['message']}"])
 
     def UpdateBuy(self, ticker, cp, cc, cancle=False):
         dt = strf_time('%Y%m%d%H%M%S%f')
