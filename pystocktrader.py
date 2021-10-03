@@ -1512,7 +1512,7 @@ class Window(QtWidgets.QMainWindow):
         for j, index in enumerate(df.index):
             for i, column in enumerate(df.columns):
                 if column == '체결시간':
-                    cgtime = df[column][index]
+                    cgtime = str(df[column][index])
                     cgtime = f'{cgtime[8:10]}:{cgtime[10:12]}:{cgtime[12:14]}'
                     item = QtWidgets.QTableWidgetItem(cgtime)
                 elif column in ['거래일자', '일자']:
@@ -1606,7 +1606,7 @@ class Window(QtWidgets.QMainWindow):
 
             for i, column in enumerate(columns_gj2):
                 if column in ['거래대금', '누적거래대금']:
-                    item = QtWidgets.QTableWidgetItem(changeFormat(dict_df[code][column][0]).split('.')[0])
+                    item = QtWidgets.QTableWidgetItem(changeFormat(dict_df[code][column][0], dotdowndel=True))
                 else:
                     item = QtWidgets.QTableWidgetItem(changeFormat(dict_df[code][column][0]))
                 item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
