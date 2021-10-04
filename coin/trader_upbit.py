@@ -39,6 +39,7 @@ class TraderUpbit(QThread):
 
         self.str_today = strf_time('%Y%m%d')
 
+        self.tickers = []
         self.dict_jcdt = {}                             # 종목별 체결시간 저장용
         self.dict_intg = {
             '예수금': 0,
@@ -117,15 +118,15 @@ class TraderUpbit(QThread):
 
     def EventLoop(self):
         """ get_tickers 리스트의 갯수가 다른 버그 발견, 1초 간격 3회 조회 후 길이가 긴 리스트를 티커리스트로 정한다 """
-        tickers = pyupbit.get_tickers(fiat="KRW")
+        self.tickers = pyupbit.get_tickers(fiat="KRW")
         time.sleep(1)
         tickers2 = pyupbit.get_tickers(fiat="KRW")
-        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
+        self.tickers = tickers2 if len(tickers2) > len(self.tickers) else self.tickers
         time.sleep(1)
         tickers2 = pyupbit.get_tickers(fiat="KRW")
-        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
-        self.cstgQ.put(['관심종목초기화', tickers])
-        self.websocketQ = WebSocketManager('ticker', tickers)
+        self.tickers = tickers2 if len(tickers2) > len(self.tickers) else self.tickers
+        self.cstgQ.put(['관심종목초기화', self.tickers])
+        self.websocketQ = WebSocketManager('ticker', self.tickers)
         while True:
             try:
                 """ 주문용 큐를 감시한다. """
@@ -196,7 +197,7 @@ class TraderUpbit(QThread):
             except websockets.exceptions.ConnectionClosedError:
                 time.sleep(5)
                 self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
-                self.websocketQ = WebSocketManager('ticker', tickers)
+                self.websocketQ = WebSocketManager('ticker', self.tickers)
 
     """
     모의투자 시 실제 매도수 주문을 전송하지 않고 바로 체결목록, 잔고목록 등을 갱신한다.
@@ -415,9 +416,8 @@ class TraderUpbit(QThread):
         self.UpdateTotaltradelist()
 
         if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
-            self.dict_time['스패셜전략'] = timedelta_sec(50)
-            tickers = pyupbit.get_tickers(fiat="KRW")
-            self.cstgQ.put(['관심종목초기화', tickers])
+            self.dict_time['스패셜전략'] = timedelta_sec(5)
+            self.cstgQ.put(['관심종목초기화', self.tickers])
 
     def UpdateTotaltradelist(self, first=False):
         tsg = self.df_td['매도금액'].sum()
