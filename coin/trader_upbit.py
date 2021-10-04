@@ -263,7 +263,7 @@ class TraderUpbit(QThread):
         oc = self.df_jg['보유수량'][ticker]
         if prec != c:
             bg = self.df_jg['매입금액'][ticker]
-            pg, sg, sp = self.GetPgSgSp(bg, oc * c)
+            pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.df_jg.at[ticker, columns] = c, sp, sg, pg
             data = [ticker, sp, oc, ch, c]
@@ -354,8 +354,8 @@ class TraderUpbit(QThread):
 
         if not cancle:
             bg = cp * cc
-            pg, sg, sp = self.GetPgSgSp(bg, bg)
-            self.dict_intg['예수금'] -= bg
+            pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, bg)
+            self.dict_intg['예수금'] -= bg + bfee
             self.df_jg.at[ticker] = ticker, cp, cp, sp, sg, bg, pg, cc
             self.df_jg.sort_values(by=['매입금액'], ascending=False, inplace=True)
             self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
@@ -376,8 +376,8 @@ class TraderUpbit(QThread):
 
         bp = self.df_jg['매입가'][ticker]
         bg = bp * cc
-        pg, sg, sp = self.GetPgSgSp(bg, cp * cc)
-        self.dict_intg['예수금'] += bg + sg
+        pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, cp * cc)
+        self.dict_intg['예수금'] += bg + sg - sfee
 
         self.df_jg.drop(index=ticker, inplace=True)
         self.df_cj.at[dt] = ticker, '매도', cc, 0, cp, cp, dt
@@ -422,10 +422,10 @@ class TraderUpbit(QThread):
     def GetPgSgSp(self, bg, cg):
         sfee = cg * self.dict_intg['업비트수수료']
         bfee = bg * self.dict_intg['업비트수수료']
-        pg = int(cg - sfee - bfee)
+        pg = int(round(cg))
         sg = int(round(pg - bg))
         sp = round(sg / bg * 100, 2)
-        return pg, sg, sp
+        return pg, sg, sp, bfee, sfee
 
     def UpdateTotaljango(self):
         if len(self.df_jg) > 0:
