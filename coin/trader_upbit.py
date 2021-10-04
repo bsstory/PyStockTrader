@@ -340,7 +340,10 @@ class TraderUpbit(QThread):
                     dt = str(int(dt) + 1)
 
         order_gubun = '매수' if not cancle else '시드부족'
-        self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, 0, dt if cancle else ticker, order_gubun, cc, 0, cp, cp, dt
+        if cancle:
+            self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, 0, dt
+        else:
+            self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
         self.df_cj.sort_values(by=['체결시간'], ascending=False, inplace=True)
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
 
