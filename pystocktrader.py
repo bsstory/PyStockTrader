@@ -205,7 +205,12 @@ class Window(QtWidgets.QMainWindow):
 
     # noinspection PyMethodMayBeStatic
     def SpecialStrategy(self):
-        coinQ.put('스패셜전략')
+        buttonReply = QtWidgets.QMessageBox.question(
+            self, '스패셜전략 활성화', f'스패셜전략 활성화 시 매도 후 관심종목이 초기화됩니다.\n계속하시겠습니까?\n',
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+        )
+        if buttonReply == QtWidgets.QMessageBox.Yes:
+            coinQ.put('스패셜전략')
 
     def CheckboxChanged_01(self, state):
         if state == Qt.Checked:
