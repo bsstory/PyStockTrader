@@ -87,7 +87,7 @@ def SetUI(self):
         lineedit.setFont(qfont)
         return lineedit
 
-    def setTablewidget(tab, columns, rowcount, sectionsize=None, clicked=None, color=False):
+    def setTablewidget(tab, columns, rowcount, sectionsize=None, clicked=None):
         tableWidget = QtWidgets.QTableWidget(tab)
         if sectionsize is not None:
             tableWidget.verticalHeader().setDefaultSectionSize(sectionsize)
@@ -166,11 +166,6 @@ def SetUI(self):
             tableWidget.setColumnWidth(6, 90)
         if clicked is not None:
             tableWidget.cellClicked.connect(clicked)
-        if color:
-            for i in range(22):
-                tableitem = QtWidgets.QTableWidgetItem()
-                tableitem.setBackground(color_bg_bt)
-                tableWidget.setItem(i, 0, tableitem)
         return tableWidget
 
     icon_main = QtGui.QIcon(f'{ICON_PATH}/python.png')
@@ -220,7 +215,9 @@ def SetUI(self):
     self.dd_pushButton = setPushbutton('', click=self.ButtonClicked_5, icon=icon_dbdel, tip='  거래목록 데이터 삭제 및 초기화')
     self.sd_pushButton = setPushbutton('', click=self.ButtonClicked_6, icon=icon_accdel, tip='  모든 계정 설정 삭제 및 초기화')
     self.qs_pushButton = setPushbutton('', click=self.ShowQsize)
+    self.cc_pushButton = setPushbutton('', click=self.SpecialStrategy)
     self.qs_pushButton.setShortcut('Alt+Q')
+    self.cc_pushButton.setShortcut('Alt+S')
 
     self.progressBar = QtWidgets.QProgressBar(self)
     self.progressBar.setAlignment(Qt.AlignCenter)
@@ -669,6 +666,7 @@ def SetUI(self):
     self.dd_pushButton.setGeometry(5, 687, 35, 32)
     self.sd_pushButton.setGeometry(5, 724, 35, 32)
     self.qs_pushButton.setGeometry(0, 0, 0, 0)
+    self.cc_pushButton.setGeometry(0, 0, 0, 0)
 
     self.stt_tableWidget.setGeometry(5, 5, 668, 42)
     self.std_tableWidget.setGeometry(5, 52, 668, 320)

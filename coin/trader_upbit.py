@@ -38,18 +38,21 @@ class TraderUpbit(QThread):
 
         self.str_today = strf_time('%Y%m%d')
 
-        self.bool_opdl = False
-        self.bool_save = False
         self.dict_jcdt = {}                             # 종목별 체결시간 저장용
         self.dict_intg = {
             '예수금': 0,
-            '종목당투자금': 0,                            # 종목당 투자금은 int(예수금 * 0.99 / 최대매수종목수)로 계산
-            '업비트수수료': 0.                            # 0.5% 일경우 0.005로 입력
+            '종목당투자금': 0,                            # 종목당 투자금은 int((예수금 + 매입금액) * 0.99 / 최대매수종목수)로 계산
+            '업비트수수료': 0.005                         # 0.5% 일경우 0.005로 입력
+        }
+        self.dict_bool = {
+            '최소주문금액': False,                        # 업비트 주문가능 최소금액, 종목당투자금이 5천원 미만일 경우 False
+            '실현손익저장': False,
+            '스패셜전략': False
         }
         self.dict_time = {
             '매수체결확인': now(),                          # 1초 마다 매수 체결 확인용
             '매도체결확인': now(),                          # 1초 마다 매도 체결 확인용
-            '거래정보': now()
+            '거래정보': now()                              # 잔고목록 및 잔고평가 갱신용
         }
 
     def run(self):
@@ -103,7 +106,7 @@ class TraderUpbit(QThread):
             self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않았습니다.'])
 
         self.cstgQ.put(self.dict_intg['종목당투자금'])
-        self.bool_opdl = True if self.dict_intg['종목당투자금'] > 5000 else False
+        self.dict_bool['최소주문금액'] = True if self.dict_intg['종목당투자금'] > 5000 else False
 
         if len(self.df_td) > 0:
             self.UpdateTotaltradelist(first=True)
@@ -121,6 +124,8 @@ class TraderUpbit(QThread):
                     self.Buy(data[1], data[2], data[3])
                 elif data[0] == '매도':
                     self.Sell(data[1], data[2], data[3])
+                elif data == '스패셜전략':
+                    self.SpecialStrategy()
 
             """
             실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
@@ -174,8 +179,8 @@ class TraderUpbit(QThread):
                 self.UpdateTotaljango()
                 self.dict_time['거래정보'] = timedelta_sec(1)
 
-            """ 9시 초기화 """
-            if 85950 < int(strf_time('%H%M%S')) < 90000 and not self.bool_save:
+            """ 0시 초기화 """
+            if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
                 self.SaveTotalGetbalDelcjtd()
 
     """
@@ -191,7 +196,7 @@ class TraderUpbit(QThread):
     그러므로 재차 시드부족이 발생한 종목은 체결목록에서 마지막 체결시간이 3분이내면 체결목록에 기록하지 않는다.
     """
     def Buy(self, ticker, c, oc):
-        if not self.bool_opdl:
+        if not self.dict_bool['최소주문금액']:
             self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
             self.cstgQ.put(['매수완료', ticker])
             return
@@ -223,8 +228,8 @@ class TraderUpbit(QThread):
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
 
-        if self.bool_save and int(strf_time('%H%M%S')) > 90000:
-            self.bool_save = False
+        if self.dict_bool['실현손익저장'] and int(strf_time('%H%M%S')) > 100:
+            self.dict_bool['실현손익저장'] = False
 
     def Sell(self, ticker, c, oc):
         if self.sell_uuid is not None:
@@ -383,6 +388,10 @@ class TraderUpbit(QThread):
         self.teleQ.put(f'매도 알림 - {ticker} {cp} {cc}')
         self.UpdateTotaltradelist()
 
+        if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
+            tickers = pyupbit.get_tickers(fiat="KRW")
+            self.cstgQ.put(['관심종목초기화', tickers])
+
     def UpdateTotaltradelist(self, first=False):
         tsg = self.df_td['매도금액'].sum()
         tbg = self.df_td['매수금액'].sum()
@@ -420,7 +429,7 @@ class TraderUpbit(QThread):
 
     """
     일별 일현손익 저장, 날짜 변경, 종목당투자금 재계산, 체결목록 및 거래목록 초기화가 진행된다.
-    저장확인용 변수 self.bool_save는 9시 이후 첫번째 매수 주문시 False로 재변경된다.
+    저장확인용 변수 self.bool_save는 0시 이후 첫번째 매수 주문시 False로 재변경된다.
     """
     def SaveTotalGetbalDelcjtd(self):
         df = self.df_tt[['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
@@ -429,4 +438,11 @@ class TraderUpbit(QThread):
         self.df_cj = pd.DataFrame(columns=columns_cj)
         self.df_td = pd.DataFrame(columns=columns_td)
         self.GetBalances()
-        self.bool_save = True
+        self.dict_bool['실현손익저장'] = True
+
+    """ 스패셜전략 활성화 시 매도 이후 관심종목을 초기화한다. """
+    def SpecialStrategy(self):
+        if self.dict_bool['스패셜전략']:
+            self.dict_bool['스패셜전략'] = False
+        else:
+            self.dict_bool['스패셜전략'] = True

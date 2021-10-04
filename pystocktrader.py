@@ -203,6 +203,10 @@ class Window(QtWidgets.QMainWindow):
     def ShowQsize(self):
         self.showqsize = True if not self.showqsize else False
 
+    # noinspection PyMethodMayBeStatic
+    def SpecialStrategy(self):
+        coinQ.put('스패셜전략')
+
     def CheckboxChanged_01(self, state):
         if state == Qt.Checked:
             con = sqlite3.connect(DB_SETTING)
