@@ -66,6 +66,7 @@ class Window(QtWidgets.QMainWindow):
         self.qtimer3.start()
 
         self.showqsize = False
+        self.specialstrategy = False
         self.backtester_proc = None
 
         self.receiver_coin_thread1 = WebsTicker(qlist)
@@ -205,12 +206,22 @@ class Window(QtWidgets.QMainWindow):
 
     # noinspection PyMethodMayBeStatic
     def SpecialStrategy(self):
-        buttonReply = QtWidgets.QMessageBox.question(
-            self, '스패셜전략 활성화', f'스패셜전략 활성화 시 매도 후 관심종목이 초기화됩니다.\n계속하시겠습니까?\n',
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
-        )
-        if buttonReply == QtWidgets.QMessageBox.Yes:
-            coinQ.put('스패셜전략')
+        if self.specialstrategy:
+            buttonReply = QtWidgets.QMessageBox.question(
+                self, '스패셜전략 활성화', f'스패셜전략이 비활성화됩니다.\n계속하시겠습니까?\n',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+            )
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.specialstrategy = False
+                coinQ.put('스패셜전략')
+        else:
+            buttonReply = QtWidgets.QMessageBox.question(
+                self, '스패셜전략 활성화', f'스패셜전략 활성화 시 매도 후 관심종목이 초기화됩니다.\n계속하시겠습니까?\n',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+            )
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.specialstrategy = True
+                coinQ.put('스패셜전략')
 
     def CheckboxChanged_01(self, state):
         if state == Qt.Checked:
