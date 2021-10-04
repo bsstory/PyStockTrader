@@ -601,7 +601,10 @@ class TraderKiwoom:
                 self.windowQ.put([ui_num['S로그텍스트'], f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
             elif og == '시드부족':
                 self.sstgQ.put(['매수완료', code])
-        self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
+        if og == '시드부족':
+            self.UpdateChegeollist(name, og, oc, omc, op, 0, dt, on)
+        else:
+            self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
         self.lock.release()
 
     def UpdateChegeoljango(self, code, name, og, oc, cp):
