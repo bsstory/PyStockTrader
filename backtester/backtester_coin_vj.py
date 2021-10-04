@@ -9,7 +9,7 @@ from utility.setting import DB_BACKTEST, DB_COIN_TICK
 from utility.static import now, strf_time, timedelta_day
 
 
-class BackTester2mCoin:
+class BackTesterCoinVj:
     def __init__(self, q_, ticker_list_, num_):
         self.q = q_
         self.ticker_list = ticker_list_
@@ -304,7 +304,7 @@ class Total:
                        f" 손절 {mc}회, 승률 {pper}%, 평균수익률 {avgsp}%, 수익률합계 {tsp}%, 수익금합계 {format(tsg, ',')}원"
                 print(text)
                 conn = sqlite3.connect(DB_BACKTEST)
-                df_back.to_sql(f"{strf_time('%Y%m%d')}_2cm", conn, if_exists='replace', chunksize=1000)
+                df_back.to_sql(f"coin_vj_{strf_time('%Y%m%d')}_1", conn, if_exists='replace', chunksize=1000)
                 conn.close()
 
         if len(df_tsg) > 0:
@@ -313,7 +313,7 @@ class Total:
             df_tsg['ttsg_cumsum'] = df_tsg['ttsg'].cumsum()
             df_tsg[['ttsg', 'ttsg_cumsum']] = df_tsg[['ttsg', 'ttsg_cumsum']].astype(int)
             conn = sqlite3.connect(DB_BACKTEST)
-            df_tsg.to_sql(f"{strf_time('%Y%m%d')}_2tm", conn, if_exists='replace', chunksize=1000)
+            df_tsg.to_sql(f"coin_vj_{strf_time('%Y%m%d')}_2", conn, if_exists='replace', chunksize=1000)
             conn.close()
             df_tsg.plot(figsize=(12, 9), rot=45)
             plt.show()
@@ -352,7 +352,7 @@ if __name__ == "__main__":
     workcount = int(last / int(sys.argv[14])) + 1
     for j in range(0, last, workcount):
         ticker_list = table_list[j:j + workcount]
-        p = Process(target=BackTester2mCoin, args=(q, ticker_list, num))
+        p = Process(target=BackTesterCoinVj, args=(q, ticker_list, num))
         procs.append(p)
         p.start()
     for p in procs:

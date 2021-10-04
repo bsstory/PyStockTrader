@@ -9,7 +9,7 @@ from utility.setting import DB_SETTING, DB_BACKTEST, DB_STOCK_TICK, GRAPH_PATH
 from utility.static import now, strf_time, strp_time, timedelta_sec, timedelta_day
 
 
-class BackTester1Stock:
+class BackTesterStockVc:
     def __init__(self, q_, code_list_, num_, df_mt_, high):
         self.q = q_
         self.code_list = code_list_
@@ -338,7 +338,7 @@ class Total:
                       self.gap_sm, self.ch_low, self.dm_low, self.per_low, self.per_high, self.cs_per]],
                     columns=columns2, index=[strf_time('%Y%m%d%H%M%S')])
                 conn = sqlite3.connect(DB_BACKTEST)
-                df_back.to_sql(f"{strf_time('%Y%m%d')}_1c", conn, if_exists='append', chunksize=1000)
+                df_back.to_sql(f"stock_vc_{strf_time('%Y%m%d')}_1", conn, if_exists='append', chunksize=1000)
                 conn.close()
 
         if len(df_tsg) > 0:
@@ -347,10 +347,10 @@ class Total:
             df_tsg['ttsg_cumsum'] = df_tsg['ttsg'].cumsum()
             df_tsg[['ttsg', 'ttsg_cumsum']] = df_tsg[['ttsg', 'ttsg_cumsum']].astype(int)
             conn = sqlite3.connect(DB_BACKTEST)
-            df_tsg.to_sql(f"{strf_time('%Y%m%d')}_it", conn, if_exists='replace', chunksize=1000)
+            df_tsg.to_sql(f"stock_vc_{strf_time('%Y%m%d')}_2", conn, if_exists='append', chunksize=1000)
             conn.close()
             df_tsg.plot(figsize=(12, 9), rot=45)
-            plt.savefig(f"{GRAPH_PATH}/S{strf_time('%Y%m%d')}_1.png")
+            plt.savefig(f"{GRAPH_PATH}/stock_vc_{strf_time('%Y%m%d')}.png")
             conn = sqlite3.connect(DB_SETTING)
             cur = conn.cursor()
 
@@ -405,7 +405,7 @@ if __name__ == "__main__":
             workcount = int(last / int(sys.argv[47])) + 1
             for j in range(0, last, workcount):
                 code_list = table_list[j:j + workcount]
-                p = Process(target=BackTester1Stock, args=(q, code_list, num, df3, False))
+                p = Process(target=BackTesterStockVc, args=(q, code_list, num, df3, False))
                 procs.append(p)
                 p.start()
             for p in procs:
@@ -440,7 +440,7 @@ if __name__ == "__main__":
         workcount = int(last / int(sys.argv[47])) + 1
         for j in range(0, last, workcount):
             code_list = table_list[j:j + workcount]
-            p = Process(target=BackTester1Stock, args=(q, code_list, num, df3, False))
+            p = Process(target=BackTesterStockVc, args=(q, code_list, num, df3, False))
             procs.append(p)
             p.start()
         for p in procs:
@@ -481,7 +481,7 @@ if __name__ == "__main__":
     workcount = int(last / int(sys.argv[47])) + 1
     for j in range(0, last, workcount):
         db_list = table_list[j:j + workcount]
-        p = Process(target=BackTester1Stock, args=(q, db_list, num, df3, True))
+        p = Process(target=BackTesterStockVc, args=(q, db_list, num, df3, True))
         procs.append(p)
         p.start()
     for p in procs:

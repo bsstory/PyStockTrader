@@ -96,7 +96,7 @@ class Window(QtWidgets.QMainWindow):
             self.UpbitCollectorStart()
         if DICT_SET['업비트트레이더']:
             self.UpbitTraderStart()
-        if self.int_time < 83000 <= int(strf_time('%H%M%S')):
+        if self.int_time < 100 <= int(strf_time('%H%M%S')):
             self.ClearTextEdit()
         self.ChangeWindowTitle()
         self.int_time = int(strf_time('%H%M%S'))

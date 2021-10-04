@@ -9,7 +9,7 @@ from utility.static import now, strf_time, timedelta_day, strp_time, timedelta_s
 from utility.setting import DB_SETTING, DB_BACKTEST, DB_COIN_TICK, GRAPH_PATH
 
 
-class BackTester2Coin:
+class BackTesterCoinVc:
     def __init__(self, q_, ticker_list_, num_, high):
         self.q = q_
         self.ticker_list = ticker_list_
@@ -346,7 +346,7 @@ class Total:
                       self.gap_sm, self.ch_low, self.dm_low, self.per_low, self.per_high, self.cs_per]],
                     columns=columns2, index=[strf_time('%Y%m%d%H%M%S')])
                 conn = sqlite3.connect(DB_BACKTEST)
-                df_back.to_sql(f"{strf_time('%Y%m%d')}_2c", conn, if_exists='append', chunksize=1000)
+                df_back.to_sql(f"coin_vc_{strf_time('%Y%m%d')}_1", conn, if_exists='append', chunksize=1000)
                 conn.close()
 
         if len(df_tsg) > 0:
@@ -355,10 +355,10 @@ class Total:
             df_tsg['ttsg_cumsum'] = df_tsg['ttsg'].cumsum()
             df_tsg[['ttsg', 'ttsg_cumsum']] = df_tsg[['ttsg', 'ttsg_cumsum']].astype(int)
             conn = sqlite3.connect(DB_BACKTEST)
-            df_tsg.to_sql(f"{strf_time('%Y%m%d')}_2t", conn, if_exists='replace', chunksize=1000)
+            df_tsg.to_sql(f"coin_vc_{strf_time('%Y%m%d')}_2", conn, if_exists='append', chunksize=1000)
             conn.close()
             df_tsg.plot(figsize=(12, 9), rot=45)
-            plt.savefig(f"{GRAPH_PATH}/C{strf_time('%Y%m%d')}_2.png")
+            plt.savefig(f"{GRAPH_PATH}/coin_vc_{strf_time('%Y%m%d')}.png")
             conn = sqlite3.connect(DB_SETTING)
             cur = conn.cursor()
 
@@ -408,7 +408,7 @@ if __name__ == "__main__":
             workcount = int(last / int(sys.argv[47])) + 1
             for j in range(0, last, workcount):
                 ticker_list = table_list[j:j + workcount]
-                p = Process(target=BackTester2Coin, args=(q, ticker_list, num, False))
+                p = Process(target=BackTesterCoinVc, args=(q, ticker_list, num, False))
                 procs.append(p)
                 p.start()
             for p in procs:
@@ -443,7 +443,7 @@ if __name__ == "__main__":
         workcount = int(last / int(sys.argv[47])) + 1
         for j in range(0, last, workcount):
             ticker_list = table_list[j:j + workcount]
-            p = Process(target=BackTester2Coin, args=(q, ticker_list, num, False))
+            p = Process(target=BackTesterCoinVc, args=(q, ticker_list, num, False))
             procs.append(p)
             p.start()
         for p in procs:
@@ -484,7 +484,7 @@ if __name__ == "__main__":
     workcount = int(last / int(sys.argv[47])) + 1
     for j in range(0, last, workcount):
         db_list = table_list[j:j + workcount]
-        p = Process(target=BackTester2Coin, args=(q, db_list, num, True))
+        p = Process(target=BackTesterCoinVc, args=(q, db_list, num, True))
         procs.append(p)
         p.start()
     for p in procs:
