@@ -99,13 +99,20 @@ class TraderUpbit(QThread):
             con = sqlite3.connect(DB_TRADELIST)
             df = pd.read_sql('SELECT * FROM c_tradelist', con)
             con.close()
-            self.dict_intg['예수금'] = 100000000 + df['수익금'].sum() - self.df_jg['매입금액'].sum()
-            self.dict_intg['종목당투자금'] = \
-                int((100000000 + df['수익금'].sum()) * 0.99 / DICT_SET['최대매수종목수2'])
+            tbg = df['매수금액'].sum()
+            tsg = df['매도금액'].sum()
+            tcg = df['수익금'].sum()
+            bfee = int(round(tbg * 0.0005))
+            sfee = int(round(tsg * 0.0005))
+            cbg = self.df_jg['매입금액'].sum()
+            cfee = int(round(cbg * 0.0005))
+            chujeonjasan = 100000000 + tcg - bfee - sfee
+            self.dict_intg['예수금'] = int(chujeonjasan - cbg - cfee)
+            self.dict_intg['종목당투자금'] = int(chujeonjasan * 0.99 / DICT_SET['최대매수종목수2'])
         elif self.upbit is not None:
+            cbg = self.df_jg['매입금액'].sum()
             self.dict_intg['예수금'] = int(float(self.upbit.get_balances()[0]['balance']))
-            self.dict_intg['종목당투자금'] = \
-                int((self.dict_intg['예수금'] + self.df_jg['매입금액'].sum()) * 0.99 / DICT_SET['최대매수종목수2'])
+            self.dict_intg['종목당투자금'] = int((self.dict_intg['예수금'] + cbg) * 0.99 / DICT_SET['최대매수종목수2'])
         else:
             self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않았습니다.'])
 
