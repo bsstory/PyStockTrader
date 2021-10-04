@@ -615,7 +615,6 @@ class TraderKiwoom:
                 self.dict_df['잔고목록'].at[code] = name, cp, cp, sp, sg, bg, pg, oc
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
                 self.receivQ.put(f'잔고편입 {code}')
-                self.sstgQ.put(['매수완료', code])
             else:
                 jc = self.dict_df['잔고목록']['보유수량'][code]
                 bg = self.dict_df['잔고목록']['매입금액'][code]
@@ -624,21 +623,24 @@ class TraderKiwoom:
                 bp = int(bg / jc)
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
-            self.list_buy.remove(code)
-
         elif og == '매도':
             jc = self.dict_df['잔고목록']['보유수량'][code]
             if jc - oc == 0:
                 self.dict_df['잔고목록'].drop(index=code, inplace=True)
                 self.stockQ.put([sn_jscg, code])
                 self.receivQ.put(f'잔고청산 {code}')
-                self.sstgQ.put(['매도완료', code])
             else:
                 bp = self.dict_df['잔고목록']['매입가'][code]
                 jc = jc - oc
                 bg = jc * bp
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
+
+        if og == '매수':
+            self.sstgQ.put(['매수완료', code])
+            self.list_buy.remove(code)
+        elif og == '매도':
+            self.sstgQ.put(['매도완료', code])
             self.list_sell.remove(code)
 
         columns = ['매입가', '현재가', '평가손익', '매입금액']
