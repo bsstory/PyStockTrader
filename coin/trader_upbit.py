@@ -212,7 +212,7 @@ class TraderUpbit(QThread):
         if self.dict_intg['예수금'] < c * oc:
             df = self.df_cj[(self.df_cj['주문구분'] == '시드부족') & (self.df_cj['종목명'] == ticker)]
             if len(df) == 0 or now() > timedelta_sec(180, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
-                self.UpdateBuy(ticker, c, 0, cancle=True)
+                self.UpdateBuy(ticker, c, oc, cancle=True)
             self.cstgQ.put(['매수완료', ticker])
             return
 
@@ -345,7 +345,10 @@ class TraderUpbit(QThread):
                     dt = str(int(dt) + 1)
 
         order_gubun = '매수' if not cancle else '시드부족'
-        self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
+        if cancle:
+            self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, 0, dt
+        else:
+            self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
         self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
 

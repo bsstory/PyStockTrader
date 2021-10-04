@@ -601,10 +601,7 @@ class TraderKiwoom:
                 self.windowQ.put([ui_num['S로그텍스트'], f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
             elif og == '시드부족':
                 self.sstgQ.put(['매수완료', code])
-        if og == '시드부족':
-            self.UpdateChegeollist(name, og, oc, omc, op, 0, dt, on)
-        else:
-            self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
+        self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
         self.lock.release()
 
     def UpdateChegeoljango(self, code, name, og, oc, cp):
@@ -696,7 +693,10 @@ class TraderKiwoom:
         if on in self.dict_df['체결목록'].index:
             self.dict_df['체결목록'].at[on, ['미체결수량', '체결가', '체결시간']] = omc, cp, dt
         else:
-            self.dict_df['체결목록'].at[on] = name, og, oc, omc, op, cp, dt
+            if og == '시드부족':
+                self.dict_df['체결목록'].at[on] = name, og, oc, 0, op, 0, dt
+            else:
+                self.dict_df['체결목록'].at[on] = name, og, oc, omc, op, cp, dt
         self.dict_df['체결목록'].sort_values(by=['체결시간'], ascending=False, inplace=True)
         self.windowQ.put([ui_num['S체결목록'], self.dict_df['체결목록']])
 
