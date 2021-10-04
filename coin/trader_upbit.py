@@ -214,7 +214,7 @@ class TraderUpbit(QThread):
     체결확인 후 잔고목록를 갱신 한 이후에 전략 연산 프로세스로 체결완료 신호를 보낸다.
     모든 목록은 갱신될 때마다 쿼리 프로세스로 보내어 DB에 실시간으로 기록된다.
     매수 주문은 예수금 부족인지 아닌지를 우선 확인하여 예수금 부족일 경우 주문구분을 시드부족으로 체결목록에 기록하고
-    전략 연산 프로세스의 주문 리스트 삭제용 매수완료 신호만 보낸다.
+    전략 연산 프로세스의 주문 리스트 삭제용 매수취소 신호만 보낸다.
     예수금 부족 상태이며 잔고목록에 없는 상태일 경우 전략 프로세스에서 지속적으로 매수 신호가 발생할 수 있다.
     그러므로 재차 시드부족이 발생한 종목은 체결목록에서 마지막 체결시간이 3분이내면 체결목록에 기록하지 않는다.
     """
@@ -223,19 +223,15 @@ class TraderUpbit(QThread):
             self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
             self.cstgQ.put(['매수취소', ticker])
             return
-        if self.dict_bool['스패셜전략'] and now() < self.dict_time['스패셜전략']:
+        if self.buy_uuid is not None or ticker in self.df_jg.index or \
+                (self.dict_bool['스패셜전략'] and now() < self.dict_time['스패셜전략']):
             self.cstgQ.put(['매수취소', ticker])
             return
-        if self.buy_uuid is not None:
-            self.cstgQ.put(['매수취소', ticker])
-            return
-
         if self.dict_intg['예수금'] < c * oc:
             df = self.df_cj[(self.df_cj['주문구분'] == '시드부족') & (self.df_cj['종목명'] == ticker)]
             if len(df) == 0 or now() > timedelta_sec(180, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
                 self.UpdateBuy(ticker, c, oc, cancle=True)
-            else:
-                self.cstgQ.put(['매수취소', ticker])
+            self.cstgQ.put(['매수취소', ticker])
             return
 
         if DICT_SET['모의투자2']:
@@ -250,7 +246,7 @@ class TraderUpbit(QThread):
                     self.ErrorCode(ret['error'])
             else:
                 self.cstgQ.put(['매수취소', ticker])
-                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
+                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
@@ -259,7 +255,7 @@ class TraderUpbit(QThread):
             self.dict_bool['실현손익저장'] = False
 
     def Sell(self, ticker, c, oc):
-        if self.sell_uuid is not None:
+        if self.sell_uuid is not None or ticker not in self.df_jg.index:
             self.cstgQ.put(['매도취소', ticker])
             return
 
@@ -275,44 +271,24 @@ class TraderUpbit(QThread):
                     self.ErrorCode(ret['error'])
             else:
                 self.cstgQ.put(['매도취소', ticker])
-                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
+                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
 
     def UpdateJango(self, ticker, c, ch):
         prec = self.df_jg['현재가'][ticker]
-        oc = self.df_jg['보유수량'][ticker]
         if prec != c:
             bg = self.df_jg['매입금액'][ticker]
+            oc = self.df_jg['보유수량'][ticker]
             pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.df_jg.at[ticker, columns] = c, sp, sg, pg
-            data = [ticker, sp, oc, ch, c]
-            self.cstgQ.put(data)
+            self.cstgQ.put([ticker, sp, oc, ch, c])
             if self.dict_bool['보유시간기준청산']:
                 df = self.df_cj[(self.df_cj['종목명'] == ticker) & (self.df_cj['주문구분'] == '매수')]
-                if len(df) > 0:
-                    buy_time = df['체결시간'][df.index[0]]
-                    if now() > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', buy_time)):
-                        self.Sell(ticker, c, oc)
-
-    def JangoCheongsan(self):
-        for ticker in self.df_jg.index:
-            c = self.df_jg['현재가'][ticker]
-            oc = self.df_jg['보유수량'][ticker]
-            if DICT_SET['모의투자2']:
-                self.UpdateSell(ticker, c, oc)
-            elif self.upbit is not None:
-                self.upbit.sell_market_order(ticker, oc)
-                time.sleep(0.2)
-            else:
-                text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
-                self.windowQ.put([ui_num['C로그텍스트'], text])
-
-        self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 잔고청산 주문 전송 완료'])
-        if DICT_SET['알림소리2']:
-            self.soundQ.put('코인 잔고청산 주문을 전송하였습니다.')
+                if len(df) > 0 and now() > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
+                    self.Sell(ticker, c, oc)
 
     def CheckBuyChegeol(self, ticker):
         ret = self.upbit.get_order(self.buy_uuid[1])
@@ -364,22 +340,17 @@ class TraderUpbit(QThread):
                     dt = str(int(dt) + 1)
 
         order_gubun = '매수' if not cancle else '시드부족'
-        if cancle:
-            self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, 0, dt
-        else:
-            self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
-        self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
-
-        self.buy_uuid = None
-        self.cstgQ.put(['매수완료', ticker])
+        self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, 0, dt if cancle else ticker, order_gubun, cc, 0, cp, cp, dt
+        self.df_cj.sort_values(by=['체결시간'], ascending=False, inplace=True)
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
 
         if not cancle:
+            self.buy_uuid = None
+            self.cstgQ.put(['매수완료', ticker])
             bg = cp * cc
             pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, bg)
             self.dict_intg['예수금'] -= bg + bfee
             self.df_jg.at[ticker] = ticker, cp, cp, sp, sg, bg, pg, cc
-            self.df_jg.sort_values(by=['매입금액'], ascending=False, inplace=True)
             self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
             self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - [매수] {ticker} 코인 {cp}원 {cc}개'])
             if DICT_SET['알림소리2']:
@@ -404,7 +375,7 @@ class TraderUpbit(QThread):
         self.df_jg.drop(index=ticker, inplace=True)
         self.df_cj.at[dt] = ticker, '매도', cc, 0, cp, cp, dt
         self.df_td.at[dt] = ticker, bg, pg, cc, sp, sg, dt
-        self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
+        self.df_cj.sort_values(by=['체결시간'], ascending=False, inplace=True)
         self.df_td.sort_values(by=['체결시간'], ascending=False, inplace=True)
 
         self.sell_uuid = None
