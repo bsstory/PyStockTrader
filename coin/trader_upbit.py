@@ -269,7 +269,9 @@ class TraderUpbit(QThread):
             data = [ticker, sp, oc, ch, c]
             self.cstgQ.put(data)
         if self.dict_bool['보유시간기준청산']:
-            if now > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', self.df_jg['체결시간'][ticker])):
+            df = self.df_cj[(self.df_cj['종목명'] == ticker) & (self.df_cj['주문구분'] == '매수')]
+            buy_time = df['체결시간'][df.index[0]]
+            if now > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', buy_time)):
                 self.Sell(ticker, c, oc)
 
     def JangoCheongsan(self):
