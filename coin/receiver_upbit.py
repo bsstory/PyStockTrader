@@ -1,10 +1,13 @@
 import os
 import sys
+import time
 import pyupbit
+import websockets.exceptions
 from PyQt5.QtCore import QThread
 from pyupbit import WebSocketManager
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.static import now
+from utility.setting import ui_num
 
 
 class WebsTicker(QThread):
@@ -20,32 +23,44 @@ class WebsTicker(QThread):
         self.websQ_ticker = None
 
     def run(self):
-        dict_askbid = {}
+        """ get_tickers 리턴 리스트의 갯수가 다른 버그 발견, 1초 간격 3회 조회 후 길이가 긴 리스트를 티커리스트로 정한다 """
         tickers = pyupbit.get_tickers(fiat="KRW")
+        time.sleep(1)
+        tickers2 = pyupbit.get_tickers(fiat="KRW")
+        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
+        time.sleep(1)
+        tickers2 = pyupbit.get_tickers(fiat="KRW")
+        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
+        dict_askbid = {}
         self.websQ_ticker = WebSocketManager('ticker', tickers)
         while True:
-            data = self.websQ_ticker.get()
-            ticker = data['code']
-            t = data['trade_time']
-            v = data['trade_volume']
-            ask_bid = data['ask_bid']
             try:
-                pret = dict_askbid[ticker][0]
-                bid_volumns = dict_askbid[ticker][1]
-                ask_volumns = dict_askbid[ticker][2]
-            except KeyError:
-                pret = None
-                bid_volumns = 0
-                ask_volumns = 0
-            if ask_bid == 'BID':
-                dict_askbid[ticker] = [t, bid_volumns + float(v), ask_volumns]
-            else:
-                dict_askbid[ticker] = [t, bid_volumns, ask_volumns + float(v)]
-            if t != pret:
-                data['매수수량'] = dict_askbid[ticker][1]
-                data['매도수량'] = dict_askbid[ticker][2]
-                dict_askbid[ticker] = [t, 0, 0]
-                self.tick5Q.put([data, now()])
+                data = self.websQ_ticker.get()
+                ticker = data['code']
+                t = data['trade_time']
+                v = data['trade_volume']
+                ask_bid = data['ask_bid']
+                try:
+                    pret = dict_askbid[ticker][0]
+                    bid_volumns = dict_askbid[ticker][1]
+                    ask_volumns = dict_askbid[ticker][2]
+                except KeyError:
+                    pret = None
+                    bid_volumns = 0
+                    ask_volumns = 0
+                if ask_bid == 'BID':
+                    dict_askbid[ticker] = [t, bid_volumns + float(v), ask_volumns]
+                else:
+                    dict_askbid[ticker] = [t, bid_volumns, ask_volumns + float(v)]
+                if t != pret:
+                    data['매수수량'] = dict_askbid[ticker][1]
+                    data['매도수량'] = dict_askbid[ticker][2]
+                    dict_askbid[ticker] = [t, 0, 0]
+                    self.tick5Q.put([data, now()])
+            except websockets.exceptions.ConnectionClosedError:
+                time.sleep(5)
+                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
+                self.websQ_ticker = WebSocketManager('ticker', tickers)
 
 
 class WebsOrderbook(QThread):
@@ -59,8 +74,20 @@ class WebsOrderbook(QThread):
         self.websQ_order = None
 
     def run(self):
+        """ get_tickers 리턴 리스트의 갯수가 다른 버그 발견, 1초 간격 3회 조회 후 길이가 긴 리스트를 티커리스트로 정한다 """
         tickers = pyupbit.get_tickers(fiat="KRW")
+        time.sleep(1)
+        tickers2 = pyupbit.get_tickers(fiat="KRW")
+        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
+        time.sleep(1)
+        tickers2 = pyupbit.get_tickers(fiat="KRW")
+        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
         self.websQ_order = WebSocketManager('orderbook', tickers)
         while True:
-            data = self.websQ_order.get()
-            self.tick5Q.put(data)
+            try:
+                data = self.websQ_order.get()
+                self.tick5Q.put(data)
+            except websockets.exceptions.ConnectionClosedError:
+                time.sleep(5)
+                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
+                self.websQ_order = WebSocketManager('orderbook', tickers)

@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import pyupbit
+import websockets.exceptions
 from PyQt5.QtCore import QThread
 from pyupbit import WebSocketManager
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -115,75 +116,87 @@ class TraderUpbit(QThread):
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 예수금 조회 완료'])
 
     def EventLoop(self):
+        """ get_tickers 리스트의 갯수가 다른 버그 발견, 1초 간격 3회 조회 후 길이가 긴 리스트를 티커리스트로 정한다 """
         tickers = pyupbit.get_tickers(fiat="KRW")
+        time.sleep(1)
+        tickers2 = pyupbit.get_tickers(fiat="KRW")
+        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
+        time.sleep(1)
+        tickers2 = pyupbit.get_tickers(fiat="KRW")
+        tickers = tickers2 if len(tickers2) > len(tickers) else tickers
         self.cstgQ.put(['관심종목초기화', tickers])
         self.websocketQ = WebSocketManager('ticker', tickers)
         while True:
-            """ 주문용 큐를 감시한다. """
-            if not self.coinQ.empty():
-                data = self.coinQ.get()
-                if type(data) == str:
-                    self.SpecialStrategy(data)
-                elif data[0] == '매수':
-                    self.Buy(data[1], data[2], data[3])
-                elif data[0] == '매도':
-                    self.Sell(data[1], data[2], data[3])
-
-            """
-            실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
-            티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
-            """
-            data = self.websocketQ.get()
-            ticker = data['code']
-            t = data['trade_time']
-
             try:
-                last_jcct = self.dict_jcdt[ticker]
-            except KeyError:
-                last_jcct = None
+                """ 주문용 큐를 감시한다. """
+                if not self.coinQ.empty():
+                    data = self.coinQ.get()
+                    if type(data) == str:
+                        self.SpecialStrategy(data)
+                    elif data[0] == '매수':
+                        self.Buy(data[1], data[2], data[3])
+                    elif data[0] == '매도':
+                        self.Sell(data[1], data[2], data[3])
 
-            if last_jcct is None or t != last_jcct:
-                self.dict_jcdt[ticker] = t
+                """
+                실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
+                티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
+                """
+                data = self.websocketQ.get()
+                ticker = data['code']
+                t = data['trade_time']
 
-                c = data['trade_price']
-                h = data['high_price']
-                low = data['low_price']
-                per = round(data['signed_change_rate'] * 100, 2)
-                dm = data['acc_trade_price']
-                bid = data['acc_bid_volume']
-                ask = data['acc_ask_volume']
+                try:
+                    last_jcct = self.dict_jcdt[ticker]
+                except KeyError:
+                    last_jcct = None
 
-                uuidnone = self.buy_uuid is None
-                injango = ticker in self.df_jg.index
-                data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango, now()]
-                self.cstgQ.put(data)
+                if last_jcct is None or t != last_jcct:
+                    self.dict_jcdt[ticker] = t
 
-                """ 잔고목록 갱신 및 매도조건 확인 """
-                if injango:
-                    try:
-                        ch = round(bid / ask * 100, 2)
-                    except ZeroDivisionError:
-                        ch = 500.
-                    if ch > 500:
-                        ch = 500.
-                    self.UpdateJango(ticker, c, ch)
+                    c = data['trade_price']
+                    h = data['high_price']
+                    low = data['low_price']
+                    per = round(data['signed_change_rate'] * 100, 2)
+                    dm = data['acc_trade_price']
+                    bid = data['acc_bid_volume']
+                    ask = data['acc_ask_volume']
 
-            """ 주문의 체결확인은 1초마다 반복한다. """
-            if self.buy_uuid is not None and ticker == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
-                self.CheckBuyChegeol(ticker)
-                self.dict_time['매수체결확인'] = timedelta_sec(1)
-            if self.sell_uuid is not None and ticker == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
-                self.CheckSellChegeol(ticker)
-                self.dict_time['매도체결확인'] = timedelta_sec(1)
+                    uuidnone = self.buy_uuid is None
+                    injango = ticker in self.df_jg.index
+                    data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango, now()]
+                    self.cstgQ.put(data)
 
-            """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
-            if now() > self.dict_time['거래정보']:
-                self.UpdateTotaljango()
-                self.dict_time['거래정보'] = timedelta_sec(1)
+                    """ 잔고목록 갱신 및 매도조건 확인 """
+                    if injango:
+                        try:
+                            ch = round(bid / ask * 100, 2)
+                        except ZeroDivisionError:
+                            ch = 500.
+                        if ch > 500:
+                            ch = 500.
+                        self.UpdateJango(ticker, c, ch)
 
-            """ 0시 초기화 """
-            if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
-                self.SaveTotalGetbalDelcjtd()
+                """ 주문의 체결확인은 1초마다 반복한다. """
+                if self.buy_uuid is not None and ticker == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
+                    self.CheckBuyChegeol(ticker)
+                    self.dict_time['매수체결확인'] = timedelta_sec(1)
+                if self.sell_uuid is not None and ticker == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
+                    self.CheckSellChegeol(ticker)
+                    self.dict_time['매도체결확인'] = timedelta_sec(1)
+
+                """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
+                if now() > self.dict_time['거래정보']:
+                    self.UpdateTotaljango()
+                    self.dict_time['거래정보'] = timedelta_sec(1)
+
+                """ 0시 초기화 """
+                if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
+                    self.SaveTotalGetbalDelcjtd()
+            except websockets.exceptions.ConnectionClosedError:
+                time.sleep(5)
+                self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
+                self.websocketQ = WebSocketManager('ticker', tickers)
 
     """
     모의투자 시 실제 매도수 주문을 전송하지 않고 바로 체결목록, 잔고목록 등을 갱신한다.
