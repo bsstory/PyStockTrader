@@ -221,20 +221,21 @@ class TraderUpbit(QThread):
     def Buy(self, ticker, c, oc):
         if not self.dict_bool['최소주문금액']:
             self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
-            self.cstgQ.put(['매수완료', ticker])
+            self.cstgQ.put(['매수취소', ticker])
             return
         if self.dict_bool['스패셜전략'] and now() < self.dict_time['스패셜전략']:
-            self.cstgQ.put(['매수완료', ticker])
+            self.cstgQ.put(['매수취소', ticker])
             return
         if self.buy_uuid is not None:
-            self.cstgQ.put(['매수완료', ticker])
+            self.cstgQ.put(['매수취소', ticker])
             return
 
         if self.dict_intg['예수금'] < c * oc:
             df = self.df_cj[(self.df_cj['주문구분'] == '시드부족') & (self.df_cj['종목명'] == ticker)]
             if len(df) == 0 or now() > timedelta_sec(180, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
                 self.UpdateBuy(ticker, c, oc, cancle=True)
-            self.cstgQ.put(['매수완료', ticker])
+            else:
+                self.cstgQ.put(['매수취소', ticker])
             return
 
         if DICT_SET['모의투자2']:
@@ -248,7 +249,7 @@ class TraderUpbit(QThread):
                 else:
                     self.ErrorCode(ret['error'])
             else:
-                self.cstgQ.put(['매수완료', ticker])
+                self.cstgQ.put(['매수취소', ticker])
                 self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
@@ -259,7 +260,7 @@ class TraderUpbit(QThread):
 
     def Sell(self, ticker, c, oc):
         if self.sell_uuid is not None:
-            self.cstgQ.put(['매도완료', ticker])
+            self.cstgQ.put(['매도취소', ticker])
             return
 
         if DICT_SET['모의투자2']:
@@ -273,7 +274,7 @@ class TraderUpbit(QThread):
                 else:
                     self.ErrorCode(ret['error'])
             else:
-                self.cstgQ.put(['매도완료', ticker])
+                self.cstgQ.put(['매도취소', ticker])
                 self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker} {oc}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
@@ -328,8 +329,6 @@ class TraderUpbit(QThread):
                         cc += float(trades[i]['volume'])
                     cp = round(tg / cc, 2)
                 self.UpdateBuy(ticker, cp, cc)
-                self.cstgQ.put(['매수완료', ticker])
-                self.buy_uuid = None
             else:
                 self.ErrorCode(ret['error'])
 
@@ -350,8 +349,6 @@ class TraderUpbit(QThread):
                             cc += float(trades[i]['volume'])
                         cp = round(tg / cc, 2)
                     self.UpdateSell(ticker, cp, cc)
-                    self.cstgQ.put(['매도완료', ticker])
-                    self.sell_uuid = None
             else:
                 self.ErrorCode(ret['error'])
 
@@ -371,6 +368,9 @@ class TraderUpbit(QThread):
         else:
             self.df_cj.at[dt] = ticker, order_gubun, cc, 0, cp, cp, dt
         self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
+
+        self.buy_uuid = None
+        self.cstgQ.put(['매수완료', ticker])
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
 
         if not cancle:
@@ -406,6 +406,8 @@ class TraderUpbit(QThread):
         self.df_cj.sort_values(by='체결시간', ascending=False, inplace=True)
         self.df_td.sort_values(by=['체결시간'], ascending=False, inplace=True)
 
+        self.sell_uuid = None
+        self.cstgQ.put(['매도완료', ticker])
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
         self.windowQ.put([ui_num['C거래목록'], self.df_td])
 

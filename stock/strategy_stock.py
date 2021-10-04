@@ -72,10 +72,10 @@ class StrategyStock:
         elif gubun == '조건이탈':
             if code in self.dict_gsjm.keys():
                 del self.dict_gsjm[code]
-        elif gubun == '매수완료':
+        elif gubun in ['매수완료', '매수취소']:
             if code in self.list_buy:
                 self.list_buy.remove(code)
-        elif gubun == '매도완료':
+        elif gubun in ['매도완료', '매도취소']:
             if code in self.list_sell:
                 self.list_sell.remove(code)
 

@@ -59,10 +59,10 @@ class StrategyCoin:
                 df = pd.DataFrame(data, columns=columns_gj1)
                 df['체결시간'] = strf_time('%H%M%S', timedelta_hour(-9))
                 self.dict_gsjm[ticker] = df.copy()
-        elif gubun == '매수완료':
+        elif gubun in ['매수완료', '매수취소']:
             if tickers in self.list_buy:
                 self.list_buy.remove(tickers)
-        elif gubun == '매도완료':
+        elif gubun in ['매도완료', '매도취소']:
             if tickers in self.list_sell:
                 self.list_sell.remove(tickers)
 

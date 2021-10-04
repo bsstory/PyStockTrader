@@ -185,14 +185,18 @@ class TraderKiwoom:
 
     def BuySell(self, gubun, code, name, c, oc):
         if gubun == '매수' and code in self.dict_df['잔고목록'].index:
+            self.sstgQ.put(['매수취소', code])
             return
         if gubun == '매도' and code not in self.dict_df['잔고목록'].index:
+            self.sstgQ.put(['매도취소', code])
             return
 
         if gubun == '매수' and code in self.list_sell:
+            self.sstgQ.put(['매수취소', code])
             self.windowQ.put([ui_num['S로그텍스트'], '매매 시스템 오류 알림 - 현재 매도 주문중인 종목입니다.'])
             return
         if gubun == '매도' and code in self.list_buy:
+            self.sstgQ.put(['매도취소', code])
             self.windowQ.put([ui_num['S로그텍스트'], '매매 시스템 오류 알림 - 현재 매수 주문중인 종목입니다.'])
             return
 
@@ -203,6 +207,7 @@ class TraderKiwoom:
                 if len(df) == 0 or \
                         (len(df) > 0 and now() > timedelta_sec(180, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0]))):
                     self.Order('시드부족', code, name, c, oc)
+                self.sstgQ.put(['매수취소', code])
                 return
 
         self.Order(gubun, code, name, c, oc)
@@ -599,8 +604,6 @@ class TraderKiwoom:
                 self.UpdateChegeoljango(code, name, og, oc, cp)
                 self.UpdateTradelist(name, oc, sp, sg, bg, pg, on)
                 self.windowQ.put([ui_num['S로그텍스트'], f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
-            elif og == '시드부족':
-                self.sstgQ.put(['매수완료', code])
         self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
         self.lock.release()
 
