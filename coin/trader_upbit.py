@@ -52,7 +52,8 @@ class TraderUpbit(QThread):
         self.dict_time = {
             '매수체결확인': now(),                          # 1초 마다 매수 체결 확인용
             '매도체결확인': now(),                          # 1초 마다 매도 체결 확인용
-            '거래정보': now()                              # 잔고목록 및 잔고평가 갱신용
+            '거래정보': now(),                             # 잔고목록 및 잔고평가 갱신용
+            '스패셜전략': now()                            # 매도 후 50초 이후의 시간을 저장하고 그시간 이전의 매수주문을 무시한다.
         }
 
     def run(self):
@@ -198,6 +199,9 @@ class TraderUpbit(QThread):
     def Buy(self, ticker, c, oc):
         if not self.dict_bool['최소주문금액']:
             self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
+            self.cstgQ.put(['매수완료', ticker])
+            return
+        if self.dict_bool['스패셜전략'] and now() < self.dict_time['스패셜전략']:
             self.cstgQ.put(['매수완료', ticker])
             return
         if self.buy_uuid is not None:
@@ -389,6 +393,7 @@ class TraderUpbit(QThread):
         self.UpdateTotaltradelist()
 
         if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
+            self.dict_time['스패셜전략'] = timedelta_sec(50)
             tickers = pyupbit.get_tickers(fiat="KRW")
             self.cstgQ.put(['관심종목초기화', tickers])
 
