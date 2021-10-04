@@ -95,6 +95,8 @@ class StrategyCoin:
             return
         if ticker in self.list_buy:
             return
+        if hlmp < 0:
+            return
 
         # 전략 비공개
 
