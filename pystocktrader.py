@@ -230,7 +230,7 @@ class Window(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
             )
             if buttonReply == QtWidgets.QMessageBox.Yes:
-                self.specialstrategy = False
+                self.holdtimestrategy = False
                 coinQ.put('보유시간기준청산')
         else:
             buttonReply = QtWidgets.QMessageBox.question(
@@ -238,7 +238,7 @@ class Window(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
             )
             if buttonReply == QtWidgets.QMessageBox.Yes:
-                self.specialstrategy = True
+                self.holdtimestrategy = True
                 coinQ.put('보유시간기준청산')
 
     def CheckboxChanged_01(self, state):
