@@ -5,7 +5,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from multiprocessing import Process, Queue
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from utility.static import now, strf_time, timedelta_day, strp_time, timedelta_sec
+from utility.static import now, strf_time, timedelta_day
 from utility.setting import DB_SETTING, DB_BACKTEST, DB_COIN_TICK, GRAPH_PATH
 
 
