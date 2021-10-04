@@ -47,6 +47,7 @@ class TraderUpbit(QThread):
         self.dict_bool = {
             '최소주문금액': False,                        # 업비트 주문가능 최소금액, 종목당투자금이 5천원 미만일 경우 False
             '실현손익저장': False,
+            '보유시간기준청산': False,
             '스패셜전략': False
         }
         self.dict_time = {
@@ -121,12 +122,12 @@ class TraderUpbit(QThread):
             """ 주문용 큐를 감시한다. """
             if not self.coinQ.empty():
                 data = self.coinQ.get()
-                if data[0] == '매수':
+                if type(data) == str:
+                    self.SpecialStrategy(data)
+                elif data[0] == '매수':
                     self.Buy(data[1], data[2], data[3])
                 elif data[0] == '매도':
                     self.Sell(data[1], data[2], data[3])
-                elif data == '스패셜전략':
-                    self.SpecialStrategy()
 
             """
             실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
@@ -259,14 +260,17 @@ class TraderUpbit(QThread):
 
     def UpdateJango(self, ticker, c, ch):
         prec = self.df_jg['현재가'][ticker]
+        oc = self.df_jg['보유수량'][ticker]
         if prec != c:
             bg = self.df_jg['매입금액'][ticker]
-            jc = self.df_jg['보유수량'][ticker]
-            pg, sg, sp = self.GetPgSgSp(bg, jc * c)
+            pg, sg, sp = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.df_jg.at[ticker, columns] = c, sp, sg, pg
-            data = [ticker, sp, jc, ch, c]
+            data = [ticker, sp, oc, ch, c]
             self.cstgQ.put(data)
+        if self.dict_bool['보유시간기준청산']:
+            if now > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', self.df_jg['체결시간'][ticker])):
+                self.Sell(ticker, c, oc)
 
     def JangoCheongsan(self):
         for ticker in self.df_jg.index:
@@ -445,9 +449,14 @@ class TraderUpbit(QThread):
         self.GetBalances()
         self.dict_bool['실현손익저장'] = True
 
-    """ 스패셜전략 활성화 시 매도 이후 관심종목을 초기화한다. """
-    def SpecialStrategy(self):
-        if self.dict_bool['스패셜전략']:
-            self.dict_bool['스패셜전략'] = False
-        else:
-            self.dict_bool['스패셜전략'] = True
+    def SpecialStrategy(self, data):
+        if data == '스패셜전략':
+            if self.dict_bool['스패셜전략']:
+                self.dict_bool['스패셜전략'] = False
+            else:
+                self.dict_bool['스패셜전략'] = True
+        elif data == '보유시간기준청산':
+            if self.dict_bool['보유시간기준청산']:
+                self.dict_bool['보유시간기준청산'] = False
+            else:
+                self.dict_bool['보유시간기준청산'] = True

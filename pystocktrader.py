@@ -67,6 +67,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.showqsize = False
         self.specialstrategy = False
+        self.holdtimestrategy = False
         self.backtester_proc = None
 
         self.receiver_coin_thread1 = WebsTicker(qlist)
@@ -204,11 +205,10 @@ class Window(QtWidgets.QMainWindow):
     def ShowQsize(self):
         self.showqsize = True if not self.showqsize else False
 
-    # noinspection PyMethodMayBeStatic
     def SpecialStrategy(self):
         if self.specialstrategy:
             buttonReply = QtWidgets.QMessageBox.question(
-                self, '스패셜전략 활성화', f'스패셜전략이 비활성화됩니다.\n계속하시겠습니까?\n',
+                self, '스패셜전략 비활성화', f'스패셜전략이 비활성화됩니다.\n계속하시겠습니까?\n',
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
             )
             if buttonReply == QtWidgets.QMessageBox.Yes:
@@ -222,6 +222,24 @@ class Window(QtWidgets.QMainWindow):
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.specialstrategy = True
                 coinQ.put('스패셜전략')
+
+    def HoldtimeStrategy(self):
+        if self.holdtimestrategy:
+            buttonReply = QtWidgets.QMessageBox.question(
+                self, '보유시간기준청산 비활성화', f'보유시간기준청산이 비활성화됩니다.\n계속하시겠습니까?\n',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+            )
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.specialstrategy = False
+                coinQ.put('보유시간기준청산')
+        else:
+            buttonReply = QtWidgets.QMessageBox.question(
+                self, '보유시간기준청산 활성화', f'보유시간기준청산 활성화 시 30분 후 매도됩니다.\n계속하시겠습니까?\n',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+            )
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.specialstrategy = True
+                coinQ.put('보유시간기준청산')
 
     def CheckboxChanged_01(self, state):
         if state == Qt.Checked:
