@@ -37,6 +37,7 @@ class ReceiverKiwoom:
         self.dict_bool = {
             '실시간조건검색시작': False,
             '실시간조건검색중단': False,
+            '장중단타전략시작': False,
 
             '로그인': False,
             'TR수신': False,
@@ -145,10 +146,10 @@ class ReceiverKiwoom:
                 break
 
             if self.operation == 3:
-                if int(strf_time('%H%M%S')) < 10000:
+                if int(strf_time('%H%M%S')) < 100000:
                     if not self.dict_bool['실시간조건검색시작']:
                         self.ConditionSearchStart()
-                if 10000 <= int(strf_time('%H%M%S')):
+                if 100000 <= int(strf_time('%H%M%S')):
                     if self.dict_bool['실시간조건검색시작'] and not self.dict_bool['실시간조건검색중단']:
                         self.ConditionSearchStop()
                     if not self.dict_bool['장중단타전략시작']:
