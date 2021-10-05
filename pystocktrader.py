@@ -43,6 +43,7 @@ class Window(QtWidgets.QMainWindow):
         self.cpu_per = 0
         self.int_time = int(strf_time('%H%M%S'))
         self.dict_name = {}
+        self.dict_code = {}
 
         self.writer = Writer()
         self.writer.data1.connect(self.UpdateTexedit)
@@ -1497,6 +1498,7 @@ class Window(QtWidgets.QMainWindow):
             self.cc_textEdit.append(text)
         elif data[0] == ui_num['S종목명딕셔너리']:
             self.dict_name = data[1]
+            self.dict_code = data[2]
 
     def UpdateTablewidget(self, data):
         gubun = data[0]

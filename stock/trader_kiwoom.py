@@ -125,7 +125,7 @@ class TraderKiwoom:
             self.dict_name[code] = name
             dict_code[name] = code
 
-        self.windowQ.put([ui_num['S종목명딕셔너리'], self.dict_name])
+        self.windowQ.put([ui_num['S종목명딕셔너리'], self.dict_name, dict_code])
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - OpenAPI 로그인 완료'])
         if DICT_SET['알림소리1']:
             self.soundQ.put('키움증권 오픈에이피아이에 로그인하였습니다.')
