@@ -215,6 +215,7 @@ class Window(QtWidgets.QMainWindow):
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.specialstrategy = False
                 coinQ.put('스패셜전략')
+                stockQ.put('스패셜전략')
         else:
             buttonReply = QtWidgets.QMessageBox.question(
                 self, '스패셜전략 활성화', f'스패셜전략 활성화 시 매도 후 관심종목이 초기화됩니다.\n계속하시겠습니까?\n',
@@ -223,6 +224,7 @@ class Window(QtWidgets.QMainWindow):
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.specialstrategy = True
                 coinQ.put('스패셜전략')
+                stockQ.put('스패셜전략')
 
     def HoldtimeStrategy(self):
         if self.holdtimestrategy:
@@ -233,6 +235,7 @@ class Window(QtWidgets.QMainWindow):
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.holdtimestrategy = False
                 coinQ.put('보유시간기준청산')
+                stockQ.put('보유시간기준청산')
         else:
             buttonReply = QtWidgets.QMessageBox.question(
                 self, '보유시간기준청산 활성화', f'보유시간기준청산 활성화 시 30분 후 매도됩니다.\n계속하시겠습니까?\n',
@@ -241,6 +244,7 @@ class Window(QtWidgets.QMainWindow):
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.holdtimestrategy = True
                 coinQ.put('보유시간기준청산')
+                stockQ.put('보유시간기준청산')
 
     def CheckboxChanged_01(self, state):
         if state == Qt.Checked:
