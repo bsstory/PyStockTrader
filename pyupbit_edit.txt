@@ -1,0 +1,18 @@
+pyupbit 라이브러리의 다음 부분을 수정해야 웹소켓 연결끊김 시 재연결이 올바르게 작동합니다.
+try - except 구문만 복사해서 수정하시면 됩니다.
+
+import websockets.exceptions
+
+    async def __connect_socket(self):
+        uri = "wss://api.upbit.com/websocket/v1"
+        async with websockets.connect(uri, ping_interval=60) as websocket:
+            data = [{"ticket": str(uuid.uuid4())[:6]}, {"type": self.type, "codes": self.codes}]
+            await websocket.send(json.dumps(data))
+
+            while self.alive:
+                try:
+                    recv_data = await websocket.recv()
+                    recv_data = recv_data.decode('utf8')
+                    self.__q.put(json.loads(recv_data))
+                except websockets.exceptions.ConnectionClosedError:
+                    self.__q.put('ConnectionClosedError')
