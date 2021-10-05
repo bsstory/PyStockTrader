@@ -159,7 +159,6 @@ class ReceiverKiwoom:
                         self.StartJangjungStrategy()
             if self.operation == 8:
                 self.AllRemoveRealreg()
-                self.SaveDatabase()
                 break
 
             if now() > self.dict_time['거래대금순위기록']:
@@ -226,7 +225,6 @@ class ReceiverKiwoom:
     def ConditionSearchStart(self):
         self.dict_bool['실시간조건검색시작'] = True
         codes = self.SendCondition(sn_cond, self.dict_cond[0], 0, 1)
-        self.df_mt.at[self.str_tday + '090000'] = ';'.join(codes)
         if len(codes) > 0:
             for code in codes:
                 self.InsertGsjmlist(code)
@@ -281,12 +279,10 @@ class ReceiverKiwoom:
     def AllRemoveRealreg(self):
         self.receivQ.put(['ALL', 'ALL'])
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
-
-    def SaveDatabase(self):
-        self.tick1Q.put('틱데이터저장')
-        self.tick2Q.put('틱데이터저장')
-        self.tick3Q.put('틱데이터저장')
-        self.tick4Q.put('틱데이터저장')
+        self.tick1Q.put('콜렉터종료')
+        self.tick2Q.put('콜렉터종료')
+        self.tick3Q.put('콜렉터종료')
+        self.tick4Q.put('콜렉터종료')
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'

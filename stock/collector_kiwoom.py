@@ -44,14 +44,14 @@ class CollectorKiwoom:
                 self.UpdateTickData(tick[0], tick[1], tick[2], tick[3], tick[4], tick[5], tick[6], tick[7],
                                     tick[8], tick[9], tick[10], tick[11], tick[12], tick[13], tick[14],
                                     tick[15], tick[16], tick[17], tick[18], tick[19], tick[20], tick[21], tick[22])
-            elif tick == '틱데이터저장':
-                self.query2Q.put([1, self.dict_df])
+            elif tick == '콜렉터종료':
                 break
 
-        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터를 종료합니다.'])
-        if DICT_SET['알림소리1']:
-            self.soundQ.put('주식 콜렉터를 종료합니다.')
-        self.teleQ.put('주식 콜렉터를 종료하였습니다.')
+        if self.gubun == 4:
+            self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터를 종료합니다.'])
+            if DICT_SET['알림소리1']:
+                self.soundQ.put('주식 콜렉터를 종료합니다.')
+            self.teleQ.put('주식 콜렉터를 종료하였습니다.')
 
     def UpdateTickData(self, code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
                        s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, d, receiv_time):
