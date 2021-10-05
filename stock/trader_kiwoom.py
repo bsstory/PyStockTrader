@@ -639,6 +639,10 @@ class TraderKiwoom:
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
 
+            if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
+                self.spcl_time = timedelta_sec(5)
+                self.sstgQ.put(['관심종목초기화', ''])
+
         if og == '매수':
             self.sstgQ.put(['매수완료', code])
             self.list_buy.remove(code)
@@ -711,10 +715,6 @@ class TraderKiwoom:
         if omc == 0:
             df = pd.DataFrame([[name, og, oc, omc, op, cp, dt]], columns=columns_cj, index=[on])
             self.query1Q.put([2, df, 's_chegeollist', 'append'])
-
-        if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
-            self.spcl_time = timedelta_sec(5)
-            self.sstgQ.put(['관심종목초기화', ''])
 
     def OnReceiveConditionVer(self, ret, msg):
         if msg == '':
