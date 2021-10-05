@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import pyupbit
-import websockets.exceptions
 from PyQt5.QtCore import QThread
 from pyupbit import WebSocketManager
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -135,22 +134,25 @@ class TraderUpbit(QThread):
         self.cstgQ.put(['관심종목초기화', self.tickers])
         self.websocketQ = WebSocketManager('ticker', self.tickers)
         while True:
-            try:
-                """ 주문용 큐를 감시한다. """
-                if not self.coinQ.empty():
-                    data = self.coinQ.get()
-                    if type(data) == str:
-                        self.SpecialStrategy(data)
-                    elif data[0] == '매수':
-                        self.Buy(data[1], data[2], data[3])
-                    elif data[0] == '매도':
-                        self.Sell(data[1], data[2], data[3])
+            """ 주문용 큐를 감시한다. """
+            if not self.coinQ.empty():
+                data = self.coinQ.get()
+                if type(data) == str:
+                    self.SpecialStrategy(data)
+                elif data[0] == '매수':
+                    self.Buy(data[1], data[2], data[3])
+                elif data[0] == '매도':
+                    self.Sell(data[1], data[2], data[3])
 
-                """
-                실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
-                티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
-                """
-                data = self.websocketQ.get()
+            """
+            실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
+            티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
+            """
+            data = self.websocketQ.get()
+            if data == 'ConnectionClosedError':
+                self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - TraderUpbit 연결 끊김으로 다시 연결합니다.'])
+                self.websocketQ = WebSocketManager('ticker', self.tickers)
+            else:
                 ticker = data['code']
                 t = data['trade_time']
 
@@ -201,10 +203,6 @@ class TraderUpbit(QThread):
                 """ 0시 초기화 """
                 if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
                     self.SaveTotalGetbalDelcjtd()
-            except websockets.exceptions.ConnectionClosedError:
-                time.sleep(5)
-                self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
-                self.websocketQ = WebSocketManager('ticker', self.tickers)
 
     """
     모의투자 시 실제 매도수 주문을 전송하지 않고 바로 체결목록, 잔고목록 등을 갱신한다.

@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import pyupbit
-import websockets.exceptions
 from PyQt5.QtCore import QThread
 from pyupbit import WebSocketManager
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -19,6 +18,7 @@ class WebsTicker(QThread):
                    10       11      12     13      14
         """
         super().__init__()
+        self.windowQ = qlist[0]
         self.tick5Q = qlist[14]
         self.websQ_ticker = None
 
@@ -34,8 +34,11 @@ class WebsTicker(QThread):
         dict_askbid = {}
         self.websQ_ticker = WebSocketManager('ticker', tickers)
         while True:
-            try:
-                data = self.websQ_ticker.get()
+            data = self.websQ_ticker.get()
+            if data == 'ConnectionClosedError':
+                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - WebsTicker 연결 끊김으로 다시 연결합니다.'])
+                self.websQ_ticker = WebSocketManager('ticker', tickers)
+            else:
                 ticker = data['code']
                 t = data['trade_time']
                 v = data['trade_volume']
@@ -57,10 +60,6 @@ class WebsTicker(QThread):
                     data['매도수량'] = dict_askbid[ticker][2]
                     dict_askbid[ticker] = [t, 0, 0]
                     self.tick5Q.put([data, now()])
-            except websockets.exceptions.ConnectionClosedError:
-                time.sleep(5)
-                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
-                self.websQ_ticker = WebSocketManager('ticker', tickers)
 
 
 class WebsOrderbook(QThread):
@@ -70,6 +69,7 @@ class WebsOrderbook(QThread):
         qlist = [windowQ, soundQ, queryQ, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ, tick1Q, tick2Q]
         """
         super().__init__()
+        self.windowQ = qlist[0]
         self.tick5Q = qlist[14]
         self.websQ_order = None
 
@@ -84,10 +84,9 @@ class WebsOrderbook(QThread):
         tickers = tickers2 if len(tickers2) > len(tickers) else tickers
         self.websQ_order = WebSocketManager('orderbook', tickers)
         while True:
-            try:
-                data = self.websQ_order.get()
-                self.tick5Q.put(data)
-            except websockets.exceptions.ConnectionClosedError:
-                time.sleep(5)
-                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - 웹소켓 연결 끊김으로 다시 연결합니다.'])
+            data = self.websQ_order.get()
+            if data == 'ConnectionClosedError':
+                self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - WebsOrderbook 연결 끊김으로 다시 연결합니다.'])
                 self.websQ_order = WebSocketManager('orderbook', tickers)
+            else:
+                self.tick5Q.put(data)
