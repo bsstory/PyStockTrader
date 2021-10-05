@@ -93,7 +93,7 @@ class BackTesterStockVj:
 
     def BuyTerm(self):
         try:
-            if self.code not in self.df_mt['거래대금상위100'][self.index]:
+            if self.code not in self.df_mt['거래대금순위'][self.index]:
                 self.ccond = 0
             else:
                 self.ccond += 1
