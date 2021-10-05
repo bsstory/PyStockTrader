@@ -21,13 +21,14 @@ class CollectorKiwoom:
         self.soundQ = qlist[1]
         self.query2Q = qlist[3]
         self.teleQ = qlist[4]
-        if gubun == 1:
+        self.gubun = gubun
+        if self.gubun == 1:
             self.tickQ = qlist[10]
-        elif gubun == 2:
+        elif self.gubun == 2:
             self.tickQ = qlist[11]
-        elif gubun == 3:
+        elif self.gubun == 3:
             self.tickQ = qlist[12]
-        elif gubun == 4:
+        elif self.gubun == 4:
             self.tickQ = qlist[13]
 
         self.dict_df = {}
@@ -84,8 +85,9 @@ class CollectorKiwoom:
                 s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr
 
         if now() > self.time_info:
-            gap = (now() - receiv_time).total_seconds()
-            self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
+            if self.gubun == 4:
+                gap = (now() - receiv_time).total_seconds()
+                self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
             self.query2Q.put([1, self.dict_df])
             self.dict_df = {}
-            self.time_info = timedelta_sec(60)
+            self.time_info = timedelta_sec(10)
