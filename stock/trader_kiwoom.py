@@ -268,6 +268,16 @@ class TraderKiwoom:
         elif work == '/잔고청산주문':
             if not self.dict_bool['잔고청산']:
                 self.JangoChungsan()
+        elif work == '스패셜전략':
+            if self.dict_bool['스패셜전략']:
+                self.dict_bool['스패셜전략'] = False
+            else:
+                self.dict_bool['스패셜전략'] = True
+        elif work == '보유시간기준청산':
+            if self.dict_bool['보유시간기준청산']:
+                self.dict_bool['보유시간기준청산'] = False
+            else:
+                self.dict_bool['보유시간기준청산'] = True
 
     def GetAccountjanGo(self):
         while True:
@@ -786,15 +796,3 @@ class TraderKiwoom:
 
     def GetChejanData(self, fid):
         return self.ocx.dynamicCall('GetChejanData(int)', fid)
-
-    def SpecialStrategy(self, data):
-        if data == '스패셜전략':
-            if self.dict_bool['스패셜전략']:
-                self.dict_bool['스패셜전략'] = False
-            else:
-                self.dict_bool['스패셜전략'] = True
-        elif data == '보유시간기준청산':
-            if self.dict_bool['보유시간기준청산']:
-                self.dict_bool['보유시간기준청산'] = False
-            else:
-                self.dict_bool['보유시간기준청산'] = True
