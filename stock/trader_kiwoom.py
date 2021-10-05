@@ -61,11 +61,14 @@ class TraderKiwoom:
             'TR수신': False,
             'TR다음': False,
             'CD수신': False,
-            'CR수신': False
+            'CR수신': False,
+            '보유시간기준청산': False,
+            '스패셜전략': False
         }
         remaintime = (strp_time('%Y%m%d%H%M%S', self.dict_strg['당일날짜'] + '090100') - now()).total_seconds()
         self.exit_time = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
         self.tdtj_time = now()
+        self.spcl_time = now()
         self.dict_item = None
         self.list_trcd = None
         self.list_kosd = None
@@ -182,7 +185,7 @@ class TraderKiwoom:
 
     def BuySell(self, gubun, code, name, c, oc):
         if gubun == '매수':
-            if code in self.dict_df['잔고목록'].index:
+            if code in self.dict_df['잔고목록'].index or now() < self.spcl_time:
                 self.sstgQ.put(['매수취소', code])
                 return
             if code in self.list_buy:
@@ -535,11 +538,15 @@ class TraderKiwoom:
         prec = self.dict_df['잔고목록']['현재가'][code]
         if prec != c:
             bg = self.dict_df['잔고목록']['매입금액'][code]
-            jc = int(self.dict_df['잔고목록']['보유수량'][code])
-            pg, sg, sp = self.GetPgSgSp(bg, jc * c)
+            oc = int(self.dict_df['잔고목록']['보유수량'][code])
+            pg, sg, sp = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.dict_df['잔고목록'].at[code, columns] = c, sp, sg, pg
-            self.sstgQ.put([code, name, per, sp, jc, ch, c])
+            self.sstgQ.put([code, name, per, sp, oc, ch, c])
+            if self.dict_bool['보유시간기준청산']:
+                df = self.dict_df['체결목록'][(self.dict_df['체결목록']['종목명'] == code) & (self.dict_df['체결목록']['주문구분'] == '매수')]
+                if len(df) > 0 and now() > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
+                    self.Order('매도', code, name, c, oc)
         self.lock.release()
 
     # noinspection PyMethodMayBeStatic
@@ -631,6 +638,10 @@ class TraderKiwoom:
                 bg = jc * bp
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
+
+            if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
+                self.spcl_time = timedelta_sec(5)
+                self.sstgQ.put(['관심종목초기화', ''])
 
         if og == '매수':
             self.sstgQ.put(['매수완료', code])
@@ -775,3 +786,15 @@ class TraderKiwoom:
 
     def GetChejanData(self, fid):
         return self.ocx.dynamicCall('GetChejanData(int)', fid)
+
+    def SpecialStrategy(self, data):
+        if data == '스패셜전략':
+            if self.dict_bool['스패셜전략']:
+                self.dict_bool['스패셜전략'] = False
+            else:
+                self.dict_bool['스패셜전략'] = True
+        elif data == '보유시간기준청산':
+            if self.dict_bool['보유시간기준청산']:
+                self.dict_bool['보유시간기준청산'] = False
+            else:
+                self.dict_bool['보유시간기준청산'] = True

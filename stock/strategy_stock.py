@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from utility.static import now, timedelta_sec, strf_time
+from utility.static import now, timedelta_sec
 from utility.setting import columns_gj1, ui_num, DICT_SET
 
 
@@ -78,6 +78,12 @@ class StrategyStock:
         elif gubun in ['매도완료', '매도취소']:
             if code in self.list_sell:
                 self.list_sell.remove(code)
+        elif gubun == '관심종목초기화':
+            for code in list(self.dict_gsjm.keys()):
+                data = np.zeros((DICT_SET['평균시간1'] + 2, len(columns_gj1))).tolist()
+                df = pd.DataFrame(data, columns=columns_gj1)
+                df['체결시간'] = '090000'
+                self.dict_gsjm[code] = df.copy()
 
     def BuyStrategy(self, code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup, receivetime):
         if code not in self.dict_gsjm.keys():
@@ -98,6 +104,8 @@ class StrategyStock:
         if self.dict_gsjm[code]['체결강도'][DICT_SET['평균시간1']] == 0:
             return
         if code in self.list_buy:
+            return
+        if hlmp < 0:
             return
 
         # 전략 비공개
