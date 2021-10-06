@@ -79,9 +79,9 @@ class WebsTicker(QThread):
                     data = [ticker, c, o, h, low, per, dm, bids, asks, tbids, tasks, dt, now()]
                     self.tick5Q.put(data)
                     if DICT_SET['업비트트레이더']:
-                        injango = ticker in self.list_jnag
+                        injango = ticker in self.list_jang
                         self.cstgQ.put(data + [injango])
-                        if ticker in self.list_jnag:
+                        if ticker in self.list_jang:
                             self.coinQ.put([ticker, c, tbids, tasks])
 
     def UpdateJango(self, data):
