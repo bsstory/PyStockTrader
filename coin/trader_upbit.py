@@ -2,13 +2,12 @@ import os
 import sys
 import time
 import pyupbit
-from PyQt5.QtCore import QThread
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.setting import *
 from utility.static import now, timedelta_sec, strf_time, strp_time
 
 
-class TraderUpbit(QThread):
+class TraderUpbit:
     def __init__(self, qlist):
         """
                     0        1       2        3       4       5          6        7      8      9     10
@@ -16,7 +15,6 @@ class TraderUpbit(QThread):
                  tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
                    11       12      13     14      15
         """
-        super().__init__()
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
         self.query1Q = qlist[2]
@@ -53,8 +51,9 @@ class TraderUpbit(QThread):
             '매도체결확인': now(),                          # 1초 마다 매도 체결 확인용
             '거래정보': now()                              # 잔고목록 및 잔고평가 갱신용
         }
+        self.Start()
 
-    def run(self):
+    def Start(self):
         self.LoadDatabase()
         self.GetKey()
         self.GetBalances()
@@ -132,26 +131,23 @@ class TraderUpbit(QThread):
                     self.Sell(data[1], data[2], data[3])
                 else:
                     """ 잔고목록 갱신 및 매도조건 확인 """
-                    code = data[0]
-                    c = data[1]
-                    bid = data[2]
-                    ask = data[3]
+                    code, c, tbids, tasks = data
                     if code in self.df_jg.index:
                         try:
-                            ch = round(bid / ask * 100, 2)
+                            ch = round(tbids / tasks * 100, 2)
                         except ZeroDivisionError:
                             ch = 500.
                         if ch > 500:
                             ch = 500.
                         self.UpdateJango(code, c, ch)
 
-                    """ 주문의 체결확인은 1초마다 반복한다. """
-                    if self.buy_uuid is not None and code == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
-                        self.CheckBuyChegeol(code)
-                        self.dict_time['매수체결확인'] = timedelta_sec(1)
-                    if self.sell_uuid is not None and code == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
-                        self.CheckSellChegeol(code)
-                        self.dict_time['매도체결확인'] = timedelta_sec(1)
+            """ 주문의 체결확인은 1초마다 반복한다. """
+            if self.buy_uuid is not None and now() > self.dict_time['매수체결확인']:
+                self.CheckBuyChegeol()
+                self.dict_time['매수체결확인'] = timedelta_sec(1)
+            if self.sell_uuid is not None and now() > self.dict_time['매도체결확인']:
+                self.CheckSellChegeol()
+                self.dict_time['매도체결확인'] = timedelta_sec(1)
 
             """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
             if now() > self.dict_time['거래정보']:
@@ -245,7 +241,8 @@ class TraderUpbit(QThread):
                 buytime = strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])
                 self.cstgQ.put([code, sp, ch, oc, c, buytime])
 
-    def CheckBuyChegeol(self, code):
+    def CheckBuyChegeol(self):
+        code = self.buy_uuid[0]
         ret = self.upbit.get_order(self.buy_uuid[1])
         if ret is not None:
             if list(ret.keys())[0] != 'error':
@@ -264,7 +261,8 @@ class TraderUpbit(QThread):
             else:
                 self.ErrorCode(ret['error'])
 
-    def CheckSellChegeol(self, code):
+    def CheckSellChegeol(self):
+        code = self.buy_uuid[0]
         ret = self.upbit.get_order(self.sell_uuid[1])
         if ret is not None:
             if list(ret.keys())[0] != 'error':
