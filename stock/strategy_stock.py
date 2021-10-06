@@ -146,12 +146,6 @@ class StrategyStock:
             self.windowQ.put([ui_num['S단순텍스트'], f'전략스 설정 오류 알림 - BuyStrategy {e}'])
             return
 
-        if 매수:
-            oc = int(self.int_tujagm / 현재가)
-            if oc > 0:
-                self.list_buy.append(종목코드)
-                self.stockQ.put(['매수', 종목코드, 종목명, 현재가, oc])
-
         if now() > self.dict_time['연산시간']:
             gap = (now() - 틱수신시간).total_seconds()
             self.windowQ.put([ui_num['S단순텍스트'], f'전략스 연산 시간 알림 - 수신시간과 연산시간의 차이는 [{gap}]초입니다.'])
@@ -182,7 +176,3 @@ class StrategyStock:
         except Exception as e:
             self.windowQ.put([ui_num['S단순텍스트'], f'전략스 설정 오류 알림 - SellStrategy {e}'])
             return
-
-        if 매도:
-            self.list_sell.append(종목코드)
-            self.stockQ.put(['매도', 종목코드, 종목명, 현재가, 보유수량])

@@ -41,6 +41,7 @@ class WebsTicker(QThread):
             if not self.creceivQ.empty():
                 data = self.creceivQ.get()
                 self.UpdateJango(data)
+                continue
 
             data = self.websQ_ticker.get()
             if data == 'ConnectionClosedError':
@@ -81,7 +82,7 @@ class WebsTicker(QThread):
                     if DICT_SET['업비트트레이더']:
                         injango = code in self.list_jang
                         self.cstgQ.put(data + [injango])
-                        if code in self.list_jang:
+                        if injango:
                             self.coinQ.put([code, c, tbids, tasks])
 
     def UpdateJango(self, data):

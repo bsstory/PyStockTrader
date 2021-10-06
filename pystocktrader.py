@@ -73,7 +73,7 @@ class Window(QtWidgets.QMainWindow):
         self.receiver_coin_thread2 = WebsOrderbook(qlist)
         self.collector_coin_proc = Process(target=CollectorUpbit, args=(qlist,), daemon=True)
         self.strategy_coin_proc = Process(target=StrategyCoin, args=(qlist,), daemon=True)
-        self.trader_coin_thread = TraderUpbit(qlist)
+        self.trader_coin_proc = Process(target=TraderUpbit, args=(qlist,), daemon=True)
 
         self.receiver_stock_proc = Process(target=ReceiverKiwoom, args=(qlist,), daemon=True)
         self.collector_stock_proc1 = Process(target=CollectorKiwoom, args=(1, qlist), daemon=True)
@@ -164,8 +164,8 @@ class Window(QtWidgets.QMainWindow):
         if DICT_SET['Access_key'] is not None:
             if not self.strategy_coin_proc.is_alive():
                 self.strategy_coin_proc.start()
-            if not self.trader_coin_thread.isRunning():
-                self.trader_coin_thread.start()
+            if not self.trader_coin_proc.is_alive():
+                self.trader_coin_proc.start()
                 text = '코인 트레이더를 시작하였습니다.'
                 soundQ.put(text)
                 teleQ.put(text)
@@ -1557,7 +1557,38 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         self.ss_textEdit_01.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
+    def ButtonClicked_39(self):
+        pass
+
+    def ButtonClicked_40(self):
+        pass
+
     def ButtonClicked_41(self):
+        pass
+
+    def ButtonClicked_42(self):
+        pass
+
+    def ButtonClicked_43(self):
+        pass
+
+    def ButtonClicked_44(self):
+        pass
+
+    def ButtonClicked_45(self):
+        pass
+
+    def ButtonClicked_46(self):
+        sell_code = '''
+if 매수:
+    매수수량 = int(self.int_tujagm / 현재가)
+    if 매수수량 > 0:
+        self.list_buy.append(종목코드)
+        self.stockQ.put(['매수', 종목코드, 종목명, 현재가, 매수수량])'''
+        self.ss_textEdit_01.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
+
+    def ButtonClicked_47(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
@@ -1569,7 +1600,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         else:
             windowQ.put([ui_num['S전략텍스트'], '매도전략 없음'])
 
-    def ButtonClicked_42(self):
+    def ButtonClicked_48(self):
         strategy_name = self.sss_lineEdit.text()
         strategy = self.ss_textEdit_02.toPlainText()
         if strategy_name == '':
@@ -1588,7 +1619,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
             query1Q.put([3, df, 'sell', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 저장하기 완료'])
 
-    def ButtonClicked_43(self):
+    def ButtonClicked_49(self):
         sell_code = '''"""
 매도(False), 종목코드(str), 종목명(str), 수익률(float), 보유수량(int), 매수시간(datetime), 현재가(int), 체결강도(float),
 등락율(float), 고저평균대비등락율(float), 초당거래대금평균(int), 체결강도평균(float), 최고체결강도(float), 매도총잔량(int), 매수총잔량(int),
@@ -1598,7 +1629,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 불러오기 완료'])
 
-    def ButtonClicked_44(self):
+    def ButtonClicked_50(self):
         strategy = self.ss_textEdit_02.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1612,27 +1643,44 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
             sstgQ.put(['매도전략', strategy])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 설정하기 완료'])
 
-    def ButtonClicked_45(self):
+    def ButtonClicked_51(self):
         sell_code = '''if now() > timedelta_sec(1800, 매수시간):\n    매도 = True'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_46(self):
+    def ButtonClicked_52(self):
         sell_code = '''if 수익률 <= -2 :\n    매도 = True'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_47(self):
+    def ButtonClicked_53(self):
         sell_code = '''if 수익률 >= 3:\n    매도 = True'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_48(self):
+    def ButtonClicked_54(self):
         sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매도 = True'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_51(self):
+    def ButtonClicked_55(self):
+        pass
+
+    def ButtonClicked_56(self):
+        pass
+
+    def ButtonClicked_57(self):
+        pass
+
+    def ButtonClicked_58(self):
+        sell_code = '''
+if 매도:
+    self.list_sell.append(종목코드)
+    self.stockQ.put(['매도', 종목코드, 종목명, 현재가, 보유수량])'''
+        self.ss_textEdit_02.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
+
+    def ButtonClicked_59(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM buy', con).set_index('index')
         con.close()
@@ -1644,7 +1692,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         else:
             windowQ.put([ui_num['C전략텍스트'], '매수전략 없음'])
 
-    def ButtonClicked_52(self):
+    def ButtonClicked_60(self):
         strategy_name = self.csb_lineEdit.text()
         strategy = self.cs_textEdit_01.toPlainText()
         if strategy_name == '':
@@ -1663,7 +1711,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
             query1Q.put([4, df, 'buy', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '매수전략 저장하기 완료'])
 
-    def ButtonClicked_53(self):
+    def ButtonClicked_61(self):
         buy_code = '''"""
 매수(False), 종목코드(str), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
 당일거래대금(int), 초당거래대금(int), 초당거래대금평균(int), 체결강도(float), 체결강도평균(float), 최고체결강도(float),
@@ -1677,7 +1725,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         self.cs_textEdit_01.append(buy_code)
         windowQ.put([ui_num['C전략텍스트'], '매수변수 불러오기 완료'])
 
-    def ButtonClicked_54(self):
+    def ButtonClicked_62(self):
         strategy = self.cs_textEdit_01.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1691,27 +1739,58 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
             cstgQ.put(['매수전략', strategy])
             windowQ.put([ui_num['C전략텍스트'], '매수전략 설정하기 완료'])
 
-    def ButtonClicked_55(self):
+    def ButtonClicked_63(self):
         sell_code = '''if 고저평균대비등락율 < 0:\n    매수 = False'''
         self.cs_textEdit_01.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_56(self):
+    def ButtonClicked_64(self):
         sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매수 = False'''
         self.cs_textEdit_01.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_57(self):
+    def ButtonClicked_65(self):
         sell_code = '''if 초당거래대금 < 초당거래대금평균 + 90:\n    매수 = False'''
         self.cs_textEdit_01.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_58(self):
+    def ButtonClicked_66(self):
         sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
         self.cs_textEdit_01.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_61(self):
+    def ButtonClicked_67(self):
+        pass
+
+    def ButtonClicked_68(self):
+        pass
+
+    def ButtonClicked_69(self):
+        pass
+
+    def ButtonClicked_70(self):
+        pass
+
+    def ButtonClicked_71(self):
+        pass
+
+    def ButtonClicked_72(self):
+        pass
+
+    def ButtonClicked_73(self):
+        pass
+
+    def ButtonClicked_74(self):
+        sell_code = '''
+if 매수:
+    매수수량 = round(self.int_tujagm / 현재가, 8)
+    if 매수수량 > 0.00000001:
+        self.list_buy.append(종목명)
+        self.coinQ.put(['매수', 종목명, 현재가, 매수수량])'''
+        self.cs_textEdit_01.append(sell_code)
+        windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
+
+    def ButtonClicked_75(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
@@ -1723,7 +1802,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         else:
             windowQ.put([ui_num['C전략텍스트'], '매도전략 없음'])
 
-    def ButtonClicked_62(self):
+    def ButtonClicked_76(self):
         strategy_name = self.css_lineEdit.text()
         strategy = self.cs_textEdit_02.toPlainText()
         if strategy_name == '':
@@ -1742,7 +1821,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
             query1Q.put([4, df, 'sell', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 저장하기 완료'])
 
-    def ButtonClicked_63(self):
+    def ButtonClicked_77(self):
         sell_code = '''"""
 매도(False), 종목코드(str), 종목명(str), 수익률(float), 보유수량(float), 매수시간(datetime), 현재가(float), 체결강도(float),
 등락율(float), 고저평균대비등락율(float), 초당거래대금평균(int), 체결강도평균(float), 최고체결강도(float),
@@ -1756,7 +1835,7 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도변수 불러오기 완료'])
 
-    def ButtonClicked_64(self):
+    def ButtonClicked_78(self):
         strategy = self.cs_textEdit_02.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1770,23 +1849,40 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
             cstgQ.put(['매도전략', strategy])
             windowQ.put([ui_num['C전략텍스트'], '매도전략 설정하기 완료'])
 
-    def ButtonClicked_65(self):
+    def ButtonClicked_79(self):
         sell_code = '''if now() > timedelta_sec(1800, 매수시간):\n    매도 = True'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_66(self):
+    def ButtonClicked_80(self):
         sell_code = '''if 수익률 <= -2 :\n    매도 = True'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_67(self):
+    def ButtonClicked_81(self):
         sell_code = '''if 수익률 >= 3:\n    매도 = True'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_68(self):
+    def ButtonClicked_82(self):
         sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매도 = True'''
+        self.cs_textEdit_02.append(sell_code)
+        windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
+
+    def ButtonClicked_83(self):
+        pass
+
+    def ButtonClicked_84(self):
+        pass
+
+    def ButtonClicked_85(self):
+        pass
+
+    def ButtonClicked_86(self):
+        sell_code = '''
+if 매도:
+    self.list_sell.append(종목명)
+    self.coinQ.put(['매도', 종목명, 현재가, 보유수량])'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
@@ -2037,6 +2133,8 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
                 self.qtimer3.stop()
             if self.writer.isRunning():
                 self.writer.terminate()
+            if self.trader_coin_proc.is_alive():
+                self.trader_coin_proc.kill()
             if self.trader_stock_proc.is_alive():
                 self.trader_stock_proc.kill()
             if self.strategy_coin_proc.is_alive():
