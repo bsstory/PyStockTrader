@@ -1530,9 +1530,7 @@ class Window(QtWidgets.QMainWindow):
             windowQ.put([ui_num['S전략텍스트'], '시작전략 저장하기 완료'])
 
     def ButtonClicked_33(self):
-        buy_code = '''"""
-def __init__(self)
-"""'''
+        buy_code = '''"""def __init__(self)"""'''
         self.ss_textEdit_01.clear()
         self.ss_textEdit_01.append(buy_code)
         windowQ.put([ui_num['S전략텍스트'], '시작변수 불러오기 완료'])
@@ -1775,9 +1773,7 @@ if 매도:
             windowQ.put([ui_num['C전략텍스트'], '시작전략 저장하기 완료'])
 
     def ButtonClicked_61(self):
-        buy_code = '''"""
-def __init__(self)
-"""'''
+        buy_code = '''"""def __init__(self)"""'''
         self.cs_textEdit_01.clear()
         self.cs_textEdit_01.append(buy_code)
         windowQ.put([ui_num['C전략텍스트'], '시작변수 불러오기 완료'])
