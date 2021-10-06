@@ -78,6 +78,10 @@ class TraderUpbit(QThread):
             self.windowQ.put([ui_num['C체결목록'], self.df_cj])
         if len(self.df_td) > 0:
             self.windowQ.put([ui_num['C거래목록'], self.df_td])
+        if len(self.df_jg) > 0:
+            for code in self.df_jg.index:
+                self.creceivQ.put(f'잔고편입 {code}')
+
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 불러오기 완료'])
 
     def GetKey(self):
