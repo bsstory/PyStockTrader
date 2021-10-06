@@ -185,9 +185,9 @@ class BackTesterCoinVj:
             avgholdday = round(self.totalholdday / self.totalcount, 2)
             self.q.put([self.code, self.totalcount, avgholdday, self.totalcount_p, self.totalcount_m,
                         plus_per, self.totalper, self.totaleyun])
-            ticker, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun = \
+            code, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun = \
                 self.GetTotal(plus_per, avgholdday)
-            print(f" 종목코드 {ticker} | 평균보유기간 {avgholdday}초 | 거래횟수 {totalcount}회 | "
+            print(f" 종목코드 {code} | 평균보유기간 {avgholdday}초 | 거래횟수 {totalcount}회 | "
                   f" 익절 {totalcount_p}회 | 손절 {totalcount_m}회 | 승률 {plus_per}% |"
                   f" 수익률 {totalper}% | 수익금 {totaleyun}원 [{count}/{tcount}]")
         else:
@@ -351,8 +351,8 @@ if __name__ == "__main__":
     procs = []
     workcount = int(last / int(sys.argv[14])) + 1
     for j in range(0, last, workcount):
-        ticker_list = table_list[j:j + workcount]
-        p = Process(target=BackTesterCoinVj, args=(q, ticker_list, num))
+        code_list = table_list[j:j + workcount]
+        p = Process(target=BackTesterCoinVj, args=(q, code_list, num))
         procs.append(p)
         p.start()
     for p in procs:

@@ -407,8 +407,8 @@ if __name__ == "__main__":
             procs = []
             workcount = int(last / int(sys.argv[47])) + 1
             for j in range(0, last, workcount):
-                ticker_list = table_list[j:j + workcount]
-                p = Process(target=BackTesterCoinVc, args=(q, ticker_list, num, False))
+                code_list = table_list[j:j + workcount]
+                p = Process(target=BackTesterCoinVc, args=(q, code_list, num, False))
                 procs.append(p)
                 p.start()
             for p in procs:
@@ -442,8 +442,8 @@ if __name__ == "__main__":
         procs = []
         workcount = int(last / int(sys.argv[47])) + 1
         for j in range(0, last, workcount):
-            ticker_list = table_list[j:j + workcount]
-            p = Process(target=BackTesterCoinVc, args=(q, ticker_list, num, False))
+            code_list = table_list[j:j + workcount]
+            p = Process(target=BackTesterCoinVc, args=(q, code_list, num, False))
             procs.append(p)
             p.start()
         for p in procs:

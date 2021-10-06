@@ -47,22 +47,22 @@ class WebsTicker(QThread):
                 self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - WebsTicker 연결 끊김으로 다시 연결합니다.'])
                 self.websQ_ticker = WebSocketManager('ticker', codes)
             else:
-                ticker = data['code']
+                code = data['code']
                 t = data['trade_time']
                 v = data['trade_volume']
                 gubun = data['ask_bid']
                 try:
-                    pret = dict_tsbc[ticker][0]
-                    bids = dict_tsbc[ticker][1]
-                    asks = dict_tsbc[ticker][2]
+                    pret = dict_tsbc[code][0]
+                    bids = dict_tsbc[code][1]
+                    asks = dict_tsbc[code][2]
                 except KeyError:
                     pret = None
                     bids = 0
                     asks = 0
                 if gubun == 'BID':
-                    dict_tsbc[ticker] = [t, bids + float(v), asks]
+                    dict_tsbc[code] = [t, bids + float(v), asks]
                 else:
-                    dict_tsbc[ticker] = [t, bids, asks + float(v)]
+                    dict_tsbc[code] = [t, bids, asks + float(v)]
                 if t != pret:
                     c = data['trade_price']
                     o = data['opening_price']
@@ -70,19 +70,19 @@ class WebsTicker(QThread):
                     low = data['low_price']
                     per = round(data['signed_change_rate'] * 100, 2)
                     dm = data['acc_trade_price']
-                    bids = dict_tsbc[ticker][1]
-                    asks = dict_tsbc[ticker][2]
+                    bids = dict_tsbc[code][1]
+                    asks = dict_tsbc[code][2]
                     tbids = data['acc_bid_volume']
                     tasks = data['acc_ask_volume']
                     dt = data['trade_date'] + t
-                    dict_tsbc[ticker] = [t, 0, 0]
-                    data = [ticker, c, o, h, low, per, dm, bids, asks, tbids, tasks, dt, now()]
+                    dict_tsbc[code] = [t, 0, 0]
+                    data = [code, c, o, h, low, per, dm, bids, asks, tbids, tasks, dt, now()]
                     self.tick5Q.put(data)
                     if DICT_SET['업비트트레이더']:
-                        injango = ticker in self.list_jang
+                        injango = code in self.list_jang
                         self.cstgQ.put(data + [injango])
-                        if ticker in self.list_jang:
-                            self.coinQ.put([ticker, c, tbids, tasks])
+                        if code in self.list_jang:
+                            self.coinQ.put([code, c, tbids, tasks])
 
     def UpdateJango(self, data):
         if data[0] == '잔고편입':
@@ -125,7 +125,7 @@ class WebsOrderbook(QThread):
                 self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 오류 알림 - WebsOrderbook 연결 끊김으로 다시 연결합니다.'])
                 self.websQ_order = WebSocketManager('orderbook', codes)
             else:
-                ticker = data['code']
+                code = data['code']
                 tsjr = data['total_ask_size']
                 tbjr = data['total_bid_size']
                 s5hg = data['orderbook_units'][4]['ask_price']
@@ -148,7 +148,7 @@ class WebsOrderbook(QThread):
                 b3jr = data['orderbook_units'][2]['bid_size']
                 b4jr = data['orderbook_units'][3]['bid_size']
                 b5jr = data['orderbook_units'][4]['bid_size']
-                data = [ticker, tsjr, tbjr,
+                data = [code, tsjr, tbjr,
                         s5hg, s4hg, s3hg, s2hg, s1hg, b1hg, b2hg, b3hg, b4hg, b5hg,
                         s5jr, s4jr, s3jr, s2jr, s1jr, b1jr, b2jr, b3jr, b4jr, b5jr]
                 self.tick5Q.put(data)

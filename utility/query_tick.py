@@ -38,8 +38,8 @@ class QueryTick:
                     self.windowQ.put([ui_num['S단순텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
             elif query[0] == 2:
                 try:
-                    for ticker in list(query[1].keys()):
-                        query[1][ticker].to_sql(ticker, self.con2, if_exists='append', chunksize=1000)
+                    for code in list(query[1].keys()):
+                        query[1][code].to_sql(code, self.con2, if_exists='append', chunksize=1000)
                     self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 실행 알림 - 틱데이터 저장 완료'])
                 except Exception as e:
                     self.windowQ.put([ui_num['C단순텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
