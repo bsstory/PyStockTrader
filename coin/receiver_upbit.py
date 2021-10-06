@@ -23,7 +23,7 @@ class WebsTicker(QThread):
         self.coinQ = qlist[8]
         self.cstgQ = qlist[10]
         self.tick5Q = qlist[15]
-        self.list_jnag = []
+        self.list_jang = []
         self.websQ_ticker = None
 
     def run(self):
