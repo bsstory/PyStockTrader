@@ -6,7 +6,7 @@ from utility.setting import *
 class TabBar(QtWidgets.QTabBar):
     def tabSizeHint(self, index):
         s = QtWidgets.QTabBar.tabSizeHint(self, index)
-        s.setWidth(50)
+        s.setWidth(40)
         s.setHeight(40)
         s.transpose()
         return s
@@ -54,13 +54,16 @@ class ProxyStyle(QtWidgets.QProxyStyle):
 
 
 def SetUI(self):
-    def setPushbutton(name, box=None, click=None, cmd=None, icon=None, tip=None):
+    def setPushbutton(name, box=None, click=None, cmd=None, icon=None, tip=None, color=False):
         if box is not None:
             pushbutton = QtWidgets.QPushButton(name, box)
         else:
             pushbutton = QtWidgets.QPushButton(name, self)
-        pushbutton.setStyleSheet(style_bc_bt)
-        pushbutton.setFont(qfont)
+        if color:
+            pushbutton.setStyleSheet(style_bc_md)
+        else:
+            pushbutton.setStyleSheet(style_bc_bt)
+        pushbutton.setFont(qfont12)
         if click is not None:
             if cmd is not None:
                 pushbutton.clicked.connect(lambda: click(cmd))
@@ -80,11 +83,30 @@ def SetUI(self):
         textedit.setStyleSheet(style_bc_dk)
         return textedit
 
+    def setTextEdit2(tab):
+        textedit = QtWidgets.QTextEdit(tab)
+        textedit.setFont(qfont14)
+        textedit.setStyleSheet(style_bc_dk)
+        return textedit
+
+    # noinspection PyUnresolvedReferences
+    def setCombobox(tab, Activated):
+        combobox = QtWidgets.QComboBox(tab)
+        combobox.setFont(qfont14)
+        combobox.currentTextChanged.connect(Activated)
+        return combobox
+
     def setLineedit(groupbox):
         lineedit = QtWidgets.QLineEdit(groupbox)
         lineedit.setAlignment(Qt.AlignRight)
         lineedit.setStyleSheet(style_fc_bt)
-        lineedit.setFont(qfont)
+        lineedit.setFont(qfont12)
+        return lineedit
+
+    def setLineedit2(tab):
+        lineedit = QtWidgets.QLineEdit(tab)
+        lineedit.setStyleSheet(style_fc_bt)
+        lineedit.setFont(qfont14)
         return lineedit
 
     def setTablewidget(tab, columns, rowcount, sectionsize=None, clicked=None):
@@ -180,8 +202,10 @@ def SetUI(self):
     icon_backdel = QtGui.QIcon(f'{ICON_PATH}/backdel.png')
     icon_dbdel = QtGui.QIcon(f'{ICON_PATH}/dbdel.png')
     icon_accdel = QtGui.QIcon(f'{ICON_PATH}/accdel.png')
+    icon_stocks = QtGui.QIcon(f'{ICON_PATH}/stocks.png')
+    icon_coins = QtGui.QIcon(f'{ICON_PATH}/coins.png')
 
-    self.setFont(qfont)
+    self.setFont(qfont12)
     self.setWindowTitle('PyStockTrader')
     self.setWindowIcon(icon_main)
 
@@ -189,24 +213,32 @@ def SetUI(self):
     self.st_tab = QtWidgets.QWidget()
     self.ct_tab = QtWidgets.QWidget()
     self.bt_tab = QtWidgets.QWidget()
+    self.ss_tab = QtWidgets.QWidget()
+    self.cs_tab = QtWidgets.QWidget()
     self.sj_tab = QtWidgets.QWidget()
     self.lg_tab = QtWidgets.QWidget()
 
     self.main_tabWidget.addTab(self.st_tab, '')
     self.main_tabWidget.addTab(self.ct_tab, '')
     self.main_tabWidget.addTab(self.bt_tab, '')
+    self.main_tabWidget.addTab(self.ss_tab, '')
+    self.main_tabWidget.addTab(self.cs_tab, '')
     self.main_tabWidget.addTab(self.sj_tab, '')
     self.main_tabWidget.addTab(self.lg_tab, '')
     self.main_tabWidget.setTabIcon(0, icon_stock)
     self.main_tabWidget.setTabIcon(1, icon_coin)
     self.main_tabWidget.setTabIcon(2, icon_back)
-    self.main_tabWidget.setTabIcon(3, icon_set)
-    self.main_tabWidget.setTabIcon(4, icon_log)
+    self.main_tabWidget.setTabIcon(3, icon_stocks)
+    self.main_tabWidget.setTabIcon(4, icon_coins)
+    self.main_tabWidget.setTabIcon(5, icon_set)
+    self.main_tabWidget.setTabIcon(6, icon_log)
     self.main_tabWidget.setTabToolTip(0, '  주식 트레이더')
     self.main_tabWidget.setTabToolTip(1, '  코인 트레이더')
     self.main_tabWidget.setTabToolTip(2, '  백테스터')
-    self.main_tabWidget.setTabToolTip(3, '  설정')
-    self.main_tabWidget.setTabToolTip(4, '  로그')
+    self.main_tabWidget.setTabToolTip(3, '  주식 전략 설정')
+    self.main_tabWidget.setTabToolTip(4, '  코인 전략 설정')
+    self.main_tabWidget.setTabToolTip(5, '  설정')
+    self.main_tabWidget.setTabToolTip(6, '  로그')
 
     self.tt_pushButton = setPushbutton('', click=self.ButtonClicked_1, icon=icon_total, tip='  수익집계')
     self.ms_pushButton = setPushbutton('', click=self.ButtonClicked_2, icon=icon_start, tip='  주식수동시작')
@@ -215,11 +247,8 @@ def SetUI(self):
     self.dd_pushButton = setPushbutton('', click=self.ButtonClicked_5, icon=icon_dbdel, tip='  거래목록 데이터 삭제 및 초기화')
     self.sd_pushButton = setPushbutton('', click=self.ButtonClicked_6, icon=icon_accdel, tip='  모든 계정 설정 삭제 및 초기화')
     self.qs_pushButton = setPushbutton('', click=self.ShowQsize)
-    self.ss_pushButton = setPushbutton('', click=self.SpecialStrategy)
-    self.ht_pushButton = setPushbutton('', click=self.HoldtimeStrategy)
+    self.zo_pushButton.setShortcut('Alt+Z')
     self.qs_pushButton.setShortcut('Alt+Q')
-    self.ss_pushButton.setShortcut('Alt+S')
-    self.ht_pushButton.setShortcut('Alt+T')
 
     self.progressBar = QtWidgets.QProgressBar(self)
     self.progressBar.setAlignment(Qt.AlignCenter)
@@ -552,6 +581,62 @@ def SetUI(self):
 
     self.sj_textEdit = setTextEdit(self.sj_tab)
 
+    self.ss_textEdit_01 = setTextEdit2(self.ss_tab)
+    self.ss_textEdit_02 = setTextEdit2(self.ss_tab)
+    self.ss_textEdit_03 = setTextEdit(self.ss_tab)
+
+    self.ssb_comboBox = setCombobox(self.ss_tab, self.Activated_01)
+    self.ssb_lineEdit = setLineedit2(self.ss_tab)
+    self.ssb_pushButton_01 = setPushbutton('매수전략 불러오기', box=self.ss_tab, click=self.ButtonClicked_31)
+    self.ssb_pushButton_02 = setPushbutton('매수전략 저장하기', box=self.ss_tab, click=self.ButtonClicked_32)
+    self.ssb_pushButton_03 = setPushbutton('매수변수 불러오기', box=self.ss_tab, click=self.ButtonClicked_33)
+    self.ssb_pushButton_04 = setPushbutton('매수전략 설정하기', box=self.ss_tab, click=self.ButtonClicked_34)
+
+    self.ssb_pushButton_05 = setPushbutton('고저평균대비등락율', box=self.ss_tab, click=self.ButtonClicked_35, color=True)
+    self.ssb_pushButton_06 = setPushbutton('체결강도차이', box=self.ss_tab, click=self.ButtonClicked_36, color=True)
+    self.ssb_pushButton_07 = setPushbutton('거래대금차이', box=self.ss_tab, click=self.ButtonClicked_37, color=True)
+    self.ssb_pushButton_08 = setPushbutton('매도총잔량우위', box=self.ss_tab, click=self.ButtonClicked_38, color=True)
+
+    self.sss_comboBox = setCombobox(self.ss_tab, self.Activated_02)
+    self.sss_lineEdit = setLineedit2(self.ss_tab)
+    self.sss_pushButton_01 = setPushbutton('매도전략 불러오기', box=self.ss_tab, click=self.ButtonClicked_41)
+    self.sss_pushButton_02 = setPushbutton('매도전략 저장하기', box=self.ss_tab, click=self.ButtonClicked_42)
+    self.sss_pushButton_03 = setPushbutton('매도변수 불러오기', box=self.ss_tab, click=self.ButtonClicked_43)
+    self.sss_pushButton_04 = setPushbutton('매도전략 설정하기', box=self.ss_tab, click=self.ButtonClicked_44)
+
+    self.sss_pushButton_05 = setPushbutton('보유시간기준', box=self.ss_tab, click=self.ButtonClicked_45, color=True)
+    self.sss_pushButton_06 = setPushbutton('손절라인설정', box=self.ss_tab, click=self.ButtonClicked_46, color=True)
+    self.sss_pushButton_07 = setPushbutton('익절라인설정', box=self.ss_tab, click=self.ButtonClicked_47, color=True)
+    self.sss_pushButton_08 = setPushbutton('체결강도차이', box=self.ss_tab, click=self.ButtonClicked_48, color=True)
+
+    self.cs_textEdit_01 = setTextEdit2(self.cs_tab)
+    self.cs_textEdit_02 = setTextEdit2(self.cs_tab)
+    self.cs_textEdit_03 = setTextEdit(self.cs_tab)
+
+    self.csb_comboBox = setCombobox(self.cs_tab, self.Activated_03)
+    self.csb_lineEdit = setLineedit2(self.cs_tab)
+    self.csb_pushButton_01 = setPushbutton('매수전략 불러오기', box=self.cs_tab, click=self.ButtonClicked_51)
+    self.csb_pushButton_02 = setPushbutton('매수전략 저장하기', box=self.cs_tab, click=self.ButtonClicked_52)
+    self.csb_pushButton_03 = setPushbutton('매수변수 불러오기', box=self.cs_tab, click=self.ButtonClicked_53)
+    self.csb_pushButton_04 = setPushbutton('매수전략 설정하기', box=self.cs_tab, click=self.ButtonClicked_54)
+
+    self.csb_pushButton_05 = setPushbutton('고저평균대비등락율', box=self.cs_tab, click=self.ButtonClicked_55, color=True)
+    self.csb_pushButton_06 = setPushbutton('체결강도차이', box=self.cs_tab, click=self.ButtonClicked_56, color=True)
+    self.csb_pushButton_07 = setPushbutton('거래대금차이', box=self.cs_tab, click=self.ButtonClicked_57, color=True)
+    self.csb_pushButton_08 = setPushbutton('매도총잔량우위', box=self.cs_tab, click=self.ButtonClicked_58, color=True)
+
+    self.css_comboBox = setCombobox(self.cs_tab, self.Activated_04)
+    self.css_lineEdit = setLineedit2(self.cs_tab)
+    self.css_pushButton_01 = setPushbutton('매도전략 불러오기', box=self.cs_tab, click=self.ButtonClicked_61)
+    self.css_pushButton_02 = setPushbutton('매도전략 저장하기', box=self.cs_tab, click=self.ButtonClicked_62)
+    self.css_pushButton_03 = setPushbutton('매도변수 불러오기', box=self.cs_tab, click=self.ButtonClicked_63)
+    self.css_pushButton_04 = setPushbutton('매도전략 설정하기', box=self.cs_tab, click=self.ButtonClicked_64)
+
+    self.css_pushButton_05 = setPushbutton('보유시간기준', box=self.cs_tab, click=self.ButtonClicked_65, color=True)
+    self.css_pushButton_06 = setPushbutton('손절라인설정', box=self.cs_tab, click=self.ButtonClicked_66, color=True)
+    self.css_pushButton_07 = setPushbutton('익절라인설정', box=self.cs_tab, click=self.ButtonClicked_67, color=True)
+    self.css_pushButton_08 = setPushbutton('체결강도차이', box=self.cs_tab, click=self.ButtonClicked_68, color=True)
+
     self.sj_main_checkBox_01 = QtWidgets.QCheckBox('주식 콜렉터', self.sj_groupBox_01)
     self.sj_main_checkBox_01.stateChanged.connect(self.CheckboxChanged_01)
     self.sj_main_checkBox_02 = QtWidgets.QCheckBox('주식 트레이더', self.sj_groupBox_01)
@@ -660,16 +745,14 @@ def SetUI(self):
     self.setFixedSize(1403, 763)
     self.geometry().center()
     self.main_tabWidget.setGeometry(5, 5, 1393, 753)
-    self.tt_pushButton.setGeometry(5, 260, 35, 32)
-    self.ms_pushButton.setGeometry(5, 297, 35, 32)
-    self.zo_pushButton.setGeometry(5, 334, 35, 32)
-    self.progressBar.setGeometry(6, 371, 33, 273)
+    self.tt_pushButton.setGeometry(5, 290, 35, 32)
+    self.ms_pushButton.setGeometry(5, 327, 35, 32)
+    self.zo_pushButton.setGeometry(5, 364, 35, 32)
+    self.progressBar.setGeometry(6, 401, 33, 243)
     self.bd_pushButton.setGeometry(5, 650, 35, 32)
     self.dd_pushButton.setGeometry(5, 687, 35, 32)
     self.sd_pushButton.setGeometry(5, 724, 35, 32)
     self.qs_pushButton.setGeometry(0, 0, 0, 0)
-    self.ss_pushButton.setGeometry(0, 0, 0, 0)
-    self.ht_pushButton.setGeometry(0, 0, 0, 0)
 
     self.stt_tableWidget.setGeometry(5, 5, 668, 42)
     self.std_tableWidget.setGeometry(5, 52, 668, 320)
@@ -909,6 +992,62 @@ def SetUI(self):
     self.sj_groupBox_05.setGeometry(5, 375, 1341, 130)
     self.sj_groupBox_06.setGeometry(5, 525, 1341, 95)
     self.sj_textEdit.setGeometry(5, 640, 1341, 103)
+
+    self.ss_textEdit_01.setGeometry(5, 5, 1000, 500)
+    self.ss_textEdit_02.setGeometry(5, 510, 1000, 234)
+    self.ss_textEdit_03.setGeometry(1010, 305, 335, 200)
+
+    self.ssb_comboBox.setGeometry(1010, 5, 165, 25)
+    self.ssb_lineEdit.setGeometry(1180, 5, 165, 25)
+    self.ssb_pushButton_01.setGeometry(1010, 35, 165, 30)
+    self.ssb_pushButton_02.setGeometry(1180, 35, 165, 30)
+    self.ssb_pushButton_03.setGeometry(1010, 70, 165, 30)
+    self.ssb_pushButton_04.setGeometry(1180, 70, 165, 30)
+
+    self.ssb_pushButton_05.setGeometry(1010, 105, 165, 30)
+    self.ssb_pushButton_06.setGeometry(1180, 105, 165, 30)
+    self.ssb_pushButton_07.setGeometry(1010, 140, 165, 30)
+    self.ssb_pushButton_08.setGeometry(1180, 140, 165, 30)
+
+    self.sss_comboBox.setGeometry(1010, 510, 165, 25)
+    self.sss_lineEdit.setGeometry(1180, 510, 165, 25)
+    self.sss_pushButton_01.setGeometry(1010, 540, 165, 30)
+    self.sss_pushButton_02.setGeometry(1180, 540, 165, 30)
+    self.sss_pushButton_03.setGeometry(1010, 575, 165, 30)
+    self.sss_pushButton_04.setGeometry(1180, 575, 165, 30)
+
+    self.sss_pushButton_05.setGeometry(1010, 610, 165, 30)
+    self.sss_pushButton_06.setGeometry(1180, 610, 165, 30)
+    self.sss_pushButton_07.setGeometry(1010, 645, 165, 30)
+    self.sss_pushButton_08.setGeometry(1180, 645, 165, 30)
+
+    self.cs_textEdit_01.setGeometry(5, 5, 1000, 500)
+    self.cs_textEdit_02.setGeometry(5, 510, 1000, 234)
+    self.cs_textEdit_03.setGeometry(1010, 305, 335, 200)
+
+    self.csb_comboBox.setGeometry(1010, 5, 165, 25)
+    self.csb_lineEdit.setGeometry(1180, 5, 165, 25)
+    self.csb_pushButton_01.setGeometry(1010, 35, 165, 30)
+    self.csb_pushButton_02.setGeometry(1180, 35, 165, 30)
+    self.csb_pushButton_03.setGeometry(1010, 70, 165, 30)
+    self.csb_pushButton_04.setGeometry(1180, 70, 165, 30)
+
+    self.csb_pushButton_05.setGeometry(1010, 105, 165, 30)
+    self.csb_pushButton_06.setGeometry(1180, 105, 165, 30)
+    self.csb_pushButton_07.setGeometry(1010, 140, 165, 30)
+    self.csb_pushButton_08.setGeometry(1180, 140, 165, 30)
+
+    self.css_comboBox.setGeometry(1010, 510, 165, 25)
+    self.css_lineEdit.setGeometry(1180, 510, 165, 25)
+    self.css_pushButton_01.setGeometry(1010, 540, 165, 30)
+    self.css_pushButton_02.setGeometry(1180, 540, 165, 30)
+    self.css_pushButton_03.setGeometry(1010, 575, 165, 30)
+    self.css_pushButton_04.setGeometry(1180, 575, 165, 30)
+
+    self.css_pushButton_05.setGeometry(1010, 610, 165, 30)
+    self.css_pushButton_06.setGeometry(1180, 610, 165, 30)
+    self.css_pushButton_07.setGeometry(1010, 645, 165, 30)
+    self.css_pushButton_08.setGeometry(1180, 645, 165, 30)
 
     self.sj_main_checkBox_01.setGeometry(10, 25, 100, 30)
     self.sj_main_checkBox_02.setGeometry(120, 25, 100, 30)

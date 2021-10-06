@@ -18,21 +18,21 @@ class ReceiverKiwoom:
 
     def __init__(self, qlist):
         """
-                    0        1       2        3       4       5       6       7      8      9
-        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                    0        1       2        3       4       5          6        7      8      9     10
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, sreceivQ, creceivQ, stockQ, coinQ, sstgQ, cstgQ,
                  tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
-                   10       11      12     13      14
+                   11       12      13     14      15
         """
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
         self.query2Q = qlist[3]
         self.teleQ = qlist[4]
-        self.receivQ = qlist[5]
-        self.sstgQ = qlist[8]
-        self.tick1Q = qlist[10]
-        self.tick2Q = qlist[11]
-        self.tick3Q = qlist[12]
-        self.tick4Q = qlist[13]
+        self.sreceivQ = qlist[5]
+        self.sstgQ = qlist[9]
+        self.tick1Q = qlist[11]
+        self.tick2Q = qlist[12]
+        self.tick3Q = qlist[13]
+        self.tick4Q = qlist[14]
 
         self.dict_bool = {
             '실시간조건검색시작': False,
@@ -138,8 +138,8 @@ class ReceiverKiwoom:
         self.OperationRealreg()
         self.ViRealreg()
         while True:
-            if not self.receivQ.empty():
-                work = self.receivQ.get()
+            if not self.sreceivQ.empty():
+                work = self.sreceivQ.get()
                 if type(work) == list:
                     self.UpdateRealreg(work)
                 elif type(work) == str:
@@ -204,7 +204,7 @@ class ReceiverKiwoom:
                 del self.dict_gsjm[code]
 
     def OperationRealreg(self):
-        self.receivQ.put([sn_oper, ' ', '215;20;214', 0])
+        self.sreceivQ.put([sn_oper, ' ', '215;20;214', 0])
         self.list_code = self.SendCondition(sn_oper, self.dict_cond[1], 1, 0)
         self.list_code1 = [code for i, code in enumerate(self.list_code) if i % 4 == 0]
         self.list_code2 = [code for i, code in enumerate(self.list_code) if i % 4 == 1]
@@ -212,7 +212,7 @@ class ReceiverKiwoom:
         self.list_code4 = [code for i, code in enumerate(self.list_code) if i % 4 == 3]
         k = 0
         for i in range(0, len(self.list_code), 100):
-            self.receivQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
+            self.sreceivQ.put([sn_jchj + k, ';'.join(self.list_code[i:i + 100]), '10;12;14;30;228;41;61;71;81', 1])
             k += 1
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 장운영시간 등록 완료'])
 
@@ -277,7 +277,7 @@ class ReceiverKiwoom:
             del self.dict_gsjm[code]
 
     def AllRemoveRealreg(self):
-        self.receivQ.put(['ALL', 'ALL'])
+        self.sreceivQ.put(['ALL', 'ALL'])
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
         self.tick1Q.put('콜렉터종료')
         self.tick2Q.put('콜렉터종료')
@@ -393,14 +393,15 @@ class ReceiverKiwoom:
                         per = float(self.GetCommRealData(code, 12))
                         dm = int(self.GetCommRealData(code, 14))
                         ch = float(self.GetCommRealData(code, 228))
-                        vp = abs(float(self.GetCommRealData(code, 30)))
                         name = self.GetMasterCodeName(code)
                     except Exception as e:
                         self.windowQ.put([ui_num['S단순텍스트'], f'OnReceiveRealData 주식체결 {e}'])
                     else:
-                        self.UpdateTickData(code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, now())
+                        self.UpdateTickData(code, name, c, o, h, low, per, dm, ch, bids, asks, t, now())
         elif realtype == '주식호가잔량':
             try:
+                tsjr = int(self.GetCommRealData(code, 121))
+                tbjr = int(self.GetCommRealData(code, 125))
                 s2hg = abs(int(self.GetCommRealData(code, 42)))
                 s1hg = abs(int(self.GetCommRealData(code, 41)))
                 b1hg = abs(int(self.GetCommRealData(code, 51)))
@@ -412,7 +413,7 @@ class ReceiverKiwoom:
             except Exception as e:
                 self.windowQ.put([ui_num['S단순텍스트'], f'OnReceiveRealData 주식호가잔량 {e}'])
             else:
-                self.dict_hoga[code] = [s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr]
+                self.dict_hoga[code] = [tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr]
 
     def InsertViPriceDown5(self, code, o):
         vid5 = self.GetVIPriceDown5(code, o)
@@ -456,7 +457,17 @@ class ReceiverKiwoom:
             vid5 = self.GetVIPriceDown5(code, key)
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
 
-    def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, vp, bids, asks, t, receivetime):
+    def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, bids, asks, t, receivetime):
+        vitime = self.dict_vipr[code][1]
+        vid5price = self.dict_vipr[code][2]
+        try:
+            tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = self.dict_hoga[code]
+        except KeyError:
+            tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+        data = [code, c, o, h, low, per, dm, ch, bids, asks, vitime, vid5price,
+                tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime]
+
         if DICT_SET['키움트레이더']:
             dt = self.str_tday + t[:4]
             if code not in self.dict_cdjm.keys():
@@ -474,19 +485,11 @@ class ReceiverKiwoom:
                 self.dict_cdjm[code].at[dt] = dm - predm, predm
 
             if code in self.dict_gsjm.keys():
-                injango = code in self.list_jang
-                vitimedown = now() < timedelta_sec(180, self.dict_vipr[code][1])
-                vid5priceup = c >= self.dict_vipr[code][2]
-                self.sstgQ.put([code, name, c, o, h, low, per, ch, dm, t, injango, vitimedown, vid5priceup, receivetime])
+                data.append(name)
+                data.append(code in self.list_jang)
+                self.sstgQ.put(data)
 
-        vitime = strf_time('%Y%m%d%H%M%S', self.dict_vipr[code][1])
-        vid5 = self.dict_vipr[code][2]
-        try:
-            s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = self.dict_hoga[code]
-        except KeyError:
-            s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = 0, 0, 0, 0, 0, 0, 0, 0
-        data = [code, c, o, h, low, per, dm, ch, vp, bids, asks, vitime, vid5,
-                s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime]
+        data[10] = strf_time('%Y%m%d%H%M%S', vitime)
         if code in self.list_code1:
             self.tick1Q.put(data)
         elif code in self.list_code2:

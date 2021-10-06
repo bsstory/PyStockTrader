@@ -15,18 +15,18 @@ class TraderKiwoom:
 
     def __init__(self, qlist):
         """
-                    0        1       2        3       4       5       6       7      8      9
-        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                    0        1       2        3       4       5          6        7      8      9     10
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, sreceivQ, creceivQ, stockQ, coinQ, sstgQ, cstgQ,
                  tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
-                   10       11      12     13      14
+                   11       12      13     14      15
         """
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
         self.query1Q = qlist[2]
         self.teleQ = qlist[4]
-        self.receivQ = qlist[5]
-        self.stockQ = qlist[6]
-        self.sstgQ = qlist[8]
+        self.sreceivQ = qlist[5]
+        self.stockQ = qlist[7]
+        self.sstgQ = qlist[9]
         self.lock = Lock()
 
         self.dict_name = {}     # key: 종목코드, value: 종목명
@@ -61,9 +61,7 @@ class TraderKiwoom:
             'TR수신': False,
             'TR다음': False,
             'CD수신': False,
-            'CR수신': False,
-            '보유시간기준청산': False,
-            '스패셜전략': False
+            'CR수신': False
         }
         remaintime = (strp_time('%Y%m%d%H%M%S', self.dict_strg['당일날짜'] + '090100') - now()).total_seconds()
         self.exit_time = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
@@ -106,7 +104,7 @@ class TraderKiwoom:
         if len(self.dict_df['잔고목록']) > 0:
             for code in self.dict_df['잔고목록'].index:
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
-                self.receivQ.put(f'잔고편입 {code}')
+                self.sreceivQ.put(f'잔고편입 {code}')
 
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 정보 불러오기 완료'])
 
@@ -268,16 +266,6 @@ class TraderKiwoom:
         elif work == '/잔고청산주문':
             if not self.dict_bool['잔고청산']:
                 self.JangoChungsan()
-        elif work == '스패셜전략':
-            if self.dict_bool['스패셜전략']:
-                self.dict_bool['스패셜전략'] = False
-            else:
-                self.dict_bool['스패셜전략'] = True
-        elif work == '보유시간기준청산':
-            if self.dict_bool['보유시간기준청산']:
-                self.dict_bool['보유시간기준청산'] = False
-            else:
-                self.dict_bool['보유시간기준청산'] = True
 
     def GetAccountjanGo(self):
         while True:
@@ -446,8 +434,6 @@ class TraderKiwoom:
             try:
                 c = abs(int(self.GetCommRealData(code, 10)))
                 o = abs(int(self.GetCommRealData(code, 16)))
-                per = float(self.GetCommRealData(code, 12))
-                ch = float(self.GetCommRealData(code, 228))
                 name = self.dict_name[code]
             except Exception as e:
                 self.windowQ.put([ui_num['S로그텍스트'], f'OnReceiveRealData 주식체결 {e}'])
@@ -458,7 +444,7 @@ class TraderKiwoom:
                     elif not self.dict_vipr[code][0] and now() > self.dict_vipr[code][1]:
                         self.UpdateViPrice(code, c)
                     if code in self.dict_df['잔고목록'].index:
-                        self.UpdateJango(code, name, c, per, ch)
+                        self.UpdateJango(code, name, c)
 
     @thread_decorator
     def OperationAlert(self, current):
@@ -543,7 +529,7 @@ class TraderKiwoom:
             self.dict_vipr[code] = [True, now(), timedelta_sec(180), uvi, dvi, uvid5]
             self.stockQ.put([sn_vijc, code])
 
-    def UpdateJango(self, code, name, c, per, ch):
+    def UpdateJango(self, code, name, c):
         self.lock.acquire()
         prec = self.dict_df['잔고목록']['현재가'][code]
         if prec != c:
@@ -552,11 +538,11 @@ class TraderKiwoom:
             pg, sg, sp = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.dict_df['잔고목록'].at[code, columns] = c, sp, sg, pg
-            self.sstgQ.put([code, name, per, sp, oc, ch, c])
-            if self.dict_bool['보유시간기준청산']:
-                df = self.dict_df['체결목록'][(self.dict_df['체결목록']['종목명'] == code) & (self.dict_df['체결목록']['주문구분'] == '매수')]
-                if len(df) > 0 and now() > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
-                    self.Order('매도', code, name, c, oc)
+            cond = (self.dict_df['체결목록']['종목명'] == code) & (self.dict_df['체결목록']['주문구분'] == '매수')
+            df = self.dict_df['체결목록'][cond]
+            if len(df) > 0:
+                buytime = strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])
+                self.sstgQ.put([code, name, sp, oc, c, buytime])
         self.lock.release()
 
     # noinspection PyMethodMayBeStatic
@@ -627,7 +613,7 @@ class TraderKiwoom:
                 pg, sg, sp = self.GetPgSgSp(bg, oc * cp)
                 self.dict_df['잔고목록'].at[code] = name, cp, cp, sp, sg, bg, pg, oc
                 self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
-                self.receivQ.put(f'잔고편입 {code}')
+                self.sreceivQ.put(f'잔고편입 {code}')
             else:
                 jc = self.dict_df['잔고목록']['보유수량'][code]
                 bg = self.dict_df['잔고목록']['매입금액'][code]
@@ -641,17 +627,13 @@ class TraderKiwoom:
             if jc - oc == 0:
                 self.dict_df['잔고목록'].drop(index=code, inplace=True)
                 self.stockQ.put([sn_jscg, code])
-                self.receivQ.put(f'잔고청산 {code}')
+                self.sreceivQ.put(f'잔고청산 {code}')
             else:
                 bp = self.dict_df['잔고목록']['매입가'][code]
                 jc = jc - oc
                 bg = jc * bp
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
-
-            if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
-                self.spcl_time = timedelta_sec(5)
-                self.sstgQ.put(['관심종목초기화', ''])
 
         if og == '매수':
             self.sstgQ.put(['매수완료', code])

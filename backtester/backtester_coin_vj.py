@@ -10,9 +10,9 @@ from utility.static import now, strf_time, timedelta_day
 
 
 class BackTesterCoinVj:
-    def __init__(self, q_, ticker_list_, num_):
+    def __init__(self, q_, code_list_, num_):
         self.q = q_
-        self.ticker_list = ticker_list_
+        self.code_list = code_list_
 
         self.batting = num_[0]
         self.testperiod = num_[1]
@@ -28,7 +28,7 @@ class BackTesterCoinVj:
         self.per_high = num_[11]
         self.cs_per = num_[12]
 
-        self.ticker = None
+        self.code = None
         self.df = None
 
         self.totalcount = 0
@@ -51,23 +51,23 @@ class BackTesterCoinVj:
 
     def Start(self):
         conn = sqlite3.connect(DB_COIN_TICK)
-        tcount = len(self.ticker_list)
+        tcount = len(self.code_list)
         int_daylimit = int(strf_time('%Y%m%d', timedelta_day(-self.testperiod)))
-        for k, ticker in enumerate(self.ticker_list):
-            self.ticker = ticker
-            self.df = pd.read_sql(f"SELECT * FROM '{ticker}'", conn)
+        for k, code in enumerate(self.code_list):
+            self.code = code
+            self.df = pd.read_sql(f"SELECT * FROM '{code}'", conn)
             self.df = self.df.set_index('index')
             self.df['고저평균대비등락율'] = (self.df['현재가'] / ((self.df['고가'] + self.df['저가']) / 2) - 1) * 100
             self.df['고저평균대비등락율'] = self.df['고저평균대비등락율'].round(2)
             self.df['체결강도'] = self.df['누적매수량'] / self.df['누적매도량'] * 100
             self.df['체결강도'] = self.df['체결강도'].round(2)
             self.df['직전체결강도'] = self.df['체결강도'].shift(1)
-            self.df['직전누적거래대금'] = self.df['누적거래대금'].shift(1)
+            self.df['직전당일거래대금'] = self.df['당일거래대금'].shift(1)
             self.df = self.df.fillna(0)
-            self.df['거래대금'] = self.df['누적거래대금'] - self.df['직전누적거래대금']
-            self.df['직전거래대금'] = self.df['거래대금'].shift(1)
+            self.df['초당거래대금'] = self.df['당일거래대금'] - self.df['직전당일거래대금']
+            self.df['직전초당거래대금'] = self.df['초당거래대금'].shift(1)
             self.df = self.df.fillna(0)
-            self.df['거래대금평균'] = self.df['직전거래대금'].rolling(window=self.avg_time).mean()
+            self.df['초당거래대금평균'] = self.df['직전초당거래대금'].rolling(window=self.avg_time).mean()
             self.df['체결강도평균'] = self.df['직전체결강도'].rolling(window=self.avg_time).mean()
             self.df['최고체결강도'] = self.df['직전체결강도'].rolling(window=self.avg_time).max()
             self.df = self.df.fillna(0)
@@ -164,7 +164,7 @@ class BackTesterCoinVj:
             self.totalcount_p += 1
         else:
             self.totalcount_m += 1
-        self.q.put([self.index, self.ticker, per, eyun])
+        self.q.put([self.index, self.code, per, eyun])
 
     # noinspection PyMethodMayBeStatic
     def GetEyunPer(self, bg, cg):
@@ -183,7 +183,7 @@ class BackTesterCoinVj:
         if self.totalcount > 0:
             plus_per = round((self.totalcount_p / self.totalcount) * 100, 2)
             avgholdday = round(self.totalholdday / self.totalcount, 2)
-            self.q.put([self.ticker, self.totalcount, avgholdday, self.totalcount_p, self.totalcount_m,
+            self.q.put([self.code, self.totalcount, avgholdday, self.totalcount_p, self.totalcount_m,
                         plus_per, self.totalper, self.totaleyun])
             ticker, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun = \
                 self.GetTotal(plus_per, avgholdday)
@@ -191,14 +191,14 @@ class BackTesterCoinVj:
                   f" 익절 {totalcount_p}회 | 손절 {totalcount_m}회 | 승률 {plus_per}% |"
                   f" 수익률 {totalper}% | 수익금 {totaleyun}원 [{count}/{tcount}]")
         else:
-            self.q.put([self.ticker, 0, 0, 0, 0, 0., 0., 0])
+            self.q.put([self.code, 0, 0, 0, 0, 0., 0., 0])
 
     def GetTotal(self, plus_per, avgholdday):
-        ticker = str(self.ticker)
-        ticker = ticker + '    ' if len(ticker) == 6 else ticker
-        ticker = ticker + '   ' if len(ticker) == 7 else ticker
-        ticker = ticker + '  ' if len(ticker) == 8 else ticker
-        ticker = ticker + ' ' if len(ticker) == 9 else ticker
+        code = str(self.code)
+        code = code + '    ' if len(code) == 6 else code
+        code = code + '   ' if len(code) == 7 else code
+        code = code + '  ' if len(code) == 8 else code
+        code = code + ' ' if len(code) == 9 else code
         totalcount = str(self.totalcount)
         totalcount = '  ' + totalcount if len(totalcount) == 1 else totalcount
         totalcount = ' ' + totalcount if len(totalcount) == 2 else totalcount
@@ -236,7 +236,7 @@ class BackTesterCoinVj:
             totaleyun = '  ' + totaleyun if len(totaleyun.split(',')[0]) == 4 else totaleyun
         elif len(totaleyun.split(',')) == 3:
             totaleyun = ' ' + totaleyun if len(totaleyun.split(',')[0]) == 1 else totaleyun
-        return ticker, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun
+        return code, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun
 
 
 class Total:

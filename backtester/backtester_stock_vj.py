@@ -60,9 +60,9 @@ class BackTesterStockVj:
             self.code = code
             self.df = pd.read_sql(f"SELECT * FROM '{code}'", conn)
             self.df = self.df.set_index('index')
-            self.df['직전거래대금'] = self.df['거래대금'].shift(1)
+            self.df['직전초당거래대금'] = self.df['초당거래대금'].shift(1)
             self.df['직전체결강도'] = self.df['체결강도'].shift(1)
-            self.df['거래대금평균'] = self.df['직전거래대금'].rolling(window=self.avg_time).mean()
+            self.df['초당거래대금평균'] = self.df['직전초당거래대금'].rolling(window=self.avg_time).mean()
             self.df['체결강도평균'] = self.df['직전체결강도'].rolling(window=self.avg_time).mean()
             self.df['최고체결강도'] = self.df['직전체결강도'].rolling(window=self.avg_time).max()
             self.df = self.df.fillna(0)

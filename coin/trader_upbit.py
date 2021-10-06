@@ -1,9 +1,7 @@
 import os
 import sys
-import time
 import pyupbit
 from PyQt5.QtCore import QThread
-from pyupbit import WebSocketManager
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.setting import *
 from utility.static import now, timedelta_sec, strf_time, strp_time
@@ -12,18 +10,19 @@ from utility.static import now, timedelta_sec, strf_time, strp_time
 class TraderUpbit(QThread):
     def __init__(self, qlist):
         """
-                    0        1       2        3       4       5       6       7      8      9
-        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, receivQ, stockQ, coinQ, sstgQ, cstgQ,
+                    0        1       2        3       4       5          6        7      8      9     10
+        qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, sreceivQ, creceivQ, stockQ, coinQ, sstgQ, cstgQ,
                  tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
-                   10       11      12     13      14
+                   11       12      13     14      15
         """
         super().__init__()
         self.windowQ = qlist[0]
         self.soundQ = qlist[1]
         self.query1Q = qlist[2]
         self.teleQ = qlist[4]
-        self.coinQ = qlist[7]
-        self.cstgQ = qlist[9]
+        self.creceivQ = qlist[6]
+        self.coinQ = qlist[8]
+        self.cstgQ = qlist[10]
 
         self.upbit = None                               # 매도수 주문 및 체결 확인용 객체
         self.buy_uuid = None                            # 매수 주문 저장용 list: [티커명, uuid]
@@ -38,7 +37,6 @@ class TraderUpbit(QThread):
 
         self.str_today = strf_time('%Y%m%d')
 
-        self.tickers = []
         self.dict_jcdt = {}                             # 종목별 체결시간 저장용
         self.dict_intg = {
             '예수금': 0,
@@ -47,15 +45,12 @@ class TraderUpbit(QThread):
         }
         self.dict_bool = {
             '최소주문금액': False,                        # 업비트 주문가능 최소금액, 종목당투자금이 5천원 미만일 경우 False
-            '실현손익저장': False,
-            '보유시간기준청산': False,
-            '스패셜전략': False
+            '실현손익저장': False
         }
         self.dict_time = {
             '매수체결확인': now(),                          # 1초 마다 매수 체결 확인용
             '매도체결확인': now(),                          # 1초 마다 매도 체결 확인용
-            '거래정보': now(),                             # 잔고목록 및 잔고평가 갱신용
-            '스패셜전략': now()                            # 매도 후 50초 이후의 시간을 저장하고 그시간 이전의 매수주문을 무시한다.
+            '거래정보': now()                              # 잔고목록 및 잔고평가 갱신용
         }
 
     def run(self):
@@ -123,76 +118,33 @@ class TraderUpbit(QThread):
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 예수금 조회 완료'])
 
     def EventLoop(self):
-        """ get_tickers 리스트의 갯수가 다른 버그 발견, 1초 간격 3회 조회 후 길이가 긴 리스트를 티커리스트로 정한다 """
-        self.tickers = pyupbit.get_tickers(fiat="KRW")
-        time.sleep(1)
-        tickers2 = pyupbit.get_tickers(fiat="KRW")
-        self.tickers = tickers2 if len(tickers2) > len(self.tickers) else self.tickers
-        time.sleep(1)
-        tickers2 = pyupbit.get_tickers(fiat="KRW")
-        self.tickers = tickers2 if len(tickers2) > len(self.tickers) else self.tickers
-        self.cstgQ.put(['관심종목초기화', self.tickers])
-        self.websocketQ = WebSocketManager('ticker', self.tickers)
         while True:
-            """ 주문용 큐를 감시한다. """
-            if not self.coinQ.empty():
-                data = self.coinQ.get()
-                if type(data) == str:
-                    self.SpecialStrategy(data)
-                elif data[0] == '매수':
-                    self.Buy(data[1], data[2], data[3])
-                elif data[0] == '매도':
-                    self.Sell(data[1], data[2], data[3])
-
-            """
-            실시간 웹소켓큐로 데이터가 들어오면 티커명 및 시간을 구하고
-            티커별 마지막 시간이 저장된 self.dict_jcdt의 시간과 틀리면 전략 연산 프로세스로 데이터를 보낸다. 
-            """
-            data = self.websocketQ.get()
-            if data == 'ConnectionClosedError':
-                self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 오류 알림 - TraderUpbit 연결 끊김으로 다시 연결합니다.'])
-                self.websocketQ = WebSocketManager('ticker', self.tickers)
+            data = self.coinQ.get()
+            if data[0] == '매수':
+                self.Buy(data[1], data[2], data[3])
+            elif data[0] == '매도':
+                self.Sell(data[1], data[2], data[3])
             else:
-                ticker = data['code']
-                t = data['trade_time']
-
-                try:
-                    last_jcct = self.dict_jcdt[ticker]
-                except KeyError:
-                    last_jcct = None
-
-                if last_jcct is None or t != last_jcct:
-                    self.dict_jcdt[ticker] = t
-
-                    c = data['trade_price']
-                    h = data['high_price']
-                    low = data['low_price']
-                    per = round(data['signed_change_rate'] * 100, 2)
-                    dm = data['acc_trade_price']
-                    bid = data['acc_bid_volume']
-                    ask = data['acc_ask_volume']
-
-                    uuidnone = self.buy_uuid is None
-                    injango = ticker in self.df_jg.index
-                    data = [ticker, c, h, low, per, dm, bid, ask, t, uuidnone, injango, now()]
-                    self.cstgQ.put(data)
-
-                    """ 잔고목록 갱신 및 매도조건 확인 """
-                    if injango:
-                        try:
-                            ch = round(bid / ask * 100, 2)
-                        except ZeroDivisionError:
-                            ch = 500.
-                        if ch > 500:
-                            ch = 500.
-                        self.UpdateJango(ticker, c, ch)
+                """ 잔고목록 갱신 및 매도조건 확인 """
+                code = data[0]
+                c = data[1]
+                bid = data[2]
+                ask = data[3]
+                if code in self.df_jg.index:
+                    try:
+                        ch = round(bid / ask * 100, 2)
+                    except ZeroDivisionError:
+                        ch = 500.
+                    if ch > 500:
+                        ch = 500.
+                    self.UpdateJango(code, c, ch)
 
                 """ 주문의 체결확인은 1초마다 반복한다. """
-                if self.buy_uuid is not None and ticker == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
-                    self.CheckBuyChegeol(ticker)
+                if self.buy_uuid is not None and code == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
+                    self.CheckBuyChegeol(code)
                     self.dict_time['매수체결확인'] = timedelta_sec(1)
-                if self.sell_uuid is not None and ticker == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
-                    self.CheckSellChegeol(ticker)
+                if self.sell_uuid is not None and code == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
+                    self.CheckSellChegeol(code)
                     self.dict_time['매도체결확인'] = timedelta_sec(1)
 
                 """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
@@ -216,35 +168,34 @@ class TraderUpbit(QThread):
     예수금 부족 상태이며 잔고목록에 없는 상태일 경우 전략 프로세스에서 지속적으로 매수 신호가 발생할 수 있다.
     그러므로 재차 시드부족이 발생한 종목은 체결목록에서 마지막 체결시간이 3분이내면 체결목록에 기록하지 않는다.
     """
-    def Buy(self, ticker, c, oc):
+    def Buy(self, code, c, oc):
         if not self.dict_bool['최소주문금액']:
             self.windowQ.put([ui_num['C로그텍스트'], '매매 시스템 오류 알림 - 종목당 투자금이 5천원 미만이라 주문할 수 없습니다.'])
-            self.cstgQ.put(['매수취소', ticker])
+            self.cstgQ.put(['매수취소', code])
             return
-        if self.buy_uuid is not None or ticker in self.df_jg.index or \
-                (self.dict_bool['스패셜전략'] and now() < self.dict_time['스패셜전략']):
-            self.cstgQ.put(['매수취소', ticker])
+        if self.buy_uuid is not None or code in self.df_jg.index:
+            self.cstgQ.put(['매수취소', code])
             return
         if self.dict_intg['예수금'] < c * oc:
-            df = self.df_cj[(self.df_cj['주문구분'] == '시드부족') & (self.df_cj['종목명'] == ticker)]
+            df = self.df_cj[(self.df_cj['주문구분'] == '시드부족') & (self.df_cj['종목명'] == code)]
             if len(df) == 0 or now() > timedelta_sec(180, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
-                self.UpdateBuy(ticker, c, oc, cancle=True)
-            self.cstgQ.put(['매수취소', ticker])
+                self.UpdateBuy(code, c, oc, cancle=True)
+            self.cstgQ.put(['매수취소', code])
             return
 
         if DICT_SET['모의투자2']:
-            self.UpdateBuy(ticker, c, oc)
+            self.UpdateBuy(code, c, oc)
         elif self.upbit is not None:
-            ret = self.upbit.buy_market_order(ticker, self.dict_intg['종목당투자금'])
+            ret = self.upbit.buy_market_order(code, self.dict_intg['종목당투자금'])
             if ret is not None:
                 if list(ret.keys())[0] != 'error':
-                    self.buy_uuid = [ticker, ret['uuid']]
+                    self.buy_uuid = [code, ret['uuid']]
                     self.dict_time['매수체결확인'] = timedelta_sec(1)
                 else:
                     self.ErrorCode(ret['error'])
             else:
-                self.cstgQ.put(['매수취소', ticker])
-                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker}'])
+                self.cstgQ.put(['매수취소', code])
+                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {code}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
@@ -252,41 +203,40 @@ class TraderUpbit(QThread):
         if self.dict_bool['실현손익저장'] and int(strf_time('%H%M%S')) > 100:
             self.dict_bool['실현손익저장'] = False
 
-    def Sell(self, ticker, c, oc):
-        if self.sell_uuid is not None or ticker not in self.df_jg.index:
-            self.cstgQ.put(['매도취소', ticker])
+    def Sell(self, code, c, oc):
+        if self.sell_uuid is not None or code not in self.df_jg.index:
+            self.cstgQ.put(['매도취소', code])
             return
 
         if DICT_SET['모의투자2']:
-            self.UpdateSell(ticker, c, oc)
+            self.UpdateSell(code, c, oc)
         elif self.upbit is not None:
-            ret = self.upbit.sell_market_order(ticker, oc)
+            ret = self.upbit.sell_market_order(code, oc)
             if ret is not None:
                 if list(ret.keys())[0] != 'error':
-                    self.sell_uuid = [ticker, ret['uuid']]
+                    self.sell_uuid = [code, ret['uuid']]
                     self.dict_time['매도체결확인'] = timedelta_sec(1)
                 else:
                     self.ErrorCode(ret['error'])
             else:
-                self.cstgQ.put(['매도취소', ticker])
-                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {ticker}'])
+                self.cstgQ.put(['매도취소', code])
+                self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 오류 알림 - 주문 실패 {code}'])
         else:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
 
-    def UpdateJango(self, ticker, c, ch):
-        prec = self.df_jg['현재가'][ticker]
+    def UpdateJango(self, code, c, ch):
+        prec = self.df_jg['현재가'][code]
         if prec != c:
-            bg = self.df_jg['매입금액'][ticker]
-            oc = self.df_jg['보유수량'][ticker]
+            bg = self.df_jg['매입금액'][code]
+            oc = self.df_jg['보유수량'][code]
             pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
-            self.df_jg.at[ticker, columns] = c, sp, sg, pg
-            self.cstgQ.put([ticker, sp, oc, ch, c])
-            if self.dict_bool['보유시간기준청산']:
-                df = self.df_cj[(self.df_cj['종목명'] == ticker) & (self.df_cj['주문구분'] == '매수')]
-                if len(df) > 0 and now() > timedelta_sec(1800, strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])):
-                    self.Sell(ticker, c, oc)
+            self.df_jg.at[code, columns] = c, sp, sg, pg
+            df = self.df_cj[(self.df_cj['종목명'] == code) & (self.df_cj['주문구분'] == '매수')]
+            if len(df) > 0:
+                buytime = strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])
+                self.cstgQ.put([code, sp, ch, oc, c, buytime])
 
     def CheckBuyChegeol(self, ticker):
         ret = self.upbit.get_order(self.buy_uuid[1])
@@ -347,6 +297,7 @@ class TraderUpbit(QThread):
 
         if not cancle:
             self.buy_uuid = None
+            self.creceivQ.put(['잔고편입', ticker])
             self.cstgQ.put(['매수완료', ticker])
             bg = cp * cc
             pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, bg)
@@ -380,6 +331,7 @@ class TraderUpbit(QThread):
         self.df_td.sort_values(by=['체결시간'], ascending=False, inplace=True)
 
         self.sell_uuid = None
+        self.creceivQ.put(['잔고청산', ticker])
         self.cstgQ.put(['매도완료', ticker])
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
         self.windowQ.put([ui_num['C거래목록'], self.df_td])
@@ -396,10 +348,6 @@ class TraderUpbit(QThread):
 
         self.teleQ.put(f'매도 알림 - {ticker} {cp} {cc}')
         self.UpdateTotaltradelist()
-
-        if self.dict_bool['스패셜전략'] and self.dict_intg['예수금'] > self.dict_intg['종목당투자금']:
-            self.dict_time['스패셜전략'] = timedelta_sec(5)
-            self.cstgQ.put(['관심종목초기화', self.tickers])
 
     def UpdateTotaltradelist(self, first=False):
         tsg = self.df_td['매도금액'].sum()
@@ -448,15 +396,3 @@ class TraderUpbit(QThread):
         self.df_td = pd.DataFrame(columns=columns_td)
         self.GetBalances()
         self.dict_bool['실현손익저장'] = True
-
-    def SpecialStrategy(self, data):
-        if data == '스패셜전략':
-            if self.dict_bool['스패셜전략']:
-                self.dict_bool['스패셜전략'] = False
-            else:
-                self.dict_bool['스패셜전략'] = True
-        elif data == '보유시간기준청산':
-            if self.dict_bool['보유시간기준청산']:
-                self.dict_bool['보유시간기준청산'] = False
-            else:
-                self.dict_bool['보유시간기준청산'] = True

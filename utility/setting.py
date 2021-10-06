@@ -12,6 +12,8 @@ DB_BACKTEST = f'{SYSTEM_PATH}/database/backtest.db'
 DB_TRADELIST = f'{SYSTEM_PATH}/database/tradelist.db'
 DB_STOCK_TICK = f'{SYSTEM_PATH}/database/stock_tick.db'
 DB_COIN_TICK = f'{SYSTEM_PATH}/database/coin_tick.db'
+DB_STOCK_STRETEGY = f'{SYSTEM_PATH}/database/stock_strategy.db'
+DB_COIN_STRETEGY = f'{SYSTEM_PATH}/database/coin_strategy.db'
 
 conn = sqlite3.connect(DB_SETTING)
 df_m = pd.read_sql('SELECT * FROM main', conn).set_index('index')
@@ -73,9 +75,13 @@ DICT_SET = {
     '최대매수종목수2': df_c['최대매수종목수'][0]
 }
 
-qfont = QFont()
-qfont.setFamily('나눔고딕')
-qfont.setPixelSize(12)
+qfont12 = QFont()
+qfont12.setFamily('나눔고딕')
+qfont12.setPixelSize(12)
+
+qfont14 = QFont()
+qfont14.setFamily('나눔고딕')
+qfont14.setPixelSize(14)
 
 sn_brrq = 1000
 sn_brrd = 1001
@@ -97,10 +103,12 @@ color_bg_bk = QColor(20, 20, 25)
 
 style_fc_bt = 'color: rgb(230, 230, 235);'
 style_bc_bt = 'background-color: rgb(50, 50, 55);'
+style_bc_md = 'background-color: rgb(40, 40, 45);'
 style_bc_dk = 'background-color: rgb(30, 30, 35);'
 style_pgbar = 'QProgressBar {background-color: #28282d;} QProgressBar::chunk {background-color: #5a5a5f;}'
 
-ui_num = {'설정텍스트': 0, 'S단순텍스트': 1, 'S로그텍스트': 2, 'S종목명딕셔너리': 3, 'C단순텍스트': 4, 'C로그텍스트': 5,
+ui_num = {'설정텍스트': 0, 'S단순텍스트': 1, 'S로그텍스트': 2, 'S종목명딕셔너리': 3,
+          'C단순텍스트': 4, 'C로그텍스트': 5, 'S전략텍스트': 6, 'C전략텍스트': 7,
           'S실현손익': 11, 'S거래목록': 12, 'S잔고평가': 13, 'S잔고목록': 14, 'S체결목록': 15,
           'S당일합계': 16, 'S당일상세': 17, 'S누적합계': 18, 'S누적상세': 19, 'S관심종목': 20,
           'C실현손익': 21, 'C거래목록': 22, 'C잔고평가': 23, 'C잔고목록': 24, 'C체결목록': 25,
@@ -111,8 +119,8 @@ columns_td = ['종목명', '매수금액', '매도금액', '주문수량', '수�
 columns_tj = ['추정예탁자산', '추정예수금', '보유종목수', '수익률', '총평가손익', '총매입금액', '총평가금액']
 columns_jg = ['종목명', '매입가', '현재가', '수익률', '평가손익', '매입금액', '평가금액', '보유수량']
 columns_cj = ['종목명', '주문구분', '주문수량', '미체결수량', '주문가격', '체결가', '체결시간']
-columns_gj1 = ['등락율', '고저평균대비등락율', '거래대금', '누적거래대금', '체결강도', '최고체결강도']
-columns_gj2 = ['등락율', '고저평균대비등락율', '거래대금', '누적거래대금', '체결강도']
+columns_gj1 = ['등락율', '고저평균대비등락율', '초당거래대금', '당일거래대금', '체결강도', '최고체결강도']
+columns_gj2 = ['등락율', '고저평균대비등락율', '초당거래대금', '당일거래대금', '체결강도']
 columns_gj3 = ['종목명', 'per', 'hmlper', 'smoney', 'dmoney', 'ch', 'smavg', 'chavg', 'chhigh']
 
 columns_dt = ['거래일자', '누적매수금액', '누적매도금액', '누적수익금액', '누적손실금액', '수익률', '누적수익금']
