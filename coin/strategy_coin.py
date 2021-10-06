@@ -21,20 +21,30 @@ class StrategyCoin:
         self.cstgQ = qlist[10]
 
         con = sqlite3.connect(DB_COIN_STRETEGY)
+        df = pd.read_sql('SELECT * FROM init', con).set_index('index')
+        if len(df) > 0 and '현재전략' in df.index:
+            self.init_var = df['전략코드']['현재전략']
+        else:
+            self.init_var = None
+
         df = pd.read_sql('SELECT * FROM buy', con).set_index('index')
-        con.close()
         if len(df) > 0 and '현재전략' in df.index:
             self.buystretegy = df['전략코드']['현재전략']
         else:
             self.buystretegy = None
 
-        con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
         if len(df) > 0 and '현재전략' in df.index:
             self.sellstretegy = df['전략코드']['현재전략']
         else:
             self.sellstretegy = None
+
+        try:
+            if self.init_var is not None:
+                exec(self.init_var, None, locals())
+        except Exception as e:
+            self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - __init__ {e}'])
 
         self.list_buy = []
         self.list_sell = []
@@ -141,7 +151,7 @@ class StrategyCoin:
             else:
                 exec(self.buystretegy, None, locals())
         except Exception as e:
-            self.windowQ.put([ui_num['S단순텍스트'], f'전략스 설정 오류 알림 - BuyStrategy {e}'])
+            self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - BuyStrategy {e}'])
             return
 
         if now() > self.dict_time['연산시간']:
