@@ -149,14 +149,14 @@ class TraderUpbit(QThread):
                         self.CheckSellChegeol(code)
                         self.dict_time['매도체결확인'] = timedelta_sec(1)
 
-                    """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
-                    if now() > self.dict_time['거래정보']:
-                        self.UpdateTotaljango()
-                        self.dict_time['거래정보'] = timedelta_sec(1)
+            """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
+            if now() > self.dict_time['거래정보']:
+                self.UpdateTotaljango()
+                self.dict_time['거래정보'] = timedelta_sec(1)
 
-                    """ 0시 초기화 """
-                    if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
-                        self.SaveTotalGetbalDelcjtd()
+            """ 0시 초기화 """
+            if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
+                self.SaveTotalGetbalDelcjtd()
             time.sleep(0.0001)
 
     """
