@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import pyupbit
 from PyQt5.QtCore import QThread
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -119,42 +120,44 @@ class TraderUpbit(QThread):
 
     def EventLoop(self):
         while True:
-            data = self.coinQ.get()
-            if data[0] == '매수':
-                self.Buy(data[1], data[2], data[3])
-            elif data[0] == '매도':
-                self.Sell(data[1], data[2], data[3])
-            else:
-                """ 잔고목록 갱신 및 매도조건 확인 """
-                code = data[0]
-                c = data[1]
-                bid = data[2]
-                ask = data[3]
-                if code in self.df_jg.index:
-                    try:
-                        ch = round(bid / ask * 100, 2)
-                    except ZeroDivisionError:
-                        ch = 500.
-                    if ch > 500:
-                        ch = 500.
-                    self.UpdateJango(code, c, ch)
+            if not self.coinQ.empty():
+                data = self.coinQ.get()
+                if data[0] == '매수':
+                    self.Buy(data[1], data[2], data[3])
+                elif data[0] == '매도':
+                    self.Sell(data[1], data[2], data[3])
+                else:
+                    """ 잔고목록 갱신 및 매도조건 확인 """
+                    code = data[0]
+                    c = data[1]
+                    bid = data[2]
+                    ask = data[3]
+                    if code in self.df_jg.index:
+                        try:
+                            ch = round(bid / ask * 100, 2)
+                        except ZeroDivisionError:
+                            ch = 500.
+                        if ch > 500:
+                            ch = 500.
+                        self.UpdateJango(code, c, ch)
 
-                """ 주문의 체결확인은 1초마다 반복한다. """
-                if self.buy_uuid is not None and code == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
-                    self.CheckBuyChegeol(code)
-                    self.dict_time['매수체결확인'] = timedelta_sec(1)
-                if self.sell_uuid is not None and code == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
-                    self.CheckSellChegeol(code)
-                    self.dict_time['매도체결확인'] = timedelta_sec(1)
+                    """ 주문의 체결확인은 1초마다 반복한다. """
+                    if self.buy_uuid is not None and code == self.buy_uuid[0] and now() > self.dict_time['매수체결확인']:
+                        self.CheckBuyChegeol(code)
+                        self.dict_time['매수체결확인'] = timedelta_sec(1)
+                    if self.sell_uuid is not None and code == self.sell_uuid[0] and now() > self.dict_time['매도체결확인']:
+                        self.CheckSellChegeol(code)
+                        self.dict_time['매도체결확인'] = timedelta_sec(1)
 
-                """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
-                if now() > self.dict_time['거래정보']:
-                    self.UpdateTotaljango()
-                    self.dict_time['거래정보'] = timedelta_sec(1)
+                    """ 잔고평가 및 잔고목록 갱신도 1초마다 반복한다. """
+                    if now() > self.dict_time['거래정보']:
+                        self.UpdateTotaljango()
+                        self.dict_time['거래정보'] = timedelta_sec(1)
 
-                """ 0시 초기화 """
-                if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
-                    self.SaveTotalGetbalDelcjtd()
+                    """ 0시 초기화 """
+                    if 0 < int(strf_time('%H%M%S')) < 100 and not self.dict_bool['실현손익저장']:
+                        self.SaveTotalGetbalDelcjtd()
+            time.sleep(0.0001)
 
     """
     모의투자 시 실제 매도수 주문을 전송하지 않고 바로 체결목록, 잔고목록 등을 갱신한다.
