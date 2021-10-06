@@ -1813,13 +1813,13 @@ if 매수:
         elif strategy == '':
             QtWidgets.QMessageBox.critical(
                 self, '오류 알림',
-                '매도전략의 코드가 공백 상태입니다.\n코드를 작성하십시오.\n'
+                '매매도전략의 코드가 공백 상태입니다.\n코드를 작성하십시오.\n'
             )
         else:
             query1Q.put([4, f"DELETE FROM sell WHERE `index` = '{strategy_name}'"])
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([4, df, 'sell', 'append'])
-            windowQ.put([ui_num['S전략텍스트'], '매도전략 저장하기 완료'])
+            windowQ.put([ui_num['C전략텍스트'], '매도전략 저장하기 완료'])
 
     def ButtonClicked_77(self):
         sell_code = '''"""
