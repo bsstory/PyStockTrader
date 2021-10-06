@@ -597,17 +597,32 @@ def SetUI(self):
     self.ssb_pushButton_07 = setPushbutton('거래대금차이', box=self.ss_tab, click=self.ButtonClicked_37, color=True)
     self.ssb_pushButton_08 = setPushbutton('매도총잔량우위', box=self.ss_tab, click=self.ButtonClicked_38, color=True)
 
+    self.ssb_pushButton_09 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_39, color=True)
+    self.ssb_pushButton_10 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_40, color=True)
+    self.ssb_pushButton_11 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_41, color=True)
+    self.ssb_pushButton_12 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_42, color=True)
+
+    self.ssb_pushButton_13 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_43, color=True)
+    self.ssb_pushButton_14 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_44, color=True)
+    self.ssb_pushButton_15 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_45, color=True)
+    self.ssb_pushButton_16 = setPushbutton('매수시그널', box=self.ss_tab, click=self.ButtonClicked_46, color=True)
+
     self.sss_comboBox = setCombobox(self.ss_tab, self.Activated_02)
     self.sss_lineEdit = setLineedit2(self.ss_tab)
-    self.sss_pushButton_01 = setPushbutton('매도전략 불러오기', box=self.ss_tab, click=self.ButtonClicked_41)
-    self.sss_pushButton_02 = setPushbutton('매도전략 저장하기', box=self.ss_tab, click=self.ButtonClicked_42)
-    self.sss_pushButton_03 = setPushbutton('매도변수 불러오기', box=self.ss_tab, click=self.ButtonClicked_43)
-    self.sss_pushButton_04 = setPushbutton('매도전략 설정하기', box=self.ss_tab, click=self.ButtonClicked_44)
+    self.sss_pushButton_01 = setPushbutton('매도전략 불러오기', box=self.ss_tab, click=self.ButtonClicked_47)
+    self.sss_pushButton_02 = setPushbutton('매도전략 저장하기', box=self.ss_tab, click=self.ButtonClicked_48)
+    self.sss_pushButton_03 = setPushbutton('매도변수 불러오기', box=self.ss_tab, click=self.ButtonClicked_49)
+    self.sss_pushButton_04 = setPushbutton('매도전략 설정하기', box=self.ss_tab, click=self.ButtonClicked_50)
 
-    self.sss_pushButton_05 = setPushbutton('보유시간기준', box=self.ss_tab, click=self.ButtonClicked_45, color=True)
-    self.sss_pushButton_06 = setPushbutton('손절라인설정', box=self.ss_tab, click=self.ButtonClicked_46, color=True)
-    self.sss_pushButton_07 = setPushbutton('익절라인설정', box=self.ss_tab, click=self.ButtonClicked_47, color=True)
-    self.sss_pushButton_08 = setPushbutton('체결강도차이', box=self.ss_tab, click=self.ButtonClicked_48, color=True)
+    self.sss_pushButton_05 = setPushbutton('보유시간기준', box=self.ss_tab, click=self.ButtonClicked_51, color=True)
+    self.sss_pushButton_06 = setPushbutton('손절라인설정', box=self.ss_tab, click=self.ButtonClicked_52, color=True)
+    self.sss_pushButton_07 = setPushbutton('익절라인설정', box=self.ss_tab, click=self.ButtonClicked_53, color=True)
+    self.sss_pushButton_08 = setPushbutton('체결강도차이', box=self.ss_tab, click=self.ButtonClicked_54, color=True)
+
+    self.sss_pushButton_09 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_55, color=True)
+    self.sss_pushButton_10 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_56, color=True)
+    self.sss_pushButton_11 = setPushbutton('', box=self.ss_tab, click=self.ButtonClicked_57, color=True)
+    self.sss_pushButton_12 = setPushbutton('매도시그널', box=self.ss_tab, click=self.ButtonClicked_58, color=True)
 
     self.cs_textEdit_01 = setTextEdit2(self.cs_tab)
     self.cs_textEdit_02 = setTextEdit2(self.cs_tab)
@@ -615,27 +630,42 @@ def SetUI(self):
 
     self.csb_comboBox = setCombobox(self.cs_tab, self.Activated_03)
     self.csb_lineEdit = setLineedit2(self.cs_tab)
-    self.csb_pushButton_01 = setPushbutton('매수전략 불러오기', box=self.cs_tab, click=self.ButtonClicked_51)
-    self.csb_pushButton_02 = setPushbutton('매수전략 저장하기', box=self.cs_tab, click=self.ButtonClicked_52)
-    self.csb_pushButton_03 = setPushbutton('매수변수 불러오기', box=self.cs_tab, click=self.ButtonClicked_53)
-    self.csb_pushButton_04 = setPushbutton('매수전략 설정하기', box=self.cs_tab, click=self.ButtonClicked_54)
+    self.csb_pushButton_01 = setPushbutton('매수전략 불러오기', box=self.cs_tab, click=self.ButtonClicked_59)
+    self.csb_pushButton_02 = setPushbutton('매수전략 저장하기', box=self.cs_tab, click=self.ButtonClicked_60)
+    self.csb_pushButton_03 = setPushbutton('매수변수 불러오기', box=self.cs_tab, click=self.ButtonClicked_61)
+    self.csb_pushButton_04 = setPushbutton('매수전략 설정하기', box=self.cs_tab, click=self.ButtonClicked_62)
 
-    self.csb_pushButton_05 = setPushbutton('고저평균대비등락율', box=self.cs_tab, click=self.ButtonClicked_55, color=True)
-    self.csb_pushButton_06 = setPushbutton('체결강도차이', box=self.cs_tab, click=self.ButtonClicked_56, color=True)
-    self.csb_pushButton_07 = setPushbutton('거래대금차이', box=self.cs_tab, click=self.ButtonClicked_57, color=True)
-    self.csb_pushButton_08 = setPushbutton('매도총잔량우위', box=self.cs_tab, click=self.ButtonClicked_58, color=True)
+    self.csb_pushButton_05 = setPushbutton('고저평균대비등락율', box=self.cs_tab, click=self.ButtonClicked_63, color=True)
+    self.csb_pushButton_06 = setPushbutton('체결강도차이', box=self.cs_tab, click=self.ButtonClicked_64, color=True)
+    self.csb_pushButton_07 = setPushbutton('거래대금차이', box=self.cs_tab, click=self.ButtonClicked_65, color=True)
+    self.csb_pushButton_08 = setPushbutton('매도총잔량우위', box=self.cs_tab, click=self.ButtonClicked_66, color=True)
+
+    self.csb_pushButton_09 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_67, color=True)
+    self.csb_pushButton_10 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_68, color=True)
+    self.csb_pushButton_11 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_69, color=True)
+    self.csb_pushButton_12 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_70, color=True)
+
+    self.csb_pushButton_13 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_71, color=True)
+    self.csb_pushButton_14 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_72, color=True)
+    self.csb_pushButton_15 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_73, color=True)
+    self.csb_pushButton_16 = setPushbutton('매수시그널', box=self.cs_tab, click=self.ButtonClicked_74, color=True)
 
     self.css_comboBox = setCombobox(self.cs_tab, self.Activated_04)
     self.css_lineEdit = setLineedit2(self.cs_tab)
-    self.css_pushButton_01 = setPushbutton('매도전략 불러오기', box=self.cs_tab, click=self.ButtonClicked_61)
-    self.css_pushButton_02 = setPushbutton('매도전략 저장하기', box=self.cs_tab, click=self.ButtonClicked_62)
-    self.css_pushButton_03 = setPushbutton('매도변수 불러오기', box=self.cs_tab, click=self.ButtonClicked_63)
-    self.css_pushButton_04 = setPushbutton('매도전략 설정하기', box=self.cs_tab, click=self.ButtonClicked_64)
+    self.css_pushButton_01 = setPushbutton('매도전략 불러오기', box=self.cs_tab, click=self.ButtonClicked_75)
+    self.css_pushButton_02 = setPushbutton('매도전략 저장하기', box=self.cs_tab, click=self.ButtonClicked_76)
+    self.css_pushButton_03 = setPushbutton('매도변수 불러오기', box=self.cs_tab, click=self.ButtonClicked_77)
+    self.css_pushButton_04 = setPushbutton('매도전략 설정하기', box=self.cs_tab, click=self.ButtonClicked_78)
 
-    self.css_pushButton_05 = setPushbutton('보유시간기준', box=self.cs_tab, click=self.ButtonClicked_65, color=True)
-    self.css_pushButton_06 = setPushbutton('손절라인설정', box=self.cs_tab, click=self.ButtonClicked_66, color=True)
-    self.css_pushButton_07 = setPushbutton('익절라인설정', box=self.cs_tab, click=self.ButtonClicked_67, color=True)
-    self.css_pushButton_08 = setPushbutton('체결강도차이', box=self.cs_tab, click=self.ButtonClicked_68, color=True)
+    self.css_pushButton_05 = setPushbutton('보유시간기준', box=self.cs_tab, click=self.ButtonClicked_79, color=True)
+    self.css_pushButton_06 = setPushbutton('손절라인설정', box=self.cs_tab, click=self.ButtonClicked_80, color=True)
+    self.css_pushButton_07 = setPushbutton('익절라인설정', box=self.cs_tab, click=self.ButtonClicked_81, color=True)
+    self.css_pushButton_08 = setPushbutton('체결강도차이', box=self.cs_tab, click=self.ButtonClicked_82, color=True)
+
+    self.css_pushButton_09 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_83, color=True)
+    self.css_pushButton_10 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_84, color=True)
+    self.css_pushButton_11 = setPushbutton('', box=self.cs_tab, click=self.ButtonClicked_85, color=True)
+    self.css_pushButton_12 = setPushbutton('매도시그널', box=self.cs_tab, click=self.ButtonClicked_86, color=True)
 
     self.sj_main_checkBox_01 = QtWidgets.QCheckBox('주식 콜렉터', self.sj_groupBox_01)
     self.sj_main_checkBox_01.stateChanged.connect(self.CheckboxChanged_01)
@@ -995,7 +1025,7 @@ def SetUI(self):
 
     self.ss_textEdit_01.setGeometry(5, 5, 1000, 500)
     self.ss_textEdit_02.setGeometry(5, 510, 1000, 234)
-    self.ss_textEdit_03.setGeometry(1010, 305, 335, 200)
+    self.ss_textEdit_03.setGeometry(1010, 315, 335, 190)
 
     self.ssb_comboBox.setGeometry(1010, 5, 165, 25)
     self.ssb_lineEdit.setGeometry(1180, 5, 165, 25)
@@ -1009,6 +1039,16 @@ def SetUI(self):
     self.ssb_pushButton_07.setGeometry(1010, 140, 165, 30)
     self.ssb_pushButton_08.setGeometry(1180, 140, 165, 30)
 
+    self.ssb_pushButton_09.setGeometry(1010, 175, 165, 30)
+    self.ssb_pushButton_10.setGeometry(1180, 175, 165, 30)
+    self.ssb_pushButton_11.setGeometry(1010, 210, 165, 30)
+    self.ssb_pushButton_12.setGeometry(1180, 210, 165, 30)
+
+    self.ssb_pushButton_13.setGeometry(1010, 245, 165, 30)
+    self.ssb_pushButton_14.setGeometry(1180, 245, 165, 30)
+    self.ssb_pushButton_15.setGeometry(1010, 280, 165, 30)
+    self.ssb_pushButton_16.setGeometry(1180, 280, 165, 30)
+
     self.sss_comboBox.setGeometry(1010, 510, 165, 25)
     self.sss_lineEdit.setGeometry(1180, 510, 165, 25)
     self.sss_pushButton_01.setGeometry(1010, 540, 165, 30)
@@ -1021,9 +1061,14 @@ def SetUI(self):
     self.sss_pushButton_07.setGeometry(1010, 645, 165, 30)
     self.sss_pushButton_08.setGeometry(1180, 645, 165, 30)
 
+    self.sss_pushButton_09.setGeometry(1010, 680, 165, 30)
+    self.sss_pushButton_10.setGeometry(1180, 680, 165, 30)
+    self.sss_pushButton_11.setGeometry(1010, 715, 165, 30)
+    self.sss_pushButton_12.setGeometry(1180, 715, 165, 30)
+
     self.cs_textEdit_01.setGeometry(5, 5, 1000, 500)
     self.cs_textEdit_02.setGeometry(5, 510, 1000, 234)
-    self.cs_textEdit_03.setGeometry(1010, 305, 335, 200)
+    self.cs_textEdit_03.setGeometry(1010, 315, 335, 190)
 
     self.csb_comboBox.setGeometry(1010, 5, 165, 25)
     self.csb_lineEdit.setGeometry(1180, 5, 165, 25)
@@ -1037,6 +1082,16 @@ def SetUI(self):
     self.csb_pushButton_07.setGeometry(1010, 140, 165, 30)
     self.csb_pushButton_08.setGeometry(1180, 140, 165, 30)
 
+    self.csb_pushButton_09.setGeometry(1010, 175, 165, 30)
+    self.csb_pushButton_10.setGeometry(1180, 175, 165, 30)
+    self.csb_pushButton_11.setGeometry(1010, 210, 165, 30)
+    self.csb_pushButton_12.setGeometry(1180, 210, 165, 30)
+
+    self.csb_pushButton_13.setGeometry(1010, 245, 165, 30)
+    self.csb_pushButton_14.setGeometry(1180, 245, 165, 30)
+    self.csb_pushButton_15.setGeometry(1010, 280, 165, 30)
+    self.csb_pushButton_16.setGeometry(1180, 280, 165, 30)
+
     self.css_comboBox.setGeometry(1010, 510, 165, 25)
     self.css_lineEdit.setGeometry(1180, 510, 165, 25)
     self.css_pushButton_01.setGeometry(1010, 540, 165, 30)
@@ -1048,6 +1103,11 @@ def SetUI(self):
     self.css_pushButton_06.setGeometry(1180, 610, 165, 30)
     self.css_pushButton_07.setGeometry(1010, 645, 165, 30)
     self.css_pushButton_08.setGeometry(1180, 645, 165, 30)
+
+    self.css_pushButton_09.setGeometry(1010, 680, 165, 30)
+    self.css_pushButton_10.setGeometry(1180, 680, 165, 30)
+    self.css_pushButton_11.setGeometry(1010, 715, 165, 30)
+    self.css_pushButton_12.setGeometry(1180, 715, 165, 30)
 
     self.sj_main_checkBox_01.setGeometry(10, 25, 100, 30)
     self.sj_main_checkBox_02.setGeometry(120, 25, 100, 30)
