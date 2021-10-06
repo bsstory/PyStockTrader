@@ -1531,11 +1531,7 @@ class Window(QtWidgets.QMainWindow):
 
     def ButtonClicked_33(self):
         buy_code = '''"""
-def __init__(self, qlist)
-qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, sreceivQ, creceivQ, stockQ, coinQ, sstgQ, cstgQ,
-            0        1       2        3       4       5          6        7      8      9     10
-         tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
-           11      12      13      14      15
+def __init__(self)
 """'''
         self.ss_textEdit_01.clear()
         self.ss_textEdit_01.append(buy_code)
@@ -1780,11 +1776,7 @@ if 매도:
 
     def ButtonClicked_61(self):
         buy_code = '''"""
-def __init__(self, qlist)
-qlist = [windowQ, soundQ, query1Q, query2Q, teleQ, sreceivQ, creceivQ, stockQ, coinQ, sstgQ, cstgQ,
-            0        1       2        3       4       5          6        7      8      9     10
-         tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
-           11      12      13      14      15
+def __init__(self)
 """'''
         self.cs_textEdit_01.clear()
         self.cs_textEdit_01.append(buy_code)
