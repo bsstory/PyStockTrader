@@ -64,19 +64,15 @@ class CollectorKiwoom:
         sm = dm - predm
         dt = self.str_tday + t
 
+        data = [c, o, h, low, per, dm, sm, ch, bids, asks, vitime, vid5price,
+                tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr]
         if code not in self.dict_df.keys():
-            self.dict_df[code] = pd.DataFrame(
-                [[c, o, h, low, per, dm, sm, ch, bids, asks, vitime, vid5price,
-                  b1jr, b2jr, tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr]],
-
-                columns=['현재가', '시가', '고가', '저가', '등락율', '당일거래대금', '초당거래대금', '체결강도',
-                         '초당매수수량', '초당매도수량', 'VI해제시간', 'VI아래5호가', '매도총잔량', '매수총잔량',
-                         '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2'],
-                index=[dt])
+            columns = ['현재가', '시가', '고가', '저가', '등락율', '당일거래대금', '초당거래대금', '체결강도',
+                       '초당매수수량', '초당매도수량', 'VI해제시간', 'VI아래5호가', '매도총잔량', '매수총잔량',
+                       '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
+            self.dict_df[code] = pd.DataFrame([data], columns=columns, index=[dt])
         else:
-            self.dict_df[code].at[dt] = \
-                c, o, h, low, per, sm, dm, ch, bids, asks, vitime, vid5price,\
-                b1jr, b2jr, tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr
+            self.dict_df[code].at[dt] = data
 
         if now() > self.time_info:
             if self.gubun == 4:
