@@ -1524,7 +1524,7 @@ class Window(QtWidgets.QMainWindow):
                 '시작전략의 코드가 공백 상태입니다.\n코드를 작성하십시오.\n'
             )
         else:
-            query1Q.put([3, f"DELETE FROM buy WHERE `index` = '{strategy_name}'"])
+            query1Q.put([3, f"DELETE FROM init WHERE `index` = '{strategy_name}'"])
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([3, df, 'init', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '시작전략 저장하기 완료'])
