@@ -40,11 +40,11 @@ class StrategyCoin:
         else:
             self.sellstretegy = None
 
-        try:
-            if self.init_var is not None:
+        if self.init_var is not None:
+            try:
                 exec(self.init_var, None, locals())
-        except Exception as e:
-            self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - __init__ {e}'])
+            except Exception as e:
+                self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - __init__ {e}'])
 
         self.list_buy = []
         self.list_sell = []
@@ -116,46 +116,40 @@ class StrategyCoin:
 
         고저평균 = (고가 + 저가) / 2
         고저평균대비등락율 = round((현재가 / 고저평균 - 1) * 100, 2)
-        직전당일거래대금 = self.dict_gsjm[종목명]['당일거래대금'][1]
+        직전당일거래대금 = self.dict_gsjm[종목명]['당일거래대금'][0]
         초당거래대금 = 0 if 직전당일거래대금 == 0 else int(당일거래대금 - 직전당일거래대금)
+
         try:
             체결강도 = round(누적매수량 / 누적매도량 * 100, 2)
         except ZeroDivisionError:
             체결강도 = 500.
+        if 체결강도 > 500:
+            체결강도 = 500.
 
         self.dict_gsjm[종목명] = self.dict_gsjm[종목명].shift(1)
-        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2']] != 0.:
-            초당거래대금평균 = int(self.dict_gsjm[종목명]['초당거래대금'][1:DICT_SET['평균시간2'] + 1].mean())
-            체결강도평균 = round(self.dict_gsjm[종목명]['체결강도'][1:DICT_SET['평균시간2'] + 1].mean(), 2)
-            최고체결강도 = round(self.dict_gsjm[종목명]['체결강도'][1:DICT_SET['평균시간2'] + 1].max(), 2)
-            self.dict_gsjm[종목명].at[DICT_SET['평균시간2'] + 1] = \
-                0., 0., 초당거래대금평균, 0, 체결강도평균, 최고체결강도, 체결시간
         self.dict_gsjm[종목명].at[0] = 등락율, 고저평균대비등락율, 초당거래대금, 당일거래대금, 체결강도, 0., 체결시간
+        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2']] != 0.:
+            평균계산틱수 = DICT_SET['평균시간2'] + 1
+            초당거래대금평균 = int(self.dict_gsjm[종목명]['초당거래대금'][1:평균계산틱수].mean())
+            체결강도평균 = round(self.dict_gsjm[종목명]['체결강도'][1:평균계산틱수].mean(), 2)
+            최고체결강도 = round(self.dict_gsjm[종목명]['체결강도'][1:평균계산틱수].max(), 2)
+            self.dict_gsjm[종목명].at[평균계산틱수] = 0., 0., 초당거래대금평균, 0, 체결강도평균, 최고체결강도, 체결시간
 
-        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2']] == 0:
-            return
-        if 잔고종목:
-            return
-        if 종목명 in self.list_buy:
-            return
-
-        매수 = True
-        초당거래대금평균 = self.dict_gsjm[종목명]['초당거래대금'][DICT_SET['평균시간2'] + 1]
-        체결강도평균 = self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2'] + 1]
-        최고체결강도 = self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2'] + 1]
-        매도총잔량, 매수총잔량,\
-            매도호가5, 매도호가4, 매도호가3, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매수호가3, 매수호가4, 매수호가5, \
-            매도잔량5, 매도잔량4, 매도잔량3, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2, 매수잔량3, 매수잔량4, 매수잔량5 = \
-            self.dict_hgjr[종목명]
-
-        try:
-            if self.buystretegy is None:
+            if 잔고종목:
                 return
-            else:
-                exec(self.buystretegy, None, locals())
-        except Exception as e:
-            self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - BuyStrategy {e}'])
-            return
+            if 종목명 in self.list_buy:
+                return
+
+            매수 = True
+            매도총잔량, 매수총잔량, 매도호가5, 매도호가4, 매도호가3, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매수호가3, \
+                매수호가4, 매수호가5, 매도잔량5, 매도잔량4, 매도잔량3, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2, 매수잔량3, \
+                매수잔량4, 매수잔량5 = self.dict_hgjr[종목명]
+
+            if self.buystretegy is not None:
+                try:
+                    exec(self.buystretegy, None, locals())
+                except Exception as e:
+                    self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - BuyStrategy {e}'])
 
         if now() > self.dict_time['연산시간']:
             gap = (now() - 수신시간).total_seconds()
@@ -167,26 +161,20 @@ class StrategyCoin:
             return
         if 종목명 in self.list_sell:
             return
-        등락율 = self.dict_gsjm[종목명]['등락율'][0]
-        if 등락율 == 0:
-            return
 
         매도 = False
+        등락율 = self.dict_gsjm[종목명]['등락율'][0]
         체결강도 = self.dict_gsjm[종목명]['체결강도'][0]
         고저평균대비등락율 = self.dict_gsjm[종목명]['고저평균대비등락율'][0]
         초당거래대금평균 = self.dict_gsjm[종목명]['초당거래대금'][DICT_SET['평균시간2'] + 1]
         체결강도평균 = self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2'] + 1]
         최고체결강도 = self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2'] + 1]
-        매도총잔량, 매수총잔량, \
-            매도호가5, 매도호가4, 매도호가3, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매수호가3, 매수호가4, 매수호가5, \
-            매도잔량5, 매도잔량4, 매도잔량3, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2, 매수잔량3, 매수잔량4, 매수잔량5 = \
-            self.dict_hgjr[종목명]
+        매도총잔량, 매수총잔량, 매도호가5, 매도호가4, 매도호가3, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매수호가3, 매수호가4, \
+            매수호가5, 매도잔량5, 매도잔량4, 매도잔량3, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2, 매수잔량3, 매수잔량4, \
+            매수잔량5 = self.dict_hgjr[종목명]
 
-        try:
-            if self.sellstretegy is None:
-                return
-            else:
+        if self.sellstretegy is not None:
+            try:
                 exec(self.sellstretegy, None, locals())
-        except Exception as e:
-            self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - SellStrategy {e}'])
-            return
+            except Exception as e:
+                self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - SellStrategy {e}'])
