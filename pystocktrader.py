@@ -1625,15 +1625,19 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_42(self):
-        sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
+        sell_code = '''if now() < timedelta_sec(1800, VI해제시간):\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_43(self):
-        pass
+        sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
+        self.ss_textEdit_02.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_44(self):
-        pass
+        sell_code = '''if 매도잔량1 < 매수잔량1 * 2:\n    매수 = False'''
+        self.ss_textEdit_02.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_45(self):
         sell_code = '''
@@ -1721,15 +1725,19 @@ def SellStrategy(self, *args)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_54(self):
-        sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매도 = True'''
+        sell_code = '''if 체결강도 < 체결강도평균:\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_55(self):
-        pass
+        sell_code = '''if 매도총잔량 < 매수총잔량:\n    매도 = True'''
+        self.ss_textEdit_03.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_56(self):
-        pass
+        sell_code = '''if 현재가 > VI아래5호가 * 1.003:\n    매도 = True'''
+        self.ss_textEdit_03.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_57(self):
         sell_code = '''
@@ -1868,20 +1876,24 @@ def BuyStrategy(self, *args)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_69(self):
-        sell_code = '''if 초당거래대금 < 초당거래대금평균 + 90:\n    매수 = False'''
+        sell_code = '''if 초당거래대금 < 초당거래대금평균 + 10000000:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_70(self):
-        sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
+        sell_code = '''if 당일거래대금 < 10000000000:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_71(self):
-        pass
+        sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
+        self.cs_textEdit_02.append(sell_code)
+        windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_72(self):
-        pass
+        sell_code = '''if 매도잔량1 < 매수잔량1 * 2:\n    매수 = False'''
+        self.cs_textEdit_02.append(sell_code)
+        windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
     def ButtonClicked_73(self):
         sell_code = '''
@@ -1978,10 +1990,14 @@ def SellStrategy(self, *args)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_83(self):
-        pass
+        sell_code = '''if 매도총잔량 < 매수총잔량:\n    매도 = True'''
+        self.cs_textEdit_03.append(sell_code)
+        windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_84(self):
-        pass
+        sell_code = '''if 고저평균대비등락율 < 0.:\n    매도 = True'''
+        self.cs_textEdit_03.append(sell_code)
+        windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
     def ButtonClicked_85(self):
         sell_code = '''
