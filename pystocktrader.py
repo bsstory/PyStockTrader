@@ -1566,7 +1566,7 @@ class Window(QtWidgets.QMainWindow):
 
     def ButtonClicked_36(self):
         strategy_name = self.ssb_lineEdit.text()
-        strategy = self.ss_textEdit_01.toPlainText()
+        strategy = self.ss_textEdit_02.toPlainText()
         if strategy_name == '':
             QtWidgets.QMessageBox.critical(
                 self, '오류 알림',
@@ -1941,7 +1941,7 @@ def SellStrategy(self, *args)
         windowQ.put([ui_num['C전략텍스트'], '매도변수 불러오기 완료'])
 
     def ButtonClicked_78(self):
-        strategy = self.cs_textEdit_02.toPlainText()
+        strategy = self.cs_textEdit_03.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
                 self, '오류 알림',
