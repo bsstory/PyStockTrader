@@ -2078,7 +2078,8 @@ if 매도:
             return
 
         if len(df) == 0:
-            tableWidget.clearContents()
+            if tableWidget.item(0, 0) is not None:
+                tableWidget.clearContents()
             return
 
         tableWidget.setRowCount(len(df))
@@ -2150,7 +2151,8 @@ if 매도:
             gj_tableWidget = self.cgj_tableWidget
 
         if len(dict_df) == 0:
-            gj_tableWidget.clearContents()
+            if gj_tableWidget.item(0, 0) is not None:
+                gj_tableWidget.clearContents()
             return
 
         gj_tableWidget.setRowCount(len(dict_df))
