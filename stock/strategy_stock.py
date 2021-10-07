@@ -31,9 +31,9 @@ class StrategyStock:
 
         df = pd.read_sql('SELECT * FROM buy', con).set_index('index')
         if len(df) > 0 and '현재전략' in df.index:
-            self.buystretegy = df['전략코드']['현재전략']
+            self.buystrategy = df['전략코드']['현재전략']
         else:
-            self.buystretegy = None
+            self.buystrategy = None
 
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
@@ -107,11 +107,11 @@ class StrategyStock:
             if code in self.list_sell:
                 self.list_sell.remove(code)
         elif gubun == '매수전략':
-            self.buystretegy = compile(code, '<string>', 'exec')
+            self.buystrategy = compile(code, '<string>', 'exec')
         elif gubun == '매도전략':
             self.sellstretegy = compile(code, '<string>', 'exec')
         elif gubun == '매수전략중지':
-            self.buystretegy = None
+            self.buystrategy = None
         elif gubun == '매도전략중지':
             self.sellstretegy = None
 
@@ -144,9 +144,9 @@ class StrategyStock:
 
             매수 = True
 
-            if self.buystretegy is not None:
+            if self.buystrategy is not None:
                 try:
-                    exec(self.buystretegy, None, locals())
+                    exec(self.buystrategy, None, locals())
                 except Exception as e:
                     self.windowQ.put([ui_num['S단순텍스트'], f'전략스 설정 오류 알림 - BuyStrategy {e}'])
 
