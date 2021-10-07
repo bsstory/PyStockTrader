@@ -1700,7 +1700,7 @@ def SellStrategy(self, *args)
         if strategy == '':
             QtWidgets.QMessageBox.critical(
                 self, '오류 알림',
-                '매수전략의 코드가 공백 상태입니다.\n'
+                '매도전략의 코드가 공백 상태입니다.\n'
             )
         else:
             query1Q.put([3, "DELETE FROM sell WHERE `index` = '현재전략'"])
@@ -1932,7 +1932,7 @@ if 매수:
         elif strategy == '':
             QtWidgets.QMessageBox.critical(
                 self, '오류 알림',
-                '매매도전략의 코드가 공백 상태입니다.\n코드를 작성하십시오.\n'
+                '매도전략의 코드가 공백 상태입니다.\n코드를 작성하십시오.\n'
             )
         else:
             query1Q.put([4, f"DELETE FROM sell WHERE `index` = '{strategy_name}'"])
@@ -1960,7 +1960,7 @@ def SellStrategy(self, *args)
         if strategy == '':
             QtWidgets.QMessageBox.critical(
                 self, '오류 알림',
-                '매수전략의 코드가 공백 상태입니다.\n'
+                '매도전략의 코드가 공백 상태입니다.\n'
             )
         else:
             query1Q.put([4, "DELETE FROM sell WHERE `index` = '현재전략'"])
