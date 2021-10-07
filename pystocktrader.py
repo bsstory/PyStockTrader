@@ -1839,7 +1839,7 @@ if 매도:
     def ButtonClicked_65(self):
         buy_code = '''"""
 def BuyStrategy(self, *args)
-매수(True), 종목코드(str), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
+매수(True), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
 당일거래대금(int), 초당거래대금(int), 초당거래대금평균(int), 체결강도(float), 체결강도평균(float), 최고체결강도(float),
 초당매수수량(int), 초당매도수량(int), 매도총잔량(float), 매수총잔량(float),
 매도호가5(float), 매도호가4(float), 매도호가3(float), 매도호가2(float), 매도호가1(float),
@@ -1943,7 +1943,7 @@ if 매수:
     def ButtonClicked_77(self):
         sell_code = '''"""
 def SellStrategy(self, *args)
-매도(False), 종목코드(str), 종목명(str), 수익률(float), 보유수량(float), 매수시간(datetime), 현재가(float), 체결강도(float),
+매도(False), 종목명(str), 수익률(float), 보유수량(float), 매수시간(datetime), 현재가(float), 체결강도(float),
 등락율(float), 고저평균대비등락율(float), 초당거래대금평균(int), 체결강도평균(float), 최고체결강도(float),
 매도총잔량(float), 매수총잔량(float),
 매도호가5(float), 매도호가4(float), 매도호가3(float), 매도호가2(float), 매도호가1(float),
