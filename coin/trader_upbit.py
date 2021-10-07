@@ -79,6 +79,7 @@ class TraderUpbit:
             self.windowQ.put([ui_num['C거래목록'], self.df_td])
         if len(self.df_jg) > 0:
             for code in self.df_jg.index:
+                self.dict_buyt[code] = now()
                 self.creceivQ.put(['잔고편입',  code])
 
         self.windowQ.put([ui_num['C로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 불러오기 완료'])
@@ -329,7 +330,6 @@ class TraderUpbit:
         self.df_td.sort_values(by=['체결시간'], ascending=False, inplace=True)
 
         self.sell_uuid = None
-        del self.dict_buyt[code]
         self.cstgQ.put(['매도완료', code])
         self.creceivQ.put(['잔고청산', code])
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
