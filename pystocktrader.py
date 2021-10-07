@@ -1645,7 +1645,6 @@ if 매수:
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-
     # noinspection PyMethodMayBeStatic
     def ButtonClicked_46(self):
         sstgQ.put(['매수전략중지', ''])
