@@ -12,6 +12,10 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.static import *
 from utility.setting import *
 
+MONEYTOP_CHANGE = 100000    # 최근거래대금순위로 변경할 시간
+MONEYTOP_MINUTE = 10        # 최근거래대금순위을 집계할 시간
+MONEYTOP_RANK = 10          # 최근거래대금순위중 관심종목으로 선정할 순위
+
 
 class ReceiverKiwoom:
     app = QtWidgets.QApplication(sys.argv)
@@ -150,10 +154,10 @@ class ReceiverKiwoom:
             if self.operation == 1 and now() > self.dict_time['휴무종료']:
                 break
             if self.operation == 3:
-                if int(strf_time('%H%M%S')) < 100000:
+                if int(strf_time('%H%M%S')) < MONEYTOP_CHANGE:
                     if not self.dict_bool['실시간조건검색시작']:
                         self.ConditionSearchStart()
-                if 100000 <= int(strf_time('%H%M%S')):
+                if MONEYTOP_CHANGE <= int(strf_time('%H%M%S')):
                     if self.dict_bool['실시간조건검색시작'] and not self.dict_bool['실시간조건검색중단']:
                         self.ConditionSearchStop()
                     if not self.dict_bool['장중단타전략시작']:
@@ -238,7 +242,7 @@ class ReceiverKiwoom:
     def StartJangjungStrategy(self):
         self.dict_bool['장중단타전략시작'] = True
         self.df_mc.sort_values(by=['최근거래대금'], ascending=False, inplace=True)
-        list_top = list(self.df_mc.index[:30])
+        list_top = list(self.df_mc.index[:MONEYTOP_RANK])
         insert_list = set(list_top) - set(self.list_gsjm)
         if len(insert_list) > 0:
             for code in list(insert_list):
@@ -252,7 +256,7 @@ class ReceiverKiwoom:
 
     def ConditionSearch(self):
         self.df_mc.sort_values(by=['최근거래대금'], ascending=False, inplace=True)
-        list_top = list(self.df_mc.index[:30])
+        list_top = list(self.df_mc.index[:MONEYTOP_RANK])
         insert_list = set(list_top) - set(self.pre_top)
         if len(insert_list) > 0:
             for code in list(insert_list):
@@ -478,7 +482,7 @@ class ReceiverKiwoom:
                 predm = self.dict_cdjm[code]['1분전당일거래대금'][-1]
                 self.dict_cdjm[code].at[dt] = dm - predm, predm
             else:
-                if len(self.dict_cdjm[code]) >= 15:
+                if len(self.dict_cdjm[code]) >= MONEYTOP_MINUTE:
                     if per > 0:
                         self.df_mc.at[code] = self.dict_cdjm[code]['1분누적거래대금'].sum()
                     self.dict_cdjm[code].drop(index=self.dict_cdjm[code].index[0], inplace=True)
