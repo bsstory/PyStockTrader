@@ -124,8 +124,7 @@ class StrategyCoin:
             체결강도 = 500.
 
         self.dict_gsjm[종목명] = self.dict_gsjm[종목명].shift(1)
-        if len(self.dict_gsjm[종목명]) == DICT_SET['평균시간2'] + 2 and \
-                self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2']] != 0.:
+        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2']] != 0.:
             초당거래대금평균 = int(self.dict_gsjm[종목명]['초당거래대금'][1:DICT_SET['평균시간2'] + 1].mean())
             체결강도평균 = round(self.dict_gsjm[종목명]['체결강도'][1:DICT_SET['평균시간2'] + 1].mean(), 2)
             최고체결강도 = round(self.dict_gsjm[종목명]['체결강도'][1:DICT_SET['평균시간2'] + 1].max(), 2)
