@@ -112,6 +112,10 @@ class StrategyStock:
             self.buystretegy = compile(code, '<string>', 'exec')
         elif gubun == '매도전략':
             self.sellstretegy = compile(code, '<string>', 'exec')
+        elif gubun == '매수전략중지':
+            self.buystretegy = None
+        elif gubun == '매도전략중지':
+            self.sellstretegy = None
 
     def BuyStrategy(self, 종목코드, 현재가, 시가, 고가, 저가, 등락율, 당일거래대금, 체결강도, 초당매수수량, 초당매도수량,
                     VI해제시간, VI아래5호가, 매도총잔량, 매수총잔량, 매도호가2, 매도호가1, 매수호가1, 매수호가2,

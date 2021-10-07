@@ -102,7 +102,7 @@ color_bg_dk = QColor(30, 30, 35)
 color_bg_bk = QColor(20, 20, 25)
 
 style_fc_bt = 'color: rgb(230, 230, 235);'
-style_bc_st = 'background-color: rgb(65, 65, 70);'
+style_bc_st = 'background-color: rgb(70, 70, 75);'
 style_bc_bt = 'background-color: rgb(50, 50, 55);'
 style_bc_dk = 'background-color: rgb(30, 30, 35);'
 style_pgbar = 'QProgressBar {background-color: #28282d;} QProgressBar::chunk {background-color: #5a5a5f;}'

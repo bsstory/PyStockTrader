@@ -104,6 +104,10 @@ class StrategyCoin:
             self.buystretegy = compile(codes, '<string>', 'exec')
         elif gubun == '매도전략':
             self.sellstretegy = compile(codes, '<string>', 'exec')
+        elif gubun == '매수전략중지':
+            self.buystretegy = None
+        elif gubun == '매도전략중지':
+            self.sellstretegy = None
 
     def BuyStrategy(self, 종목명, 현재가, 시가, 고가, 저가, 등락율, 당일거래대금, 초당매수수량, 초당매도수량,
                     누적매수량, 누적매도량, 체결시간, 수신시간, 잔고종목):

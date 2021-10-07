@@ -1636,9 +1636,6 @@ VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당�
         pass
 
     def ButtonClicked_45(self):
-        pass
-
-    def ButtonClicked_46(self):
         sell_code = '''
 if 매수:
     매수수량 = int(self.int_tujagm / 현재가)
@@ -1647,6 +1644,11 @@ if 매수:
         self.stockQ.put(['매수', 종목코드, 종목명, 현재가, 매수수량])'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
+
+
+    # noinspection PyMethodMayBeStatic
+    def ButtonClicked_46(self):
+        sstgQ.put(['매수전략중지', ''])
 
     def ButtonClicked_47(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
@@ -1731,15 +1733,16 @@ def SellStrategy(self, *args)
         pass
 
     def ButtonClicked_57(self):
-        pass
-
-    def ButtonClicked_58(self):
         sell_code = '''
 if 매도:
     self.list_sell.append(종목코드)
     self.stockQ.put(['매도', 종목코드, 종목명, 현재가, 보유수량])'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
+
+    # noinspection PyMethodMayBeStatic
+    def ButtonClicked_58(self):
+        sstgQ.put(['매도전략중지', ''])
 
     def ButtonClicked_59(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
@@ -1882,9 +1885,6 @@ def BuyStrategy(self, *args)
         pass
 
     def ButtonClicked_73(self):
-        pass
-
-    def ButtonClicked_74(self):
         sell_code = '''
 if 매수:
     매수수량 = round(self.int_tujagm / 현재가, 8)
@@ -1893,6 +1893,10 @@ if 매수:
         self.coinQ.put(['매수', 종목명, 현재가, 매수수량])'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
+
+    # noinspection PyMethodMayBeStatic
+    def ButtonClicked_74(self):
+        cstgQ.put(['매수전략중지', ''])
 
     def ButtonClicked_75(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
@@ -1981,15 +1985,16 @@ def SellStrategy(self, *args)
         pass
 
     def ButtonClicked_85(self):
-        pass
-
-    def ButtonClicked_86(self):
         sell_code = '''
 if 매도:
     self.list_sell.append(종목명)
     self.coinQ.put(['매도', 종목명, 현재가, 보유수량])'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
+
+    # noinspection PyMethodMayBeStatic
+    def ButtonClicked_86(self):
+        cstgQ.put(['매도전략중지', ''])
 
     def UpdateTexedit(self, data):
         text = f'[{now()}] {data[1]}'
