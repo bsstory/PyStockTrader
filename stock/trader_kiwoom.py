@@ -66,7 +66,6 @@ class TraderKiwoom:
         remaintime = (strp_time('%Y%m%d%H%M%S', self.dict_strg['당일날짜'] + '090100') - now()).total_seconds()
         self.exit_time = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
         self.tdtj_time = now()
-        self.spcl_time = now()
         self.dict_item = None
         self.list_trcd = None
         self.list_kosd = None
@@ -183,7 +182,7 @@ class TraderKiwoom:
 
     def BuySell(self, gubun, code, name, c, oc):
         if gubun == '매수':
-            if code in self.dict_df['잔고목록'].index or now() < self.spcl_time:
+            if code in self.dict_df['잔고목록'].index or self.dict_bool['잔고청산']:
                 self.sstgQ.put(['매수취소', code])
                 return
             if code in self.list_buy:
