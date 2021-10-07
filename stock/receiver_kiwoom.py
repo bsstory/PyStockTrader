@@ -28,6 +28,7 @@ class ReceiverKiwoom:
         self.query2Q = qlist[3]
         self.teleQ = qlist[4]
         self.sreceivQ = qlist[5]
+        self.stockQ = qlist[7]
         self.sstgQ = qlist[9]
         self.tick1Q = qlist[11]
         self.tick2Q = qlist[12]
@@ -485,9 +486,12 @@ class ReceiverKiwoom:
                 self.dict_cdjm[code].at[dt] = dm - predm, predm
 
             if code in self.dict_gsjm.keys():
+                injango = code in self.list_jang
                 data.append(name)
-                data.append(code in self.list_jang)
+                data.append(injango)
                 self.sstgQ.put(data)
+                if injango:
+                    self.stockQ.put([code, name, c])
 
         data[10] = strf_time('%Y%m%d%H%M%S', vitime)
         if code in self.list_code1:

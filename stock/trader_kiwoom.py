@@ -36,6 +36,7 @@ class TraderKiwoom:
         self.dict_hoga = {}     # key: 호가창번호, value: [종목코드, 갱신여부, 호가잔고(DataFrame)]
         self.dict_chat = {}     # key: UI번호, value: 종목코드
         self.dict_gsjm = {}     # key: 종목코드, value: 마지막체결시간
+        self.dict_buyt = {}     # key: 종목코드, value: 매수시간
         self.dict_df = {
             '실현손익': pd.DataFrame(columns=columns_tt),
             '거래목록': pd.DataFrame(columns=columns_td),
@@ -102,7 +103,6 @@ class TraderKiwoom:
             self.windowQ.put([ui_num['S거래목록'], self.dict_df['거래목록']])
         if len(self.dict_df['잔고목록']) > 0:
             for code in self.dict_df['잔고목록'].index:
-                self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
                 self.sreceivQ.put(f'잔고편입 {code}')
 
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 정보 불러오기 완료'])
@@ -145,6 +145,8 @@ class TraderKiwoom:
                     elif len(work) in [2, 4]:
                         self.UpdateRealreg(work)
                         continue
+                    elif len(work) == 3:
+                        self.UpdateJango(work[0], work[1], work[2])
                 elif type(work) == str:
                     self.RunWork(work)
 
@@ -433,7 +435,6 @@ class TraderKiwoom:
             try:
                 c = abs(int(self.GetCommRealData(code, 10)))
                 o = abs(int(self.GetCommRealData(code, 16)))
-                name = self.dict_name[code]
             except Exception as e:
                 self.windowQ.put([ui_num['S로그텍스트'], f'OnReceiveRealData 주식체결 {e}'])
             else:
@@ -442,8 +443,6 @@ class TraderKiwoom:
                         self.InsertViPrice(code, o)
                     elif not self.dict_vipr[code][0] and now() > self.dict_vipr[code][1]:
                         self.UpdateViPrice(code, c)
-                    if code in self.dict_df['잔고목록'].index:
-                        self.UpdateJango(code, name, c)
 
     @thread_decorator
     def OperationAlert(self, current):
@@ -537,11 +536,8 @@ class TraderKiwoom:
             pg, sg, sp = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.dict_df['잔고목록'].at[code, columns] = c, sp, sg, pg
-            cond = (self.dict_df['체결목록']['종목명'] == code) & (self.dict_df['체결목록']['주문구분'] == '매수')
-            df = self.dict_df['체결목록'][cond]
-            if len(df) > 0:
-                buytime = strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])
-                self.sstgQ.put([code, name, sp, oc, c, buytime])
+            if code in self.dict_buyt.keys():
+                self.sstgQ.put([code, name, sp, oc, c, self.dict_buyt[code]])
         self.lock.release()
 
     # noinspection PyMethodMayBeStatic
@@ -589,19 +585,27 @@ class TraderKiwoom:
         self.lock.acquire()
         if ot == '체결' and omc == 0 and cp != 0:
             if og == '매수':
+                self.UpdateChegeoljango(code, name, og, oc, cp)
+                self.dict_buyt[code] = now()
+                self.list_buy.remove(code)
+                self.sreceivQ.put(f'잔고편입 {code}')
+                self.sstgQ.put(['매수완료', code])
                 self.dict_intg['예수금'] -= oc * cp
                 self.dict_intg['추정예수금'] = self.dict_intg['예수금']
-                self.UpdateChegeoljango(code, name, og, oc, cp)
                 self.windowQ.put([ui_num['S로그텍스트'], f'매매 시스템 체결 알림 - {name} {oc}주 {og}'])
             elif og == '매도':
                 bp = self.dict_df['잔고목록']['매입가'][code]
                 bg = bp * oc
                 pg, sg, sp = self.GetPgSgSp(bg, oc * cp)
-                self.dict_intg['예수금'] += pg
-                self.dict_intg['추정예수금'] = self.dict_intg['예수금']
                 self.UpdateChegeoljango(code, name, og, oc, cp)
                 self.UpdateTradelist(name, oc, sp, sg, bg, pg, on)
-                self.windowQ.put([ui_num['S로그텍스트'], f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
+                self.list_sell.remove(code)
+                self.sreceivQ.put(f'잔고청산 {code}')
+                self.sstgQ.put(['매도완료', code])
+                self.dict_intg['예수금'] += pg
+                self.dict_intg['추정예수금'] = self.dict_intg['예수금']
+                self.windowQ.put([ui_num['S로그텍스트'],
+                                  f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
         self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
         self.lock.release()
 
@@ -611,8 +615,6 @@ class TraderKiwoom:
                 bg = oc * cp
                 pg, sg, sp = self.GetPgSgSp(bg, oc * cp)
                 self.dict_df['잔고목록'].at[code] = name, cp, cp, sp, sg, bg, pg, oc
-                self.stockQ.put([sn_jscg, code, '10;12;14;30;228', 1])
-                self.sreceivQ.put(f'잔고편입 {code}')
             else:
                 jc = self.dict_df['잔고목록']['보유수량'][code]
                 bg = self.dict_df['잔고목록']['매입금액'][code]
@@ -625,21 +627,12 @@ class TraderKiwoom:
             jc = self.dict_df['잔고목록']['보유수량'][code]
             if jc - oc == 0:
                 self.dict_df['잔고목록'].drop(index=code, inplace=True)
-                self.stockQ.put([sn_jscg, code])
-                self.sreceivQ.put(f'잔고청산 {code}')
             else:
                 bp = self.dict_df['잔고목록']['매입가'][code]
                 jc = jc - oc
                 bg = jc * bp
                 pg, sg, sp = self.GetPgSgSp(bg, jc * cp)
                 self.dict_df['잔고목록'].at[code] = name, bp, cp, sp, sg, bg, pg, jc
-
-        if og == '매수':
-            self.sstgQ.put(['매수완료', code])
-            self.list_buy.remove(code)
-        elif og == '매도':
-            self.sstgQ.put(['매도완료', code])
-            self.list_sell.remove(code)
 
         columns = ['매입가', '현재가', '평가손익', '매입금액']
         self.dict_df['잔고목록'][columns] = self.dict_df['잔고목록'][columns].astype(int)
@@ -674,8 +667,9 @@ class TraderKiwoom:
         sg = self.dict_df['거래목록']['수익금'].sum()
         sp = round(sg / self.dict_intg['추정예탁자산'] * 100, 2)
         tdct = len(self.dict_df['거래목록'])
-        self.dict_df['실현손익'] = pd.DataFrame([[tdct, tbg, tsg, tsig, tssg, sp, sg]],
-                                            columns=columns_tt, index=[self.dict_strg['당일날짜']])
+        self.dict_df['실현손익'] = pd.DataFrame(
+            [[tdct, tbg, tsg, tsig, tssg, sp, sg]], columns=columns_tt, index=[self.dict_strg['당일날짜']]
+        )
         self.windowQ.put([ui_num['S실현손익'], self.dict_df['실현손익']])
 
         if not first:

@@ -36,7 +36,7 @@ class TraderUpbit:
 
         self.str_today = strf_time('%Y%m%d')
 
-        self.dict_jcdt = {}                             # 종목별 체결시간 저장용
+        self.dict_buyt = {}                             # 매수시간 기록용
         self.dict_intg = {
             '예수금': 0,
             '종목당투자금': 0,                            # 종목당 투자금은 int((예수금 + 매입금액) * 0.99 / 최대매수종목수)로 계산
@@ -131,15 +131,9 @@ class TraderUpbit:
                     self.Sell(data[1], data[2], data[3])
                 else:
                     """ 잔고목록 갱신 및 매도조건 확인 """
-                    code, c, tbids, tasks = data
+                    code, c = data
                     if code in self.df_jg.index:
-                        try:
-                            ch = round(tbids / tasks * 100, 2)
-                        except ZeroDivisionError:
-                            ch = 500.
-                        if ch > 500:
-                            ch = 500.
-                        self.UpdateJango(code, c, ch)
+                        self.UpdateJango(code, c)
 
             """ 주문의 체결확인은 1초마다 반복한다. """
             if self.buy_uuid is not None and now() > self.dict_time['매수체결확인']:
@@ -228,7 +222,7 @@ class TraderUpbit:
             text = '시스템 명령 오류 알림 - 업비트 키값이 설정되지 않아 주문을 전송할 수 없습니다.'
             self.windowQ.put([ui_num['C로그텍스트'], text])
 
-    def UpdateJango(self, code, c, ch):
+    def UpdateJango(self, code, c):
         prec = self.df_jg['현재가'][code]
         if prec != c:
             bg = self.df_jg['매입금액'][code]
@@ -236,10 +230,8 @@ class TraderUpbit:
             pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, oc * c)
             columns = ['현재가', '수익률', '평가손익', '평가금액']
             self.df_jg.at[code, columns] = c, sp, sg, pg
-            df = self.df_cj[(self.df_cj['종목명'] == code) & (self.df_cj['주문구분'] == '매수')]
-            if len(df) > 0:
-                buytime = strp_time('%Y%m%d%H%M%S%f', df['체결시간'][0])
-                self.cstgQ.put([code, sp, ch, oc, c, buytime])
+            if code in self.dict_buyt.keys():
+                self.cstgQ.put([code, sp, oc, c, self.dict_buyt[code]])
 
     def CheckBuyChegeol(self):
         code = self.buy_uuid[0]
@@ -301,13 +293,14 @@ class TraderUpbit:
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
 
         if not cancle:
-            self.buy_uuid = None
-            self.creceivQ.put(['잔고편입', code])
-            self.cstgQ.put(['매수완료', code])
             bg = cp * cc
             pg, sg, sp, bfee, sfee = self.GetPgSgSp(bg, bg)
-            self.dict_intg['예수금'] -= bg + bfee
             self.df_jg.at[code] = code, cp, cp, sp, sg, bg, pg, cc
+            self.buy_uuid = None
+            self.dict_buyt[code] = now()
+            self.dict_intg['예수금'] -= bg + bfee
+            self.cstgQ.put(['매수완료', code])
+            self.creceivQ.put(['잔고편입', code])
             self.query1Q.put([2, self.df_jg, 'c_jangolist', 'replace'])
             self.windowQ.put([ui_num['C로그텍스트'], f'매매 시스템 체결 알림 - [매수] {code} 코인 {cp}원 {cc}개'])
             if DICT_SET['알림소리2']:
@@ -336,8 +329,9 @@ class TraderUpbit:
         self.df_td.sort_values(by=['체결시간'], ascending=False, inplace=True)
 
         self.sell_uuid = None
-        self.creceivQ.put(['잔고청산', code])
+        del self.dict_buyt[code]
         self.cstgQ.put(['매도완료', code])
+        self.creceivQ.put(['잔고청산', code])
         self.windowQ.put([ui_num['C체결목록'], self.df_cj])
         self.windowQ.put([ui_num['C거래목록'], self.df_td])
 
