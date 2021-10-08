@@ -727,7 +727,7 @@ if 매수:
             for index in df.index:
                 self.sss_comboBox.addItem(index)
             windowQ.put([ui_num['S전략텍스트'], '매도전략 불러오기 완료'])
-            self.sss_pushButton_03.setStyleSheet(style_bc_st)
+            self.sss_pushButton_04.setStyleSheet(style_bc_st)
         else:
             windowQ.put([ui_num['S전략텍스트'], '매도전략 없음'])
 
@@ -749,7 +749,7 @@ if 매수:
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([3, df, 'sell', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 저장하기 완료'])
-            self.sss_pushButton_03.setStyleSheet(style_bc_st)
+            self.sss_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_31(self):
         sell_code = '''"""
@@ -761,7 +761,7 @@ def SellStrategy(self, *args)
         self.ss_textEdit_03.clear()
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 불러오기 완료'])
-        self.sss_pushButton_03.setStyleSheet(style_bc_st)
+        self.sss_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_32(self):
         strategy = self.ss_textEdit_03.toPlainText()
@@ -776,7 +776,7 @@ def SellStrategy(self, *args)
             query1Q.put([3, df, 'sell', 'append'])
             sstgQ.put(['매도전략', strategy])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 시작하기 완료'])
-            self.sss_pushButton_03.setStyleSheet(style_bc_dk)
+            self.sss_pushButton_04.setStyleSheet(style_bc_dk)
             self.sss_pushButton_12.setStyleSheet(style_bc_st)
 
     def ButtonClicked_33(self):
@@ -821,7 +821,7 @@ if 매도:
     def ButtonClicked_40(self):
         sstgQ.put(['매도전략중지', ''])
         self.sss_pushButton_12.setStyleSheet(style_bc_dk)
-        self.sss_pushButton_03.setStyleSheet(style_bc_st)
+        self.sss_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_41(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
@@ -1032,7 +1032,7 @@ if 매수:
             for index in df.index:
                 self.css_comboBox.addItem(index)
             windowQ.put([ui_num['C전략텍스트'], '매도전략 불러오기 완료'])
-            self.css_pushButton_03.setStyleSheet(style_bc_st)
+            self.css_pushButton_04.setStyleSheet(style_bc_st)
         else:
             windowQ.put([ui_num['C전략텍스트'], '매도전략 없음'])
 
@@ -1054,7 +1054,7 @@ if 매수:
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([4, df, 'sell', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '매도전략 저장하기 완료'])
-            self.css_pushButton_03.setStyleSheet(style_bc_st)
+            self.css_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_61(self):
         sell_code = '''"""
@@ -1069,7 +1069,7 @@ def SellStrategy(self, *args)
         self.cs_textEdit_03.clear()
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도변수 불러오기 완료'])
-        self.css_pushButton_03.setStyleSheet(style_bc_st)
+        self.css_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_62(self):
         strategy = self.cs_textEdit_03.toPlainText()
@@ -1084,7 +1084,7 @@ def SellStrategy(self, *args)
             query1Q.put([4, df, 'sell', 'append'])
             cstgQ.put(['매도전략', strategy])
             windowQ.put([ui_num['C전략텍스트'], '매도전략 시작하기 완료'])
-            self.css_pushButton_03.setStyleSheet(style_bc_dk)
+            self.css_pushButton_04.setStyleSheet(style_bc_dk)
             self.css_pushButton_12.setStyleSheet(style_bc_st)
 
     def ButtonClicked_63(self):
@@ -1129,7 +1129,7 @@ if 매도:
     def ButtonClicked_70(self):
         cstgQ.put(['매도전략중지', ''])
         self.css_pushButton_12.setStyleSheet(style_bc_dk)
-        self.css_pushButton_03.setStyleSheet(style_bc_st)
+        self.css_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_71(self):
         con = sqlite3.connect(DB_SETTING)
