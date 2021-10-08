@@ -220,10 +220,10 @@ class Window(QtWidgets.QMainWindow):
                 self.cb_pushButton_01.setStyleSheet(style_bc_bt)
                 self.cb_pushButton_02.setStyleSheet(style_bc_st)
         else:
-            self.sb_pushButton_01.setStyleSheet(style_bc_bt)
-            self.sb_pushButton_02.setStyleSheet(style_bc_bt)
-            self.cb_pushButton_01.setStyleSheet(style_bc_bt)
-            self.cb_pushButton_02.setStyleSheet(style_bc_bt)
+            self.sb_pushButton_01.setStyleSheet(style_bc_st)
+            self.sb_pushButton_02.setStyleSheet(style_bc_st)
+            self.cb_pushButton_01.setStyleSheet(style_bc_st)
+            self.cb_pushButton_02.setStyleSheet(style_bc_st)
 
     @thread_decorator
     def UpdateCpuper(self):
