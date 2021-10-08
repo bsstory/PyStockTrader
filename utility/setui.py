@@ -365,6 +365,7 @@ def SetUI(self):
     self.ssb_lineEdit_06 = setLineedit(self.ss_tab)
     self.sb_pushButton_01 = setPushbutton('백테스팅', box=self.ss_tab, click=self.ButtonClicked_27, color=True)
     self.sb_pushButton_02 = setPushbutton('최적화', box=self.ss_tab, click=self.ButtonClicked_28, color=True)
+    self.sb_pushButton_03 = setPushbutton('중지', box=self.ss_tab, click=self.ButtonClicked_83, color=True)
 
     self.sss_comboBox = setCombobox(self.ss_tab, self.Activated_03)
     self.sss_lineEdit = setLineedit2(self.ss_tab)
@@ -421,6 +422,7 @@ def SetUI(self):
     self.csb_lineEdit_06 = setLineedit(self.cs_tab)
     self.cb_pushButton_01 = setPushbutton('백테스팅', box=self.cs_tab, click=self.ButtonClicked_57, color=True)
     self.cb_pushButton_02 = setPushbutton('최적화', box=self.cs_tab, click=self.ButtonClicked_58, color=True)
+    self.cb_pushButton_03 = setPushbutton('중지', box=self.cs_tab, click=self.ButtonClicked_84, color=True)
 
     self.css_comboBox = setCombobox(self.cs_tab, self.Activated_06)
     self.css_lineEdit = setLineedit2(self.cs_tab)
@@ -605,8 +607,9 @@ def SetUI(self):
     self.ssb_lineEdit_05.setGeometry(1175, 370, 55, 20)
     self.ssb_lineEdit_06.setGeometry(1290, 370, 55, 20)
 
-    self.sb_pushButton_01.setGeometry(1010, 395, 165, 30)
-    self.sb_pushButton_02.setGeometry(1180, 395, 165, 30)
+    self.sb_pushButton_01.setGeometry(1010, 395, 108, 30)
+    self.sb_pushButton_02.setGeometry(1123, 395, 108, 30)
+    self.sb_pushButton_03.setGeometry(1236, 395, 108, 30)
 
     self.sss_comboBox.setGeometry(1010, 510, 165, 25)
     self.sss_lineEdit.setGeometry(1180, 510, 165, 25)
@@ -660,8 +663,9 @@ def SetUI(self):
     self.csb_lineEdit_05.setGeometry(1175, 370, 55, 20)
     self.csb_lineEdit_06.setGeometry(1290, 370, 55, 20)
 
-    self.cb_pushButton_01.setGeometry(1010, 395, 165, 30)
-    self.cb_pushButton_02.setGeometry(1180, 395, 165, 30)
+    self.cb_pushButton_01.setGeometry(1010, 395, 108, 30)
+    self.cb_pushButton_02.setGeometry(1123, 395, 108, 30)
+    self.cb_pushButton_03.setGeometry(1236, 395, 108, 30)
 
     self.css_comboBox.setGeometry(1010, 510, 165, 25)
     self.css_lineEdit.setGeometry(1180, 510, 165, 25)
