@@ -1,12 +1,9 @@
 import os
 import sys
-import warnings
-import numpy as np
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from utility.setting import ui_num, DICT_SET
+from utility.setting import ui_num
 from utility.static import now, strf_time, timedelta_sec
-warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 DIVIDE_SAVE = True     # 틱데이터 저장방식 선택 - True: 경우 10초에 한번 저장, False: 장마감 후 거래종목만 저장
 
@@ -19,11 +16,10 @@ class CollectorKiwoom:
                  tick1Q, tick2Q, tick3Q, tick4Q, tick5Q]
                    11       12      13     14      15
         """
+        self.gubun = gubun
         self.windowQ = qlist[0]
-        self.soundQ = qlist[1]
         self.query2Q = qlist[3]
         self.teleQ = qlist[4]
-        self.gubun = gubun
         if self.gubun == 1:
             self.tickQ = qlist[11]
         elif self.gubun == 2:
@@ -35,6 +31,10 @@ class CollectorKiwoom:
 
         self.dict_df = {}
         self.dict_dm = {}
+        self.dict_time = {
+            '기록시간': now(),
+            '저장시간': now()
+        }
         self.time_info = now()
         self.str_tday = strf_time('%Y%m%d')
         self.Start()
@@ -52,10 +52,7 @@ class CollectorKiwoom:
                 break
 
         if self.gubun == 4:
-            self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터를 종료합니다.'])
-            if DICT_SET['알림소리1']:
-                self.soundQ.put('주식 콜렉터를 종료합니다.')
-            self.teleQ.put('주식 콜렉터를 종료하였습니다.')
+            self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터 종료'])
 
     def UpdateTickData(self, code, c, o, h, low, per, dm, ch, bids, asks, vitime, vid5price,
                        tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime):
@@ -78,14 +75,15 @@ class CollectorKiwoom:
         else:
             self.dict_df[code].at[dt] = data
 
-        if now() > self.time_info:
-            if self.gubun == 4:
-                gap = (now() - receivetime).total_seconds()
-                self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
-            if DIVIDE_SAVE:
-                self.query2Q.put([1, self.dict_df])
-                self.dict_df = {}
-            self.time_info = timedelta_sec(10)
+        if self.gubun == 4 and now() > self.dict_time['기록시간']:
+            gap = (now() - receivetime).total_seconds()
+            self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
+            self.dict_time['기록시간'] = timedelta_sec(60)
+
+        if DIVIDE_SAVE and now() > self.dict_time['저장시간']:
+            self.query2Q.put([1, self.dict_df])
+            self.dict_df = {}
+            self.dict_time['저장시간'] = timedelta_sec(10)
 
     def SaveTickData(self, codes):
         for code in list(self.dict_df.keys()):
