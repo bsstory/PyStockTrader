@@ -10,9 +10,10 @@ from utility.static import now, strf_time, timedelta_sec, timedelta_day, strp_ti
 
 
 class BackTesterCoinStg:
-    def __init__(self, q_, code_list_, var_, buystg_, sellstg_):
+    def __init__(self, q_, code_list_, var_, buystg_, sellstg_, df_mt_):
         self.q = q_
         self.code_list = code_list_
+        self.df_mt = df_mt_
 
         self.testperiod = var_[0]
         self.totaltime = var_[1]
@@ -100,8 +101,12 @@ class BackTesterCoinStg:
         conn.close()
 
     def BuyTerm(self):
-        self.ccond += 1
-        if type(self.df['현재가'][self.index]) == pd.Series:
+        try:
+            if self.code not in self.df_mt['거래대금순위'][self.index]:
+                self.ccond = 0
+            else:
+                self.ccond += 1
+        except KeyError:
             return False
         if self.ccond < self.avgtime:
             return False
@@ -243,20 +248,15 @@ class BackTesterCoinStg:
             avgholdday = round(self.totalholdday / self.totalcount, 2)
             self.q.put([self.code, self.totalcount, avgholdday, self.totalcount_p, self.totalcount_m,
                         plus_per, self.totalper, self.totaleyun])
-            code, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun = \
+            totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun = \
                 self.GetTotal(plus_per, avgholdday)
-            print(f" 종목코드 {code} | 평균보유기간 {avgholdday}초 | 거래횟수 {totalcount}회 | "
+            print(f" 종목코드 {self.code} | 평균보유기간 {avgholdday}초 | 거래횟수 {totalcount}회 | "
                   f" 익절 {totalcount_p}회 | 손절 {totalcount_m}회 | 승률 {plus_per}% |"
                   f" 수익률 {totalper}% | 수익금 {totaleyun}원 [{count}/{tcount}]")
         else:
             self.q.put([self.code, 0, 0, 0, 0, 0., 0., 0])
 
     def GetTotal(self, plus_per, avgholdday):
-        code = str(self.code)
-        code = code + '    ' if len(code) == 6 else code
-        code = code + '   ' if len(code) == 7 else code
-        code = code + '  ' if len(code) == 8 else code
-        code = code + ' ' if len(code) == 9 else code
         totalcount = str(self.totalcount)
         totalcount = '  ' + totalcount if len(totalcount) == 1 else totalcount
         totalcount = ' ' + totalcount if len(totalcount) == 2 else totalcount
@@ -294,15 +294,16 @@ class BackTesterCoinStg:
             totaleyun = '  ' + totaleyun if len(totaleyun.split(',')[0]) == 4 else totaleyun
         elif len(totaleyun.split(',')) == 3:
             totaleyun = ' ' + totaleyun if len(totaleyun.split(',')[0]) == 1 else totaleyun
-        return code, totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun
+        return totalcount, avgholdday, totalcount_p, totalcount_m, plus_per, totalper, totaleyun
 
 
 class Total:
-    def __init__(self, q_, last_, totaltime_):
+    def __init__(self, q_, last_, totaltime_, df1_):
         super().__init__()
         self.q = q_
         self.last = last_
         self.totaltime = totaltime_
+        self.name = df1_
         self.Start()
 
     def Start(self):
@@ -313,12 +314,13 @@ class Total:
         while True:
             data = self.q.get()
             if len(data) == 4:
+                name = self.name['종목명'][data[1]]
                 if data[0] in df_tsg.index:
-                    df_tsg.at[data[0]] = df_tsg['종목명'][data[0]] + ';' + data[1], \
+                    df_tsg.at[data[0]] = df_tsg['종목명'][data[0]] + ';' + name, \
                                          df_tsg['per'][data[0]] + data[2], \
                                          df_tsg['ttsg'][data[0]] + data[3]
                 else:
-                    df_tsg.at[data[0]] = data[1], data[2], data[3]
+                    df_tsg.at[data[0]] = name, data[2], data[3]
             else:
                 df_back.at[data[0]] = data[1], data[2], data[3], data[4], data[5], data[6], data[7]
                 k += 1
@@ -364,10 +366,13 @@ if __name__ == "__main__":
     start = now()
 
     con = sqlite3.connect(DB_STOCK_TICK)
-    df = pd.read_sql("SELECT name FROM sqlite_master WHERE TYPE = 'table'", con)
+    df1 = pd.read_sql('SELECT * FROM codename', con).set_index('index')
+    df2 = pd.read_sql("SELECT name FROM sqlite_master WHERE TYPE = 'table'", con)
+    df3 = pd.read_sql('SELECT * FROM moneytop', con).set_index('index')
     con.close()
-
-    table_list = list(df['name'].values)
+    table_list = list(df2['name'].values)
+    table_list.remove('moneytop')
+    table_list.remove('codename')
     last = len(table_list)
 
     testperiod = int(sys.argv[1])
@@ -381,13 +386,13 @@ if __name__ == "__main__":
     sellstg = sys.argv[8]
 
     q = Queue()
-    w = Process(target=Total, args=(q, last, totaltime))
+    w = Process(target=Total, args=(q, last, df1, totaltime))
     w.start()
     procs = []
     workcount = int(last / int(sys.argv[6])) + 1
     for j in range(0, last, workcount):
         code_list = table_list[j:j + workcount]
-        p = Process(target=BackTesterCoinStg, args=(q, code_list, var, buystg, sellstg))
+        p = Process(target=BackTesterCoinStg, args=(q, code_list, var, buystg, sellstg, df3))
         procs.append(p)
         p.start()
     for p in procs:

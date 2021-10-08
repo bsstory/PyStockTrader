@@ -370,11 +370,9 @@ if __name__ == "__main__":
     start = now()
 
     con = sqlite3.connect(DB_STOCK_TICK)
-    df1 = pd.read_sql('SELECT * FROM codename', con)
-    df1 = df1.set_index('index')
+    df1 = pd.read_sql('SELECT * FROM codename', con).set_index('index')
     df2 = pd.read_sql("SELECT name FROM sqlite_master WHERE TYPE = 'table'", con)
-    df3 = pd.read_sql('SELECT * FROM moneytop', con)
-    df3 = df3.set_index('index')
+    df3 = pd.read_sql('SELECT * FROM moneytop', con).set_index('index')
     con.close()
     table_list = list(df2['name'].values)
     table_list.remove('moneytop')

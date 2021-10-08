@@ -48,7 +48,6 @@ class BackTesterStockVj:
 
         self.indexn = 0
         self.ccond = 0
-        self.csell = 0
 
         self.Start()
 
@@ -78,7 +77,7 @@ class BackTesterStockVj:
                 if h != 0 and index[:8] != self.df.index[h - 1][:8]:
                     self.ccond = 0
                 if int(index[:8]) < int_daylimit or \
-                        (not self.hold and (self.endtime <= int(index[8:]) or int(index[8:]) < self.starttime)):
+                        (not self.hold and (int(index[8:]) < self.starttime or self.endtime <= int(index[8:]))):
                     continue
                 self.index = index
                 self.indexn = h
@@ -123,7 +122,6 @@ class BackTesterStockVj:
             return
         self.hold = True
         self.indexb = self.indexn
-        self.csell = 0
 
     def SellTerm(self):
         if self.df['등락율'][self.index] > 29:
@@ -196,9 +194,10 @@ class BackTesterStockVj:
         totalcount = '  ' + totalcount if len(totalcount) == 1 else totalcount
         totalcount = ' ' + totalcount if len(totalcount) == 2 else totalcount
         avgholdday = str(avgholdday)
-        avgholdday = '   ' + avgholdday if len(avgholdday.split('.')[0]) == 1 else avgholdday
-        avgholdday = '  ' + avgholdday if len(avgholdday.split('.')[0]) == 2 else avgholdday
-        avgholdday = ' ' + avgholdday if len(avgholdday.split('.')[0]) == 3 else avgholdday
+        avgholdday = '    ' + avgholdday if len(avgholdday.split('.')[0]) == 1 else avgholdday
+        avgholdday = '   ' + avgholdday if len(avgholdday.split('.')[0]) == 2 else avgholdday
+        avgholdday = '  ' + avgholdday if len(avgholdday.split('.')[0]) == 3 else avgholdday
+        avgholdday = ' ' + avgholdday if len(avgholdday.split('.')[0]) == 4 else avgholdday
         avgholdday = avgholdday + '0' if len(avgholdday.split('.')[1]) == 1 else avgholdday
         totalcount_p = str(self.totalcount_p)
         totalcount_p = '  ' + totalcount_p if len(totalcount_p) == 1 else totalcount_p
@@ -317,12 +316,9 @@ if __name__ == "__main__":
     start = now()
 
     con = sqlite3.connect(DB_STOCK_TICK)
-    df1 = pd.read_sql('SELECT * FROM codename', con)
-    df1 = df1.set_index('index')
-    con = sqlite3.connect(DB_STOCK_TICK)
+    df1 = pd.read_sql('SELECT * FROM codename', con).set_index('index')
     df2 = pd.read_sql("SELECT name FROM sqlite_master WHERE TYPE = 'table'", con)
-    df3 = pd.read_sql('SELECT * FROM moneytop', con)
-    df3 = df3.set_index('index')
+    df3 = pd.read_sql('SELECT * FROM moneytop', con).set_index('index')
     con.close()
     table_list = list(df2['name'].values)
     table_list.remove('moneytop')
