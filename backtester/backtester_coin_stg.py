@@ -389,32 +389,33 @@ if __name__ == "__main__":
     df = pd.read_sql("SELECT name FROM sqlite_master WHERE TYPE = 'table'", con)
     con.close()
 
-    table_list = list(df['name'].values)
-    last = len(table_list)
+    if len(df) > 0:
+        table_list = list(df['name'].values)
+        last = len(table_list)
 
-    testperiod = int(sys.argv[1])
-    totaltime = int(sys.argv[2])
-    avgtime = int(sys.argv[3])
-    starttime = int(sys.argv[4])
-    endtime = int(sys.argv[5])
-    var = [testperiod, totaltime, avgtime, starttime, endtime]
+        testperiod = int(sys.argv[1])
+        totaltime = int(sys.argv[2])
+        avgtime = int(sys.argv[3])
+        starttime = int(sys.argv[4])
+        endtime = int(sys.argv[5])
+        var = [testperiod, totaltime, avgtime, starttime, endtime]
 
-    buystg = sys.argv[7]
-    sellstg = sys.argv[8]
+        buystg = sys.argv[7]
+        sellstg = sys.argv[8]
 
-    q = Queue()
-    w = Process(target=Total, args=(q, last, totaltime))
-    w.start()
-    procs = []
-    workcount = int(last / int(sys.argv[6])) + 1
-    for j in range(0, last, workcount):
-        code_list = table_list[j:j + workcount]
-        p = Process(target=BackTesterCoinStg, args=(q, code_list, var, buystg, sellstg))
-        procs.append(p)
-        p.start()
-    for p in procs:
-        p.join()
-    w.join()
+        q = Queue()
+        w = Process(target=Total, args=(q, last, totaltime))
+        w.start()
+        procs = []
+        workcount = int(last / int(sys.argv[6])) + 1
+        for j in range(0, last, workcount):
+            code_list = table_list[j:j + workcount]
+            p = Process(target=BackTesterCoinStg, args=(q, code_list, var, buystg, sellstg))
+            procs.append(p)
+            p.start()
+        for p in procs:
+            p.join()
+        w.join()
 
     end = now()
     print(f" 백테스팅 소요시간 {end - start}")
