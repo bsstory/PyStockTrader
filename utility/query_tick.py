@@ -1,4 +1,5 @@
 import sqlite3
+from utility.static import now
 from utility.setting import ui_num, DB_STOCK_TICK, DB_COIN_TICK
 
 
@@ -27,19 +28,25 @@ class QueryTick:
             if query[0] == 1:
                 try:
                     if len(query) == 2:
+                        start = now()
                         for code in list(query[1].keys()):
                             query[1][code].to_sql(code, self.con1, if_exists='append', chunksize=1000)
                         k += 1
                         if k % 4 == 0:
-                            self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 틱데이터 저장 완료'])
+                            save_time = (now() - start).total_seconds()
+                            text = f'시스템 명령 실행 알림 - 틱데이터 저장 완료, 소요시간은 [{save_time}]초입니다.'
+                            self.windowQ.put([ui_num['S단순텍스트'], text])
                     elif len(query) == 4:
                         query[1].to_sql(query[2], self.con1, if_exists=query[3], chunksize=1000)
                 except Exception as e:
                     self.windowQ.put([ui_num['S단순텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
             elif query[0] == 2:
                 try:
+                    start = now()
                     for code in list(query[1].keys()):
                         query[1][code].to_sql(code, self.con2, if_exists='append', chunksize=1000)
-                    self.windowQ.put([ui_num['C단순텍스트'], '시스템 명령 실행 알림 - 틱데이터 저장 완료'])
+                    save_time = (now() - start).total_seconds()
+                    text = f'시스템 명령 실행 알림 - 틱데이터 저장 완료, 소요시간은 [{save_time}]초입니다.'
+                    self.windowQ.put([ui_num['C단순텍스트'], text])
                 except Exception as e:
                     self.windowQ.put([ui_num['C단순텍스트'], f'시스템 명령 오류 알림 - to_sql {e}'])
