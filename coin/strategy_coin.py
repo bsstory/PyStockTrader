@@ -23,22 +23,22 @@ class StrategyCoin:
         con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM init', con).set_index('index')
         if len(df) > 0 and '현재전략' in df.index:
-            self.init_var = df['전략코드']['현재전략']
+            self.init_var = compile(df['전략코드']['현재전략'], '<string>', 'exec')
         else:
             self.init_var = None
 
         df = pd.read_sql('SELECT * FROM buy', con).set_index('index')
         if len(df) > 0 and '현재전략' in df.index:
-            self.buystrategy = df['전략코드']['현재전략']
+            self.buystrategy = compile(df['전략코드']['현재전략'], '<string>', 'exec')
         else:
             self.buystrategy = None
 
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
         if len(df) > 0 and '현재전략' in df.index:
-            self.sellstretegy = df['전략코드']['현재전략']
+            self.sellstrategy = compile(df['전략코드']['현재전략'], '<string>', 'exec')
         else:
-            self.sellstretegy = None
+            self.sellstrategy = None
 
         if self.init_var is not None:
             try:
@@ -103,11 +103,11 @@ class StrategyCoin:
         elif gubun == '매수전략':
             self.buystrategy = compile(codes, '<string>', 'exec')
         elif gubun == '매도전략':
-            self.sellstretegy = compile(codes, '<string>', 'exec')
+            self.sellstrategy = compile(codes, '<string>', 'exec')
         elif gubun == '매수전략중지':
             self.buystrategy = None
         elif gubun == '매도전략중지':
-            self.sellstretegy = None
+            self.sellstrategy = None
 
     def BuyStrategy(self, 종목명, 현재가, 시가, 고가, 저가, 등락율, 당일거래대금, 초당매수수량, 초당매도수량,
                     누적매수량, 누적매도량, 체결시간, 수신시간, 잔고종목):
@@ -167,17 +167,18 @@ class StrategyCoin:
         매도 = False
         평균값인덱스 = DICT_SET['평균시간2'] + 1
         등락율 = self.dict_gsjm[종목명]['등락율'][0]
-        체결강도 = self.dict_gsjm[종목명]['체결강도'][0]
         고저평균대비등락율 = self.dict_gsjm[종목명]['고저평균대비등락율'][0]
-        초당거래대금평균 = self.dict_gsjm[종목명]['초당거래대금'][평균값인덱스]
+        체결강도 = self.dict_gsjm[종목명]['체결강도'][0]
         체결강도평균 = self.dict_gsjm[종목명]['체결강도'][평균값인덱스]
         최고체결강도 = self.dict_gsjm[종목명]['체결강도'][평균값인덱스]
+        초당거래대금 = self.dict_gsjm[종목명]['초당거래대금'][0]
+        초당거래대금평균 = self.dict_gsjm[종목명]['초당거래대금'][평균값인덱스]
         매도총잔량, 매수총잔량, 매도호가5, 매도호가4, 매도호가3, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매수호가3, 매수호가4, \
             매수호가5, 매도잔량5, 매도잔량4, 매도잔량3, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2, 매수잔량3, 매수잔량4, \
             매수잔량5 = self.dict_hgjr[종목명]
 
-        if self.sellstretegy is not None:
+        if self.sellstrategy is not None:
             try:
-                exec(self.sellstretegy, None, locals())
+                exec(self.sellstrategy, None, locals())
             except Exception as e:
                 self.windowQ.put([ui_num['C단순텍스트'], f'전략스 설정 오류 알림 - SellStrategy {e}'])

@@ -613,6 +613,19 @@ def SetUI(self):
     self.ssb_pushButton_11 = setPushbutton('매수시그널', box=self.ss_tab, click=self.ButtonClicked_45)
     self.ssb_pushButton_12 = setPushbutton('매수전략 중지하기', box=self.ss_tab, click=self.ButtonClicked_46, color=True)
 
+    text = '백테기간                      총시간(초)                      평균틱수'
+    self.ssb_labellll_01 = QtWidgets.QLabel(text, self.ss_tab)
+    text = '시작시간                       종료시간                          멀티수'
+    self.ssb_labellll_02 = QtWidgets.QLabel(text, self.ss_tab)
+
+    self.ssb_lineEdit_01 = setLineedit(self.ss_tab)
+    self.ssb_lineEdit_02 = setLineedit(self.ss_tab)
+    self.ssb_lineEdit_03 = setLineedit(self.ss_tab)
+    self.ssb_lineEdit_04 = setLineedit(self.ss_tab)
+    self.ssb_lineEdit_05 = setLineedit(self.ss_tab)
+    self.ssb_lineEdit_06 = setLineedit(self.ss_tab)
+    self.ssb_pushButton_00 = setPushbutton('백테스팅 시작하기', box=self.ss_tab, click=self.ButtonClicked_87, color=True)
+
     self.sss_comboBox = setCombobox(self.ss_tab, self.Activated_03)
     self.sss_lineEdit = setLineedit2(self.ss_tab)
     self.sss_pushButton_01 = setPushbutton('매도전략 로딩', box=self.ss_tab, click=self.ButtonClicked_47, color=True)
@@ -654,6 +667,19 @@ def SetUI(self):
     self.csb_pushButton_10 = setPushbutton('1호가잔량비교', box=self.cs_tab, click=self.ButtonClicked_72)
     self.csb_pushButton_11 = setPushbutton('매수시그널', box=self.cs_tab, click=self.ButtonClicked_73)
     self.csb_pushButton_12 = setPushbutton('매수전략 중지', box=self.cs_tab, click=self.ButtonClicked_74, color=True)
+
+    text = '백테기간                      총시간(초)                      평균틱수'
+    self.csb_labellll_01 = QtWidgets.QLabel(text, self.cs_tab)
+    text = '시작시간                       종료시간                          멀티수'
+    self.csb_labellll_02 = QtWidgets.QLabel(text, self.cs_tab)
+
+    self.csb_lineEdit_01 = setLineedit(self.cs_tab)
+    self.csb_lineEdit_02 = setLineedit(self.cs_tab)
+    self.csb_lineEdit_03 = setLineedit(self.cs_tab)
+    self.csb_lineEdit_04 = setLineedit(self.cs_tab)
+    self.csb_lineEdit_05 = setLineedit(self.cs_tab)
+    self.csb_lineEdit_06 = setLineedit(self.cs_tab)
+    self.csb_pushButton_00 = setPushbutton('백테스팅 시작하기', box=self.cs_tab, click=self.ButtonClicked_88, color=True)
 
     self.css_comboBox = setCombobox(self.cs_tab, self.Activated_06)
     self.css_lineEdit = setLineedit2(self.cs_tab)
@@ -1029,7 +1055,7 @@ def SetUI(self):
     self.ss_textEdit_01.setGeometry(5, 5, 1000, 95)
     self.ss_textEdit_02.setGeometry(5, 105, 1000, 400)
     self.ss_textEdit_03.setGeometry(5, 510, 1000, 234)
-    self.ss_textEdit_04.setGeometry(1010, 345, 335, 160)
+    self.ss_textEdit_04.setGeometry(1010, 430, 335, 75)
 
     self.ssi_comboBox.setGeometry(1010, 5, 165, 25)
     self.ssi_lineEdit.setGeometry(1180, 5, 165, 25)
@@ -1053,6 +1079,17 @@ def SetUI(self):
     self.ssb_pushButton_11.setGeometry(1010, 310, 165, 30)
     self.ssb_pushButton_12.setGeometry(1180, 310, 165, 30)
 
+    self.ssb_labellll_01.setGeometry(1010, 345, 335, 20)
+    self.ssb_labellll_02.setGeometry(1010, 370, 335, 20)
+
+    self.ssb_lineEdit_01.setGeometry(1060, 345, 55, 20)
+    self.ssb_lineEdit_02.setGeometry(1175, 345, 55, 20)
+    self.ssb_lineEdit_03.setGeometry(1290, 345, 55, 20)
+    self.ssb_lineEdit_04.setGeometry(1060, 370, 55, 20)
+    self.ssb_lineEdit_05.setGeometry(1175, 370, 55, 20)
+    self.ssb_lineEdit_06.setGeometry(1290, 370, 55, 20)
+    self.ssb_pushButton_00.setGeometry(1010, 395, 335, 30)
+
     self.sss_comboBox.setGeometry(1010, 510, 165, 25)
     self.sss_lineEdit.setGeometry(1180, 510, 165, 25)
     self.sss_pushButton_01.setGeometry(1010, 540, 165, 30)
@@ -1071,7 +1108,7 @@ def SetUI(self):
     self.cs_textEdit_01.setGeometry(5, 5, 1000, 95)
     self.cs_textEdit_02.setGeometry(5, 105, 1000, 400)
     self.cs_textEdit_03.setGeometry(5, 510, 1000, 234)
-    self.cs_textEdit_04.setGeometry(1010, 345, 335, 160)
+    self.cs_textEdit_04.setGeometry(1010, 430, 335, 75)
 
     self.csi_comboBox.setGeometry(1010, 5, 165, 25)
     self.csi_lineEdit.setGeometry(1180, 5, 165, 25)
@@ -1094,6 +1131,17 @@ def SetUI(self):
     self.csb_pushButton_10.setGeometry(1180, 275, 165, 30)
     self.csb_pushButton_11.setGeometry(1010, 310, 165, 30)
     self.csb_pushButton_12.setGeometry(1180, 310, 165, 30)
+
+    self.csb_labellll_01.setGeometry(1010, 345, 335, 20)
+    self.csb_labellll_02.setGeometry(1010, 370, 335, 20)
+
+    self.csb_lineEdit_01.setGeometry(1060, 345, 55, 20)
+    self.csb_lineEdit_02.setGeometry(1175, 345, 55, 20)
+    self.csb_lineEdit_03.setGeometry(1290, 345, 55, 20)
+    self.csb_lineEdit_04.setGeometry(1060, 370, 55, 20)
+    self.csb_lineEdit_05.setGeometry(1175, 370, 55, 20)
+    self.csb_lineEdit_06.setGeometry(1290, 370, 55, 20)
+    self.csb_pushButton_00.setGeometry(1010, 395, 335, 30)
 
     self.css_comboBox.setGeometry(1010, 510, 165, 25)
     self.css_lineEdit.setGeometry(1180, 510, 165, 25)

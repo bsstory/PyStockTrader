@@ -67,7 +67,8 @@ class Window(QtWidgets.QMainWindow):
         self.qtimer3.start()
 
         self.showqsize = False
-        self.backtester_proc = None
+        self.backtester_proc1 = None
+        self.backtester_proc2 = None
 
         self.receiver_coin_thread1 = WebsTicker(qlist)
         self.receiver_coin_thread2 = WebsOrderbook(qlist)
@@ -102,7 +103,7 @@ class Window(QtWidgets.QMainWindow):
 
     # noinspection PyArgumentList
     def KiwoomCollectorStart(self):
-        self.backtester_proc = None
+        self.backtester_proc1 = None
         if DICT_SET['아이디2'] is not None:
             os.system(f'python {LOGIN_PATH}/versionupdater.py')
             os.system(f'python {LOGIN_PATH}/autologin2.py')
@@ -143,7 +144,7 @@ class Window(QtWidgets.QMainWindow):
 
     # noinspection PyArgumentList
     def BacktestStart(self):
-        if self.backtester_proc is None or self.backtester_proc.poll() == 0:
+        if self.backtester_proc1 is None or self.backtester_proc1.poll() == 0:
             self.ButtonClicked_8()
             QTest.qWait(3000)
             self.ButtonClicked_9()
@@ -512,7 +513,7 @@ class Window(QtWidgets.QMainWindow):
         self.sbvc_lineEdit_47.setText(str(df['47'][0]))
 
     def ButtonClicked_9(self):
-        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -613,7 +614,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_proc = subprocess.Popen(
+        self.backtester_proc1 = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_stock_vc.py '
             f'{self.sbvc_lineEdit_01.text()} {self.sbvc_lineEdit_02.text()} {self.sbvc_lineEdit_03.text()} '
             f'{self.sbvc_lineEdit_04.text()} {self.sbvc_lineEdit_05.text()} {self.sbvc_lineEdit_06.text()} '
@@ -776,7 +777,7 @@ class Window(QtWidgets.QMainWindow):
         self.sbvj_lineEdit_14.setText(str(df['멀티프로세스'][0]))
 
     def ButtonClicked_12(self):
-        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -811,7 +812,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_proc = subprocess.Popen(
+        self.backtester_proc1 = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_stock_vj.py '
             f'{self.sbvj_lineEdit_01.text()} {self.sbvj_lineEdit_02.text()} {self.sbvj_lineEdit_03.text()} '
             f'{self.sbvj_lineEdit_04.text()} {self.sbvj_lineEdit_05.text()} {self.sbvj_lineEdit_06.text()} '
@@ -874,7 +875,7 @@ class Window(QtWidgets.QMainWindow):
         self.cbvc_lineEdit_47.setText(str(df['47'][0]))
 
     def ButtonClicked_14(self):
-        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -975,7 +976,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_proc = subprocess.Popen(
+        self.backtester_proc1 = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_coin_vc.py '
             f'{self.cbvc_lineEdit_01.text()} {self.cbvc_lineEdit_02.text()} {self.cbvc_lineEdit_03.text()} '
             f'{self.cbvc_lineEdit_04.text()} {self.cbvc_lineEdit_05.text()} {self.cbvc_lineEdit_06.text()} '
@@ -1138,7 +1139,7 @@ class Window(QtWidgets.QMainWindow):
         self.cbvj_lineEdit_14.setText(str(df['멀티프로세스'][0]))
 
     def ButtonClicked_17(self):
-        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
             return
         textfull = True
@@ -1173,7 +1174,7 @@ class Window(QtWidgets.QMainWindow):
         if not textfull:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
             return
-        self.backtester_proc = subprocess.Popen(
+        self.backtester_proc1 = subprocess.Popen(
             f'python {SYSTEM_PATH}/backtester/backtester_coin_vj.py '
             f'{self.cbvj_lineEdit_01.text()} {self.cbvj_lineEdit_02.text()} {self.cbvj_lineEdit_03.text()} '
             f'{self.cbvj_lineEdit_04.text()} {self.cbvj_lineEdit_05.text()} {self.cbvj_lineEdit_06.text()} '
@@ -1586,7 +1587,7 @@ class Window(QtWidgets.QMainWindow):
     def ButtonClicked_37(self):
         buy_code = '''"""
 def BuyStrategy(self, *args)
-매수(True), 종목코드(str), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
+매수(True), 종목코드(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
 당일거래대금(int), 초당거래대금(int), 초당거래대금평균(int), 체결강도(float), 체결강도평균(float), 최고체결강도(float),
 VI해제시간(datetime), VI아래5호가(int), 초당매수수량(int), 초당매도수량(int), 매도총잔량(int), 매수총잔량(int),
 매도호가2(int), 매도호가1(int), 매수호가1(int), 매수호가2(int), 매도잔량2(int), 매도잔량1(int), 매수잔량1(int), 매수잔량2(int)
@@ -1687,8 +1688,8 @@ if 매수:
     def ButtonClicked_49(self):
         sell_code = '''"""
 def SellStrategy(self, *args)
-매도(False), 종목코드(str), 종목명(str), 수익률(float), 보유수량(int), 매수시간(datetime), 현재가(int), 체결강도(float),
-등락율(float), 고저평균대비등락율(float), 초당거래대금평균(int), 체결강도평균(float), 최고체결강도(float), 매도총잔량(int), 매수총잔량(int),
+매도(False), 종목코드(str), 수익률(float), 보유수량(int), 매수시간(datetime), 현재가(int), 등락율(float), 고저평균대비등락율(float),
+체결강도(float), 체결강도평균(float), 최고체결강도(float), 초당거래대금(int), 초당거래대금평균(int), 매도총잔량(int), 매수총잔량(int),
 매도호가2(int), 매도호가1(int), 매수호가1(int), 매수호가2(int), 매도잔량2(int), 매도잔량1(int), 매수잔량1(int), 매수잔량2(int)
 """'''
         self.ss_textEdit_03.clear()
@@ -1839,13 +1840,12 @@ if 매도:
     def ButtonClicked_65(self):
         buy_code = '''"""
 def BuyStrategy(self, *args)
-매수(True), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
-당일거래대금(int), 초당거래대금(int), 초당거래대금평균(int), 체결강도(float), 체결강도평균(float), 최고체결강도(float),
-초당매수수량(int), 초당매도수량(int), 매도총잔량(float), 매수총잔량(float),
+매수(True), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float), 당일거래대금(int), 초당거래대금(int),
+초당거래대금평균(int), 체결강도(float), 체결강도평균(float), 최고체결강도(float), 초당매수수량(int), 초당매도수량(int), 매도총잔량(float), 매수총잔량(float),
 매도호가5(float), 매도호가4(float), 매도호가3(float), 매도호가2(float), 매도호가1(float),
 매수호가1(float), 매수호가2(float), 매수호가3(float), 매수호가4(float), 매수호가5(float),
 매도잔량5(float), 매도잔량4(float), 매도잔량3(float), 매도잔량2(float), 매도잔량1(float),
-매수잔량1(float), 매수잔량2(float), 매수잔량2(float), 매수잔량2(float), 매수잔량2(float)
+매수잔량1(float), 매수잔량2(float), 매수잔량3(float), 매수잔량4(float), 매수잔량5(float)
 """'''
         self.cs_textEdit_02.clear()
         self.cs_textEdit_02.append(buy_code)
@@ -1943,13 +1943,12 @@ if 매수:
     def ButtonClicked_77(self):
         sell_code = '''"""
 def SellStrategy(self, *args)
-매도(False), 종목명(str), 수익률(float), 보유수량(float), 매수시간(datetime), 현재가(float), 체결강도(float),
-등락율(float), 고저평균대비등락율(float), 초당거래대금평균(int), 체결강도평균(float), 최고체결강도(float),
-매도총잔량(float), 매수총잔량(float),
+매도(False), 종목명(str), 수익률(float), 보유수량(float), 매수시간(datetime), 현재가(float), 등락율(float), 고저평균대비등락율(float),
+체결강도(float), 체결강도평균(float), 최고체결강도(float), 초당거래대금(int), 초당거래대금평균(int), 매도총잔량(float), 매수총잔량(float),
 매도호가5(float), 매도호가4(float), 매도호가3(float), 매도호가2(float), 매도호가1(float),
 매수호가1(float), 매수호가2(float), 매수호가3(float), 매수호가4(float), 매수호가5(float),
 매도잔량5(float), 매도잔량4(float), 매도잔량3(float), 매도잔량2(float), 매도잔량1(float),
-매수잔량1(float), 매수잔량2(float), 매수잔량2(float), 매수잔량2(float), 매수잔량2(float)
+매수잔량1(float), 매수잔량2(float), 매수잔량3(float), 매수잔량4(float), 매수잔량5(float)
 """'''
         self.cs_textEdit_03.clear()
         self.cs_textEdit_03.append(sell_code)
@@ -2010,6 +2009,50 @@ if 매도:
     # noinspection PyMethodMayBeStatic
     def ButtonClicked_86(self):
         cstgQ.put(['매도전략중지', ''])
+
+    def ButtonClicked_87(self):
+        if self.backtester_proc2 is not None and self.backtester_proc2.poll() != 0:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
+            return
+        else:
+            testperiod = self.ssb_lineEdit_01.text()
+            totaltime = self.ssb_lineEdit_02.text()
+            avgtime = self.ssb_lineEdit_03.text()
+            starttime = self.ssb_lineEdit_04.text()
+            endtime = self.ssb_lineEdit_05.text()
+            multi = self.ssb_lineEdit_06.text()
+            buystg = self.ssb_comboBox.currentText()
+            sellstg = self.sss_comboBox.currentText()
+            if buystg == '' or sellstg == '' or testperiod == '' or totaltime == '' or avgtime == '' or \
+                    starttime == '' or endtime == '' or multi == '':
+                QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 공백 상태입니다.\n')
+                return
+            self.backtester_proc2 = subprocess.Popen(
+                    f'python {SYSTEM_PATH}/backtester/backtester_stock_stg.py '
+                    f'{testperiod} {totaltime} {avgtime} {starttime} {endtime} {multi} {buystg} {sellstg}'
+                )
+
+    def ButtonClicked_88(self):
+        if self.backtester_proc2 is not None and self.backtester_proc2.poll() != 0:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
+            return
+        else:
+            testperiod = self.csb_lineEdit_01.text()
+            totaltime = self.csb_lineEdit_02.text()
+            avgtime = self.csb_lineEdit_03.text()
+            starttime = self.csb_lineEdit_04.text()
+            endtime = self.csb_lineEdit_05.text()
+            multi = self.csb_lineEdit_06.text()
+            buystg = self.csb_comboBox.currentText()
+            sellstg = self.css_comboBox.currentText()
+            if buystg == '' or sellstg == '' or testperiod == '' or totaltime == '' or avgtime == '' or \
+                    starttime == '' or endtime == '' or multi == '':
+                QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 공백 상태입니다.\n')
+                return
+            self.backtester_proc2 = subprocess.Popen(
+                    f'python {SYSTEM_PATH}/backtester/backtester_coin_stg.py '
+                    f'{testperiod} {totaltime} {avgtime} {starttime} {endtime} {multi} {buystg} {sellstg}'
+                )
 
     def UpdateTexedit(self, data):
         text = f'[{now()}] {data[1]}'
