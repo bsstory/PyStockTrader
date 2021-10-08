@@ -145,15 +145,15 @@ class BackTesterCoinStg:
         return True
 
     def Buy(self):
-        if self.df['매도호가1'][self.index] * self.df['매도잔량1'][self.index] >= 100000000:
+        if self.df['매도호가1'][self.index] * self.df['매도잔량1'][self.index] >= 10000000:
             s1hg = self.df['매도호가1'][self.index]
-            self.buycount = int(100000000 / s1hg)
+            self.buycount = int(10000000 / s1hg)
             self.buyprice = s1hg
         else:
             s1hg = self.df['매도호가1'][self.index]
             s1jr = self.df['매도잔량1'][self.index]
             s2hg = self.df['매도호가2'][self.index]
-            ng = 100000000 - s1hg * s1jr
+            ng = 10000000 - s1hg * s1jr
             s2jc = int(ng / s2hg)
             self.buycount = s1jr + s2jc
             self.buyprice = round((s1hg * s1jr + s2hg * s2jc) / self.buycount, 2)
@@ -338,11 +338,11 @@ class Total:
                 avgsp = round(df_back['수익률'].sum() / tc, 2)
                 tsg = int(df_back['수익금'].sum())
                 onedaycount = round(tc / self.totaltime, 4)
-                onegm = int(100000000 * onedaycount * avghold)
-                if onegm < 100000000:
-                    onegm = 100000000
+                onegm = int(10000000 * onedaycount * avghold)
+                if onegm < 10000000:
+                    onegm = 10000000
                 tsp = round(tsg / onegm * 100, 4)
-                text = f" 종목당 배팅금액 {format(100000000, ',')}원, 필요자금 {format(onegm, ',')}원, "\
+                text = f" 종목당 배팅금액 {format(10000000, ',')}원, 필요자금 {format(onegm, ',')}원, "\
                        f" 종목출현빈도수 {onedaycount}개/초, 거래횟수 {tc}회, 평균보유기간 {avghold}초,\n 익절 {pc}회, "\
                        f" 손절 {mc}회, 승률 {pper}%, 평균수익률 {avgsp}%, 수익률합계 {tsp}%, 수익금합계 {format(tsg, ',')}원"
                 print(text)
