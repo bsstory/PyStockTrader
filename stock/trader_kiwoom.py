@@ -3,7 +3,6 @@ import sys
 import time
 import pythoncom
 from PyQt5 import QtWidgets
-from threading import Lock
 from PyQt5.QAxContainer import QAxWidget
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.static import *
@@ -27,15 +26,8 @@ class TraderKiwoom:
         self.sreceivQ = qlist[5]
         self.stockQ = qlist[7]
         self.sstgQ = qlist[9]
-        self.lock = Lock()
 
         self.dict_name = {}     # key: 종목코드, value: 종목명
-        self.dict_sghg = {}     # key: 종목코드, value: [상한가, 하한가]
-        self.dict_vipr = {}     # key: 종목코드, value: [갱신여부, 발동시간+5초, 해제시간+180초, UVI, DVI, UVID5]
-        self.dict_cond = {}     # key: 조건검색식번호, value: 조건검색식명
-        self.dict_hoga = {}     # key: 호가창번호, value: [종목코드, 갱신여부, 호가잔고(DataFrame)]
-        self.dict_chat = {}     # key: UI번호, value: 종목코드
-        self.dict_gsjm = {}     # key: 종목코드, value: 마지막체결시간
         self.dict_buyt = {}     # key: 종목코드, value: 매수시간
         self.dict_df = {
             '실현손익': pd.DataFrame(columns=columns_tt),
@@ -60,15 +52,14 @@ class TraderKiwoom:
             '잔고청산': False,
             '로그인': False,
             'TR수신': False,
-            'TR다음': False,
-            'CD수신': False,
-            'CR수신': False
+            'TR다음': False
         }
         remaintime = (strp_time('%Y%m%d%H%M%S', self.dict_strg['당일날짜'] + '090100') - now()).total_seconds()
-        self.exit_time = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
-        self.tdtj_time = now()
+        self.dict_time = {
+            '휴무종료': timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600),
+            '거래정보': now()
+        }
         self.dict_item = None
-        self.list_trcd = None
         self.list_kosd = None
         self.list_buy = []
         self.list_sell = []
@@ -101,10 +92,6 @@ class TraderKiwoom:
             self.windowQ.put([ui_num['S체결목록'], self.dict_df['체결목록']])
         if len(self.dict_df['거래목록']) > 0:
             self.windowQ.put([ui_num['S거래목록'], self.dict_df['거래목록']])
-        if len(self.dict_df['잔고목록']) > 0:
-            for code in self.dict_df['잔고목록'].index:
-                self.dict_buyt[code] = now()
-                self.sreceivQ.put(f'잔고편입 {code}')
 
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 데이터베이스 정보 불러오기 완료'])
 
@@ -123,46 +110,50 @@ class TraderKiwoom:
             self.dict_name[code] = name
             dict_code[name] = code
 
-        self.windowQ.put([ui_num['S종목명딕셔너리'], self.dict_name, dict_code])
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - OpenAPI 로그인 완료'])
         if DICT_SET['알림소리1']:
             self.soundQ.put('키움증권 오픈에이피아이에 로그인하였습니다.')
+
+        if len(self.dict_df['잔고목록']) > 0:
+            for code in self.dict_df['잔고목록'].index:
+                cond = (self.dict_df['체결목록']['주문구분'] == '매수') & \
+                       (self.dict_df['체결목록']['종목명'] == self.dict_name[code])
+                df = self.dict_df['체결목록'][cond]
+                self.dict_buyt[code] = df['체결시간'].loc[0]
+                self.sreceivQ.put(f'잔고편입 {code}')
+
         if int(strf_time('%H%M%S')) > 90000:
             self.dict_intg['장운영상태'] = 3
 
     def EventLoop(self):
         self.GetAccountjanGo()
         self.OperationRealreg()
-        self.ViRealreg()
         while True:
             if not self.stockQ.empty():
-                work = self.stockQ.get()
-                if type(work) == list:
-                    if len(work) == 10:
-                        self.SendOrder(work)
-                    elif len(work) == 5:
-                        self.BuySell(work[0], work[1], work[2], work[3], work[4])
+                data = self.stockQ.get()
+                if type(data) == list:
+                    if len(data) == 10:
+                        self.SendOrder(data)
+                    elif len(data) == 5:
+                        self.BuySell(data[0], data[1], data[2], data[3], data[4])
                         continue
-                    elif len(work) in [2, 4]:
-                        self.UpdateRealreg(work)
-                        continue
-                    elif len(work) == 3:
-                        self.UpdateJango(work[0], work[1], work[2])
-                elif type(work) == str:
-                    self.RunWork(work)
+                    elif len(data) == 3:
+                        self.UpdateJango(data[0], data[1], data[2])
+                elif type(data) == str:
+                    self.TelegramCmd(data)
 
-            if self.dict_intg['장운영상태'] == 1 and now() > self.exit_time:
+            if self.dict_intg['장운영상태'] == 1 and now() > self.dict_time['휴무종료']:
                 break
             if int(strf_time('%H%M%S')) >= DICT_SET['잔고청산'] and not self.dict_bool['잔고청산']:
                 self.JangoChungsan()
             if self.dict_intg['장운영상태'] == 8:
                 self.AllRemoveRealreg()
-                self.SaveDatabase()
+                self.SaveDayData()
                 break
 
-            if now() > self.tdtj_time:
+            if now() > self.dict_time['거래정보']:
                 self.UpdateTotaljango()
-                self.tdtj_time = timedelta_sec(1)
+                self.dict_time['거래정보'] = timedelta_sec(1)
 
             time_loop = timedelta_sec(0.25)
             while now() < time_loop:
@@ -249,7 +240,7 @@ class TraderKiwoom:
             else:
                 self.windowQ.put([ui_num['S로그텍스트'], f'실시간 알림 등록 {result} - [{sn}] {name}'])
 
-    def RunWork(self, work):
+    def TelegramCmd(self, work):
         if work == '/당일체결목록':
             if len(self.dict_df['체결목록']) > 0:
                 self.teleQ.put(self.dict_df['체결목록'])
@@ -320,11 +311,6 @@ class TraderKiwoom:
 
     def OperationRealreg(self):
         self.stockQ.put([sn_oper, ' ', '215;20;214', 0])
-
-    def ViRealreg(self):
-        self.Block_Request('opt10054', 시장구분='000', 장전구분='1', 종목코드='', 발동구분='1', 제외종목='111111011',
-                           거래량구분='0', 거래대금구분='0', 발동방향='0', output='발동종목', next=0)
-        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - VI발동해제 등록 완료'])
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 시스템 시작 완료'])
 
     def JangoChungsan(self):
@@ -352,7 +338,7 @@ class TraderKiwoom:
             self.soundQ.put('실시간 데이터의 수신을 중단하였습니다.')
         self.windowQ.put([ui_num['S로그텍스트'], f'시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
 
-    def SaveDatabase(self):
+    def SaveDayData(self):
         if len(self.dict_df['거래목록']) > 0:
             df = self.dict_df['실현손익'][['총매수금액', '총매도금액', '총수익금액', '총손실금액', '수익률', '수익금합계']].copy()
             self.query1Q.put([2, df, 's_totaltradelist', 'append'])
@@ -360,7 +346,6 @@ class TraderKiwoom:
             self.soundQ.put('일별실현손익를 저장하였습니다.')
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 일별실현손익 저장 완료'])
 
-    @thread_decorator
     def UpdateTotaljango(self):
         if len(self.dict_df['잔고목록']) > 0:
             tsg = self.dict_df['잔고목록']['평가손익'].sum()
@@ -420,32 +405,7 @@ class TraderKiwoom:
                 self.windowQ.put([ui_num['S로그텍스트'], f'OnReceiveRealData 장시작시간 {e}'])
             else:
                 self.OperationAlert(current)
-        elif realtype == 'VI발동/해제':
-            try:
-                code = self.GetCommRealData(code, 9001).strip('A').strip('Q')
-                gubun = self.GetCommRealData(code, 9068)
-                name = self.dict_name[code]
-            except Exception as e:
-                self.windowQ.put([ui_num['S로그텍스트'], f'OnReceiveRealData VI발동/해제 {e}'])
-            else:
-                if gubun == '1' and \
-                        (code not in self.dict_vipr.keys() or
-                         (self.dict_vipr[code][0] and now() > self.dict_vipr[code][1])):
-                    self.UpdateViPrice(code, name)
-        elif realtype == '주식체결':
-            try:
-                c = abs(int(self.GetCommRealData(code, 10)))
-                o = abs(int(self.GetCommRealData(code, 16)))
-            except Exception as e:
-                self.windowQ.put([ui_num['S로그텍스트'], f'OnReceiveRealData 주식체결 {e}'])
-            else:
-                if self.dict_intg['장운영상태'] == 3:
-                    if code not in self.dict_vipr.keys():
-                        self.InsertViPrice(code, o)
-                    elif not self.dict_vipr[code][0] and now() > self.dict_vipr[code][1]:
-                        self.UpdateViPrice(code, c)
 
-    @thread_decorator
     def OperationAlert(self, current):
         if DICT_SET['알림소리1']:
             if current == '084000':
@@ -481,56 +441,7 @@ class TraderKiwoom:
                 self.soundQ.put(f"{self.dict_strg['당일날짜'][:4]}년 {self.dict_strg['당일날짜'][4:6]}월 "
                                 f"{self.dict_strg['당일날짜'][6:]}일 장이 종료되었습니다.")
 
-    def InsertViPrice(self, code, o):
-        uvi, dvi, uvid5 = self.GetVIPrice(code, o)
-        self.dict_vipr[code] = [True, timedelta_sec(-180), timedelta_sec(-180), uvi, dvi, uvid5]
-
-    def GetVIPrice(self, code, std_price):
-        uvi = std_price * 1.1
-        x = self.GetHogaunit(code, uvi)
-        if uvi % x != 0:
-            uvi = uvi + (x - uvi % x)
-        uvid5 = uvi - x * 5
-        dvi = std_price * 0.9
-        x = self.GetHogaunit(code, dvi)
-        if dvi % x != 0:
-            dvi = dvi - dvi % x
-        return int(uvi), int(dvi), int(uvid5)
-
-    def GetHogaunit(self, code, price):
-        if price < 1000:
-            x = 1
-        elif 1000 <= price < 5000:
-            x = 5
-        elif 5000 <= price < 10000:
-            x = 10
-        elif 10000 <= price < 50000:
-            x = 50
-        elif code in self.list_kosd:
-            x = 100
-        elif 50000 <= price < 100000:
-            x = 100
-        elif 100000 <= price < 500000:
-            x = 500
-        else:
-            x = 1000
-        return x
-
-    def UpdateViPrice(self, code, key):
-        if type(key) == str:
-            try:
-                self.dict_vipr[code][:3] = False, timedelta_sec(5), timedelta_sec(180)
-            except KeyError:
-                self.dict_vipr[code] = [False, timedelta_sec(5), timedelta_sec(180), 0, 0, 0]
-            self.windowQ.put([ui_num['S로그텍스트'], f'변동성 완화 장치 발동 - [{code}] {key}'])
-            self.stockQ.put([sn_vijc, code, '10;12;14;30;228', 1])
-        elif type(key) == int:
-            uvi, dvi, uvid5 = self.GetVIPrice(code, key)
-            self.dict_vipr[code] = [True, now(), timedelta_sec(180), uvi, dvi, uvid5]
-            self.stockQ.put([sn_vijc, code])
-
     def UpdateJango(self, code, name, c):
-        self.lock.acquire()
         prec = self.dict_df['잔고목록']['현재가'][code]
         if prec != c:
             bg = self.dict_df['잔고목록']['매입금액'][code]
@@ -540,7 +451,6 @@ class TraderKiwoom:
             self.dict_df['잔고목록'].at[code, columns] = c, sp, sg, pg
             if code in self.dict_buyt.keys():
                 self.sstgQ.put([code, name, sp, oc, c, self.dict_buyt[code]])
-        self.lock.release()
 
     # noinspection PyMethodMayBeStatic
     def GetPgSgSp(self, bg, cg):
@@ -582,9 +492,7 @@ class TraderKiwoom:
                 cp = 0
             self.UpdateChejanData(code, name, ot, og, op, cp, oc, omc, on, dt)
 
-    @thread_decorator
     def UpdateChejanData(self, code, name, ot, og, op, cp, oc, omc, on, dt):
-        self.lock.acquire()
         if ot == '체결' and omc == 0 and cp != 0:
             if og == '매수':
                 self.UpdateChegeoljango(code, name, og, oc, cp)
@@ -609,7 +517,6 @@ class TraderKiwoom:
                 self.windowQ.put([ui_num['S로그텍스트'],
                                   f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
         self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
-        self.lock.release()
 
     def UpdateChegeoljango(self, code, name, og, oc, cp):
         if og == '매수':
@@ -703,21 +610,6 @@ class TraderKiwoom:
             df = pd.DataFrame([[name, og, oc, omc, op, cp, dt]], columns=columns_cj, index=[on])
             self.query1Q.put([2, df, 's_chegeollist', 'append'])
 
-    def OnReceiveConditionVer(self, ret, msg):
-        if msg == '':
-            return
-
-        if ret == 1:
-            self.dict_bool['CD수신'] = True
-
-    def OnReceiveTrCondition(self, screen, code_list, cond_name, cond_index, nnext):
-        if screen == "" and cond_name == "" and cond_index == "" and nnext == "":
-            return
-
-        codes = code_list.split(';')[:-1]
-        self.list_trcd = codes
-        self.dict_bool['CR수신'] = True
-
     def Block_Request(self, *args, **kwargs):
         trcode = args[0].lower()
         lines = readEnc(trcode)
@@ -747,13 +639,6 @@ class TraderKiwoom:
             self.DisconnectRealData(sn_brrq)
         return self.dict_df['TRDF']
 
-    def SendCondition(self, screen, cond_name, cond_index, search):
-        self.dict_bool['CR수신'] = False
-        self.ocx.dynamicCall('SendCondition(QString, QString, int, int)', screen, cond_name, cond_index, search)
-        while not self.dict_bool['CR수신']:
-            pythoncom.PumpWaitingMessages()
-        return self.list_trcd
-
     def DisconnectRealData(self, screen):
         self.ocx.dynamicCall('DisconnectRealData(QString)', screen)
 
@@ -764,9 +649,6 @@ class TraderKiwoom:
         data = self.ocx.dynamicCall('GetCodeListByMarket(QString)', market)
         tokens = data.split(';')[:-1]
         return tokens
-
-    def GetMasterLastPrice(self, code):
-        return int(self.ocx.dynamicCall('GetMasterLastPrice(QString)', code))
 
     def GetCommRealData(self, code, fid):
         return self.ocx.dynamicCall('GetCommRealData(QString, int)', code, fid)

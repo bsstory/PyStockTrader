@@ -1,13 +1,10 @@
 import os
 import sys
 import time
-import warnings
 import pythoncom
-import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
 from PyQt5.QAxContainer import QAxWidget
-warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.static import *
 from utility.setting import *
@@ -28,9 +25,7 @@ class ReceiverKiwoom:
                    11       12      13     14      15
         """
         self.windowQ = qlist[0]
-        self.soundQ = qlist[1]
         self.query2Q = qlist[3]
-        self.teleQ = qlist[4]
         self.sreceivQ = qlist[5]
         self.stockQ = qlist[7]
         self.sstgQ = qlist[9]
@@ -56,7 +51,7 @@ class ReceiverKiwoom:
         self.dict_tick = {}
         self.dict_hoga = {}
         self.dict_cond = {}
-        self.name_code = {}
+        self.dict_name = {}
 
         self.list_gsjm = []
         self.list_trcd = []
@@ -71,7 +66,7 @@ class ReceiverKiwoom:
 
         self.df_tr = None
         self.dict_item = None
-        self.str_trname = None
+        self.str_tname = None
 
         self.operation = 1
         self.df_mt = pd.DataFrame(columns=['거래대금순위'])
@@ -81,9 +76,8 @@ class ReceiverKiwoom:
         self.dt_mtct = None
 
         remaintime = (strp_time('%Y%m%d%H%M%S', self.str_tday + '090100') - now()).total_seconds()
-        exittime = timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600)
         self.dict_time = {
-            '휴무종료': exittime,
+            '휴무종료': timedelta_sec(remaintime) if remaintime > 0 else timedelta_sec(600),
             '거래대금순위기록': now(),
             '거래대금순위저장': now()
         }
@@ -117,13 +111,16 @@ class ReceiverKiwoom:
 
         self.list_kosd = self.GetCodeListByMarket('10')
         list_code = self.GetCodeListByMarket('0') + self.list_kosd
+        dict_code = {}
         df = pd.DataFrame(columns=['종목명'])
         for code in list_code:
             name = self.GetMasterCodeName(code)
             df.at[code] = name
-            self.name_code[name] = code
+            self.dict_name[name] = code
+            dict_code[name] = code
 
         self.query2Q.put([1, df, 'codename', 'replace'])
+        self.windowQ.put([ui_num['S종목명딕셔너리'], self.dict_name, dict_code])
 
         data = self.ocx.dynamicCall('GetConditionNameList()')
         conditions = data.split(';')[:-1]
@@ -144,11 +141,11 @@ class ReceiverKiwoom:
         self.ViRealreg()
         while True:
             if not self.sreceivQ.empty():
-                work = self.sreceivQ.get()
-                if type(work) == list:
-                    self.UpdateRealreg(work)
-                elif type(work) == str:
-                    self.UpdateJangolist(work)
+                data = self.sreceivQ.get()
+                if type(data) == list:
+                    self.UpdateRealreg(data)
+                elif type(data) == str:
+                    self.UpdateJangolist(data)
                 continue
 
             if self.operation == 1 and now() > self.dict_time['휴무종료']:
@@ -168,6 +165,8 @@ class ReceiverKiwoom:
                 break
 
             if now() > self.dict_time['거래대금순위기록']:
+                if len(self.dict_vipr) > 0:
+                    self.stockQ.put(['VI정보', self.dict_vipr])
                 if len(self.list_gsjm) > 0:
                     self.UpdateMoneyTop()
                 self.dict_time['거래대금순위기록'] = timedelta_sec(1)
@@ -177,10 +176,7 @@ class ReceiverKiwoom:
                 pythoncom.PumpWaitingMessages()
                 time.sleep(0.0001)
 
-        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 리시버를 종료합니다.'])
-        if DICT_SET['알림소리1']:
-            self.soundQ.put('주식 리시버를 종료합니다.')
-        self.teleQ.put('주식 리시버를 종료하였습니다.')
+        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 리시버 종료'])
 
     def UpdateRealreg(self, rreg):
         sn = rreg[0]
@@ -226,7 +222,7 @@ class ReceiverKiwoom:
         self.Block_Request('opt10054', 시장구분='000', 장전구분='1', 종목코드='', 발동구분='1', 제외종목='111111011',
                            거래량구분='0', 거래대금구분='0', 발동방향='0', output='발동종목', next=0)
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - VI발동해제 등록 완료'])
-        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 시스템 시작 완료'])
+        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 콜렉터 시작 완료'])
 
     def ConditionSearchStart(self):
         self.dict_bool['실시간조건검색시작'] = True
@@ -239,6 +235,7 @@ class ReceiverKiwoom:
     def ConditionSearchStop(self):
         self.dict_bool['실시간조건검색중단'] = True
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", sn_cond, self.dict_cond[0], 0)
+        self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간조건검색 중단 완료'])
 
     def StartJangjungStrategy(self):
         self.dict_bool['장중단타전략시작'] = True
@@ -292,7 +289,7 @@ class ReceiverKiwoom:
         con.close()
         codes = []
         for index in df.index:
-            code = self.name_code[df['종목명'][index]]
+            code = self.dict_name[df['종목명'][index]]
             if code not in codes:
                 codes.append(code)
         self.tick1Q.put(['콜렉터종료', codes])
@@ -336,9 +333,12 @@ class ReceiverKiwoom:
         self.list_trcd = codes
         self.dict_bool['CR수신'] = True
 
-    def OnReceiveRealCondition(self, code, IorD, cname):
-        if cname == "":
+    def OnReceiveRealCondition(self, code, IorD, cname, cindex):
+        if cname == '' and cindex == '':
             return
+        if int(strf_time('%H%M%S')) > MONEYTOP_CHANGE:
+            return
+
         if IorD == 'I':
             self.InsertGsjmlist(code)
         elif IorD == 'D':
@@ -369,7 +369,7 @@ class ReceiverKiwoom:
                 if gubun == '1' and code in self.list_code and \
                         (code not in self.dict_vipr.keys() or
                          (self.dict_vipr[code][0] and now() > self.dict_vipr[code][1])):
-                    self.UpdateViPriceDown5(code, name)
+                    self.UpdateViPrice(code, name)
         elif realtype == '주식체결':
             try:
                 c = abs(int(self.GetCommRealData(code, 10)))
@@ -384,9 +384,9 @@ class ReceiverKiwoom:
                 if t != self.str_jcct[8:]:
                     self.str_jcct = self.str_tday + t
                 if code not in self.dict_vipr.keys():
-                    self.InsertViPriceDown5(code, o)
+                    self.InsertViPrice(code, o)
                 if code in self.dict_vipr.keys() and not self.dict_vipr[code][0] and now() > self.dict_vipr[code][1]:
-                    self.UpdateViPriceDown5(code, c)
+                    self.UpdateViPrice(code, c)
                 try:
                     pret = self.dict_tick[code][0]
                     bid_volumns = self.dict_tick[code][1]
@@ -431,16 +431,21 @@ class ReceiverKiwoom:
             else:
                 self.dict_hoga[code] = [tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr]
 
-    def InsertViPriceDown5(self, code, o):
-        vid5 = self.GetVIPriceDown5(code, o)
-        self.dict_vipr[code] = [True, timedelta_sec(-180), vid5]
+    def InsertViPrice(self, code, o):
+        uvi, dvi, vid5price = self.GetVIPrice(code, o)
+        self.dict_vipr[code] = [True, timedelta_sec(-180), uvi, dvi, vid5price]
 
-    def GetVIPriceDown5(self, code, std_price):
-        vi = std_price * 1.1
-        x = self.GetHogaunit(code, vi)
-        if vi % x != 0:
-            vi = vi + (x - vi % x)
-        return int(vi - x * 5)
+    def GetVIPrice(self, code, std_price):
+        uvi = std_price * 1.1
+        x = self.GetHogaunit(code, uvi)
+        if uvi % x != 0:
+            uvi = uvi + (x - uvi % x)
+        vid5price = uvi - x * 5
+        dvi = std_price * 0.9
+        x = self.GetHogaunit(code, dvi)
+        if dvi % x != 0:
+            dvi = dvi - dvi % x
+        return int(uvi), int(dvi), int(vid5price)
 
     def GetHogaunit(self, code, price):
         if price < 1000:
@@ -461,16 +466,16 @@ class ReceiverKiwoom:
             x = 1000
         return x
 
-    def UpdateViPriceDown5(self, code, key):
+    def UpdateViPrice(self, code, key):
         if type(key) == str:
-            if code in self.dict_vipr.keys():
-                self.dict_vipr[code][0] = False
-                self.dict_vipr[code][1] = timedelta_sec(5)
-            else:
-                self.dict_vipr[code] = [False, timedelta_sec(5), 0]
+            try:
+                self.dict_vipr[code][:2] = False, timedelta_sec(5)
+            except KeyError:
+                self.dict_vipr[code] = [False, timedelta_sec(5), 0, 0, 0]
+            self.windowQ.put([ui_num['S로그텍스트'], f'변동성 완화 장치 발동 - [{code}] {key}'])
         elif type(key) == int:
-            vid5 = self.GetVIPriceDown5(code, key)
-            self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
+            uvi, dvi, vid5price = self.GetVIPrice(code, key)
+            self.dict_vipr[code] = [True, timedelta_sec(5), uvi, dvi, vid5price]
 
     def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, bids, asks, t, receivetime):
         dt = self.str_tday + t[:4]
@@ -486,7 +491,7 @@ class ReceiverKiwoom:
                 self.dict_cdjm[code].drop(index=self.dict_cdjm[code].index[0], inplace=True)
 
         vitime = self.dict_vipr[code][1]
-        vid5price = self.dict_vipr[code][2]
+        vid5price = self.dict_vipr[code][4]
         try:
             tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr = self.dict_hoga[code]
         except KeyError:
@@ -521,7 +526,7 @@ class ReceiverKiwoom:
         for output in self.dict_item['output']:
             record = list(output.keys())[0]
             items = list(output.values())[0]
-            if record == self.str_trname:
+            if record == self.str_tname:
                 break
         rows = self.ocx.dynamicCall('GetRepeatCnt(QString, QString)', trcode, rqname)
         if rows == 0:
@@ -541,14 +546,14 @@ class ReceiverKiwoom:
         trcode = args[0].lower()
         lines = readEnc(trcode)
         self.dict_item = parseDat(trcode, lines)
-        self.str_trname = kwargs['output']
+        self.str_tname = kwargs['output']
         nnext = kwargs['next']
         for i in kwargs:
             if i.lower() != 'output' and i.lower() != 'next':
                 self.ocx.dynamicCall('SetInputValue(QString, QString)', i, kwargs[i])
         self.dict_bool['TR수신'] = False
         self.dict_bool['TR다음'] = False
-        self.ocx.dynamicCall('CommRqData(QString, QString, int, QString)', self.str_trname, trcode, nnext, sn_brrq)
+        self.ocx.dynamicCall('CommRqData(QString, QString, int, QString)', self.str_tname, trcode, nnext, sn_brrq)
         sleeptime = timedelta_sec(0.25)
         while not self.dict_bool['TR수신'] or now() < sleeptime:
             pythoncom.PumpWaitingMessages()
