@@ -14,11 +14,11 @@ class BackTesterCoinStg:
         self.q = q_
         self.code_list = code_list_
 
-        self.testperiod = var_[1]
+        self.testperiod = var_[0]
         self.totaltime = var_[1]
-        self.avg_time = var_[1]
-        self.starttime = var_[1]
-        self.endtime = var_[1]
+        self.avgtime = var_[2]
+        self.starttime = var_[3]
+        self.endtime = var_[4]
 
         conn = sqlite3.connect(DB_STOCK_STRETEGY)
         dfs = pd.read_sql('SELECT * FROM buy', conn).set_index('index')
@@ -59,8 +59,7 @@ class BackTesterCoinStg:
         int_daylimit = int(strf_time('%Y%m%d', timedelta_day(-self.testperiod)))
         for k, code in enumerate(self.code_list):
             self.code = code
-            self.df = pd.read_sql(f"SELECT * FROM '{code}'", conn)
-            self.df = self.df.set_index('index')
+            self.df = pd.read_sql(f"SELECT * FROM '{code}'", conn).set_index('index')
             self.df['고저평균대비등락율'] = (self.df['현재가'] / ((self.df['고가'] + self.df['저가']) / 2) - 1) * 100
             self.df['고저평균대비등락율'] = self.df['고저평균대비등락율'].round(2)
             self.df['체결강도'] = self.df['누적매수량'] / self.df['누적매도량'] * 100
@@ -71,9 +70,9 @@ class BackTesterCoinStg:
             self.df['초당거래대금'] = self.df['당일거래대금'] - self.df['직전당일거래대금']
             self.df['직전초당거래대금'] = self.df['초당거래대금'].shift(1)
             self.df = self.df.fillna(0)
-            self.df['초당거래대금평균'] = self.df['직전초당거래대금'].rolling(window=self.avg_time).mean()
-            self.df['체결강도평균'] = self.df['직전체결강도'].rolling(window=self.avg_time).mean()
-            self.df['최고체결강도'] = self.df['직전체결강도'].rolling(window=self.avg_time).max()
+            self.df['초당거래대금평균'] = self.df['직전초당거래대금'].rolling(window=self.avgtime).mean()
+            self.df['체결강도평균'] = self.df['직전체결강도'].rolling(window=self.avgtime).mean()
+            self.df['최고체결강도'] = self.df['직전체결강도'].rolling(window=self.avgtime).max()
             self.df = self.df.fillna(0)
             self.totalcount = 0
             self.totalcount_p = 0
@@ -87,11 +86,10 @@ class BackTesterCoinStg:
                 if h != 0 and index[:8] != self.df.index[h - 1][:8]:
                     self.ccond = 0
                 if int(index[:8]) < int_daylimit or \
-                        (not self.hold and (self.endtime <= int(index[8:]) or int(index[8:]) < self.starttime)):
+                        (not self.hold and (int(index[8:]) < self.starttime or self.endtime <= int(index[8:]))):
                     continue
                 self.index = index
                 self.indexn = h
-                self.ccond += 1
                 if not self.hold and self.starttime < int(index[8:]) < self.endtime and self.BuyTerm():
                     self.Buy()
                 elif self.hold and self.starttime < int(index[8:]) < self.endtime and self.SellTerm():
@@ -102,11 +100,13 @@ class BackTesterCoinStg:
         conn.close()
 
     def BuyTerm(self):
+        self.ccond += 1
         if type(self.df['현재가'][self.index]) == pd.Series:
             return False
-        if self.ccond < self.avg_time:
+        if self.ccond < self.avgtime:
             return False
 
+        매수 = False
         종목명 = self.code
         현재가 = self.df['현재가'][self.index]
         시가 = self.df['시가'][self.index]
@@ -135,6 +135,8 @@ class BackTesterCoinStg:
 
         exec(self.buystrategy, None, locals())
 
+        if 매수:
+            return True
         return True
 
     def Buy(self):
@@ -164,7 +166,7 @@ class BackTesterCoinStg:
         cg = self.buycount * self.df['현재가'][self.index]
         eyun, 수익률 = self.GetEyunPer(bg, cg)
 
-        매수 = False
+        매도 = False
         종목명 = self.code
         보유수량 = self.buycount
         매수시간 = self.buytime
@@ -191,7 +193,7 @@ class BackTesterCoinStg:
 
         exec(self.sellstrategy, None, locals())
 
-        if 매수:
+        if 매도:
             return True
         return False
 
@@ -300,9 +302,7 @@ class Total:
         super().__init__()
         self.q = q_
         self.last = last_
-
         self.totaltime = totaltime_
-
         self.Start()
 
     def Start(self):
