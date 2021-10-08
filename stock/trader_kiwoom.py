@@ -120,7 +120,7 @@ class TraderKiwoom:
                 cond = (self.dict_df['체결목록']['주문구분'] == '매수') & \
                        (self.dict_df['체결목록']['종목명'] == self.dict_name[code])
                 df = self.dict_df['체결목록'][cond]
-                self.dict_buyt[code] = df['체결시간'].loc[0]
+                self.dict_buyt[code] = strp_time('%Y%m%d%H%M%S%f', df['체결시간'].loc[0])
                 self.sreceivQ.put(f'잔고편입 {code}')
 
         if int(strf_time('%H%M%S')) > 90000:
@@ -217,8 +217,7 @@ class TraderKiwoom:
             on = 2
 
         if DICT_SET['모의투자1'] or gubun == '시드부족':
-            self.UpdateChejanData(code, name, '체결', gubun, c, c, oc, 0,
-                                  strf_time('%Y%m%d%H%M%S%f'), strf_time('%Y%m%d%H%M%S%f'))
+            self.UpdateChejanData(code, name, '체결', gubun, c, c, oc, 0, strf_time('%Y%m%d%H%M%S%f'))
         else:
             self.stockQ.put([gubun, '4989', self.dict_strg['계좌번호'], on, code, oc, 0, '03', '', name])
 
@@ -312,8 +311,7 @@ class TraderKiwoom:
                 name = self.dict_name[code]
                 if DICT_SET['모의투자1']:
                     self.list_sell.append(code)
-                    self.UpdateChejanData(code, name, '체결', '매도', c, c, oc, 0,
-                                          strf_time('%Y%m%d%H%M%S%f'), strf_time('%Y%m%d%H%M%S%f'))
+                    self.UpdateChejanData(code, name, '체결', '매도', c, c, oc, 0, strf_time('%Y%m%d%H%M%S%f'))
                 else:
                     self.Order('매도', code, name, c, oc)
         if DICT_SET['알림소리1']:
@@ -470,7 +468,6 @@ class TraderKiwoom:
             op = int(self.GetChejanData(901))
             oc = int(self.GetChejanData(900))
             omc = int(self.GetChejanData(902))
-            dt = self.dict_strg['당일날짜'] + self.GetChejanData(908)
         except Exception as e:
             self.windowQ.put([ui_num['S로그텍스트'], f'OnReceiveChejanData {e}'])
         else:
@@ -478,9 +475,9 @@ class TraderKiwoom:
                 cp = int(self.GetChejanData(910))
             except ValueError:
                 cp = 0
-            self.UpdateChejanData(code, name, ot, og, op, cp, oc, omc, on, dt)
+            self.UpdateChejanData(code, name, ot, og, op, cp, oc, omc, on)
 
-    def UpdateChejanData(self, code, name, ot, og, op, cp, oc, omc, on, dt):
+    def UpdateChejanData(self, code, name, ot, og, op, cp, oc, omc, on):
         if ot == '체결' and omc == 0 and cp != 0:
             if og == '매수':
                 self.UpdateChegeoljango(code, name, og, oc, cp)
@@ -504,7 +501,7 @@ class TraderKiwoom:
                 self.dict_intg['추정예수금'] = self.dict_intg['예수금']
                 self.windowQ.put([ui_num['S로그텍스트'],
                                   f"매매 시스템 체결 알림 - {name} {oc}주 {og}, 수익률 {sp}% 수익금{format(sg, ',')}원"])
-        self.UpdateChegeollist(name, og, oc, omc, op, cp, dt, on)
+        self.UpdateChegeollist(name, og, oc, omc, op, cp, on)
 
     def UpdateChegeoljango(self, code, name, og, oc, cp):
         if og == '매수':
@@ -539,20 +536,18 @@ class TraderKiwoom:
             self.soundQ.put(f'{name} {oc}주를 {og}하였습니다')
 
     def UpdateTradelist(self, name, oc, sp, sg, bg, pg, on):
-        d = strf_time('%Y%m%d%H%M%S')
+        dt = strf_time('%Y%m%d%H%M%S%f')
         if DICT_SET['모의투자1'] and len(self.dict_df['거래목록']) > 0:
-            if on in self.dict_df['거래목록'].index:
-                while on in self.dict_df['거래목록'].index:
-                    on = str(int(on) + 1)
-            if d in self.dict_df['거래목록']['체결시간'].values:
-                while d in self.dict_df['거래목록']['체결시간'].values:
-                    d = str(int(d) + 1)
+            if dt in self.dict_df['거래목록']['체결시간'].values:
+                while dt in self.dict_df['거래목록']['체결시간'].values:
+                    dt = str(int(dt) + 1)
+                on = dt
 
-        self.dict_df['거래목록'].at[on] = name, bg, pg, oc, sp, sg, d
+        self.dict_df['거래목록'].at[on] = name, bg, pg, oc, sp, sg, dt
         self.dict_df['거래목록'].sort_values(by=['체결시간'], ascending=False, inplace=True)
         self.windowQ.put([ui_num['S거래목록'], self.dict_df['거래목록']])
 
-        df = pd.DataFrame([[name, bg, pg, oc, sp, sg, d]], columns=columns_td, index=[on])
+        df = pd.DataFrame([[name, bg, pg, oc, sp, sg, dt]], columns=columns_td, index=[on])
         self.query1Q.put([2, df, 's_tradelist', 'append'])
         self.UpdateTotaltradelist()
 
@@ -575,14 +570,13 @@ class TraderKiwoom:
                 f"총매도금액 {format(int(tsg), ',')}원 / 총수익금액 {format(int(tsig), ',')}원 / "
                 f"총손실금액 {format(int(tssg), ',')}원 / 수익률 {sp}% / 수익금합계 {format(int(sg), ',')}원")
 
-    def UpdateChegeollist(self, name, og, oc, omc, op, cp, dt, on):
+    def UpdateChegeollist(self, name, og, oc, omc, op, cp, on):
+        dt = strf_time('%Y%m%d%H%M%S%f')
         if DICT_SET['모의투자1'] and len(self.dict_df['체결목록']) > 0:
-            if on in self.dict_df['체결목록'].index:
-                while on in self.dict_df['체결목록'].index:
-                    on = str(int(on) + 1)
-            if dt in self.dict_df['체결목록']['체결시간'].values:
-                while dt in self.dict_df['체결목록']['체결시간'].values:
+            if dt in self.dict_df['거래목록']['체결시간'].values:
+                while dt in self.dict_df['거래목록']['체결시간'].values:
                     dt = str(int(dt) + 1)
+                on = dt
 
         if on in self.dict_df['체결목록'].index:
             self.dict_df['체결목록'].at[on, ['미체결수량', '체결가', '체결시간']] = omc, cp, dt
