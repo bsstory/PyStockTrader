@@ -219,6 +219,11 @@ class Window(QtWidgets.QMainWindow):
                 self.sb_pushButton_02.setStyleSheet(style_bc_st)
                 self.cb_pushButton_01.setStyleSheet(style_bc_bt)
                 self.cb_pushButton_02.setStyleSheet(style_bc_st)
+        else:
+            self.sb_pushButton_01.setStyleSheet(style_bc_bt)
+            self.sb_pushButton_02.setStyleSheet(style_bc_bt)
+            self.cb_pushButton_01.setStyleSheet(style_bc_bt)
+            self.cb_pushButton_02.setStyleSheet(style_bc_bt)
 
     @thread_decorator
     def UpdateCpuper(self):
@@ -679,6 +684,7 @@ if 매수:
     def ButtonClicked_26(self):
         sstgQ.put(['매수전략중지', ''])
         self.ssb_pushButton_12.setStyleSheet(style_bc_dk)
+        self.ssb_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_27(self):
         if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
@@ -815,6 +821,7 @@ if 매도:
     def ButtonClicked_40(self):
         sstgQ.put(['매도전략중지', ''])
         self.sss_pushButton_12.setStyleSheet(style_bc_dk)
+        self.sss_pushButton_03.setStyleSheet(style_bc_st)
 
     def ButtonClicked_41(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
@@ -982,6 +989,7 @@ if 매수:
     def ButtonClicked_56(self):
         cstgQ.put(['매수전략중지', ''])
         self.csb_pushButton_12.setStyleSheet(style_bc_dk)
+        self.csb_pushButton_04.setStyleSheet(style_bc_st)
 
     def ButtonClicked_57(self):
         if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
@@ -1121,6 +1129,7 @@ if 매도:
     def ButtonClicked_70(self):
         cstgQ.put(['매도전략중지', ''])
         self.css_pushButton_12.setStyleSheet(style_bc_dk)
+        self.css_pushButton_03.setStyleSheet(style_bc_st)
 
     def ButtonClicked_71(self):
         con = sqlite3.connect(DB_SETTING)
