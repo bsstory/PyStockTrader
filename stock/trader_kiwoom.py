@@ -28,6 +28,7 @@ class TraderKiwoom:
         self.sstgQ = qlist[9]
 
         self.dict_name = {}     # key: 종목코드, value: 종목명
+        self.dict_vipr = {}     # key: 종목코드, value: [갱신여부, 발동시간+5초, UVI, DVI, UVID5]
         self.dict_buyt = {}     # key: 종목코드, value: 매수시간
         self.dict_df = {
             '실현손익': pd.DataFrame(columns=columns_tt),
@@ -137,6 +138,9 @@ class TraderKiwoom:
                     elif len(data) == 5:
                         self.BuySell(data[0], data[1], data[2], data[3], data[4])
                         continue
+                    elif len(data) == 2:
+                        if data[0] == 'VI정보':
+                            self.dict_vipr = data[1]
                     elif len(data) == 3:
                         self.UpdateJango(data[0], data[1], data[2])
                 elif type(data) == str:
@@ -219,26 +223,10 @@ class TraderKiwoom:
             self.stockQ.put([gubun, '4989', self.dict_strg['계좌번호'], on, code, oc, 0, '03', '', name])
 
     def UpdateRealreg(self, rreg):
-        name = ''
-        if rreg[1] == 'ALL':
-            name = 'ALL'
-        elif ';' in rreg[1]:
-            count = len(rreg[1].split(';'))
-            name = f'종목갯수 {count}'
-        elif rreg[1] != ' ':
-            name = self.dict_name[rreg[1]]
-
-        sn = rreg[0]
         if len(rreg) == 2:
             self.ocx.dynamicCall('SetRealRemove(QString, QString)', rreg)
-            self.windowQ.put([ui_num['S로그텍스트'], f'실시간 알림 중단 완료 - [{sn}] {name}'])
         elif len(rreg) == 4:
-            ret = self.ocx.dynamicCall('SetRealReg(QString, QString, QString, QString)', rreg)
-            result = '완료' if ret == 0 else '실패'
-            if sn == sn_oper:
-                self.windowQ.put([ui_num['S로그텍스트'], f'실시간 알림 등록 {result} - 장운영시간 [{sn}]'])
-            else:
-                self.windowQ.put([ui_num['S로그텍스트'], f'실시간 알림 등록 {result} - [{sn}] {name}'])
+            self.ocx.dynamicCall('SetRealReg(QString, QString, QString, QString)', rreg)
 
     def TelegramCmd(self, work):
         if work == '/당일체결목록':
@@ -311,7 +299,7 @@ class TraderKiwoom:
 
     def OperationRealreg(self):
         self.stockQ.put([sn_oper, ' ', '215;20;214', 0])
-        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 시스템 시작 완료'])
+        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 트레이더 시작 완료'])
 
     def JangoChungsan(self):
         self.dict_bool['잔고청산'] = True
