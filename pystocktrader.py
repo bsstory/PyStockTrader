@@ -718,6 +718,12 @@ if 매수:
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.backtester_proc = subprocess.Popen(f'python {SYSTEM_PATH}/backtester/backtester_stock_vc.py')
 
+    def ButtonClicked_83(self):
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            self.backtester_proc.kill()
+        else:
+            QtWidgets.QMessageBox.critical(self, '알림', '현재 백테스터는 농땡이 중입니다.\n')
+
     def ButtonClicked_29(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
@@ -1022,6 +1028,12 @@ if 매수:
             )
             if buttonReply == QtWidgets.QMessageBox.Yes:
                 self.backtester_proc = subprocess.Popen(f'python {SYSTEM_PATH}/backtester/backtester_coin_vc.py')
+
+    def ButtonClicked_84(self):
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            self.backtester_proc.kill()
+        else:
+            QtWidgets.QMessageBox.critical(self, '알림', '현재 백테스터는 농땡이 중입니다.\n')
 
     def ButtonClicked_59(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
