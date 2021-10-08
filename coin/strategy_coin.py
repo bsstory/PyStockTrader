@@ -90,7 +90,7 @@ class StrategyCoin:
         if '관심종목' in gubun:
             self.dict_gsjm = {}
             for code in codes:
-                data = np.zeros((DICT_SET['평균시간2'] + 2, len(columns_gj1))).tolist()
+                data = np.zeros((DICT_SET['평균값계산틱수2'] + 2, len(columns_gj1))).tolist()
                 df = pd.DataFrame(data, columns=columns_gj1)
                 df['체결시간'] = strf_time('%H%M%S', timedelta_hour(-9))
                 self.dict_gsjm[code] = df.copy()
@@ -128,8 +128,8 @@ class StrategyCoin:
 
         self.dict_gsjm[종목명] = self.dict_gsjm[종목명].shift(1)
         self.dict_gsjm[종목명].at[0] = 등락율, 고저평균대비등락율, 초당거래대금, 당일거래대금, 체결강도, 0., 체결시간
-        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균시간2']] != 0.:
-            평균값인덱스 = DICT_SET['평균시간2'] + 1
+        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균값계산틱수2']] != 0.:
+            평균값인덱스 = DICT_SET['평균값계산틱수2'] + 1
             초당거래대금평균 = int(self.dict_gsjm[종목명]['초당거래대금'][1:평균값인덱스].mean())
             체결강도평균 = round(self.dict_gsjm[종목명]['체결강도'][1:평균값인덱스].mean(), 2)
             최고체결강도 = round(self.dict_gsjm[종목명]['체결강도'][1:평균값인덱스].max(), 2)
@@ -161,11 +161,11 @@ class StrategyCoin:
             return
         if 종목명 in self.list_sell:
             return
-        if self.dict_gsjm[종목명]['체결강도'][DICT_SET[f'평균시간1']] == 0.:
+        if self.dict_gsjm[종목명]['체결강도'][DICT_SET['평균값계산틱수1']] == 0.:
             return
 
         매도 = False
-        평균값인덱스 = DICT_SET['평균시간2'] + 1
+        평균값인덱스 = DICT_SET['평균값계산틱수2'] + 1
         등락율 = self.dict_gsjm[종목명]['등락율'][0]
         고저평균대비등락율 = self.dict_gsjm[종목명]['고저평균대비등락율'][0]
         체결강도 = self.dict_gsjm[종목명]['체결강도'][0]

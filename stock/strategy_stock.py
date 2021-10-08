@@ -93,7 +93,7 @@ class StrategyStock:
     def UpdateList(self, gubun, code):
         if '조건진입' in gubun:
             if code not in self.dict_gsjm.keys():
-                data = np.zeros((DICT_SET['평균시간1'] + 2, len(columns_gj1))).tolist()
+                data = np.zeros((DICT_SET['평균값계산시간1'] + 2, len(columns_gj1))).tolist()
                 df = pd.DataFrame(data, columns=columns_gj1)
                 df['체결시간'] = '090000'
                 self.dict_gsjm[code] = df.copy()
@@ -130,8 +130,8 @@ class StrategyStock:
         self.dict_gsjm[종목코드].at[0] = 등락율, 고저평균대비등락율, 초당거래대금, 당일거래대금, 체결강도, 0., 체결시간
         self.dict_hgjr[종목코드] = \
             [매도총잔량, 매수총잔량, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2]
-        if self.dict_gsjm[종목코드]['체결강도'][DICT_SET[f'평균시간1']] != 0.:
-            평균값인덱스 = DICT_SET['평균시간1'] + 1
+        if self.dict_gsjm[종목코드]['체결강도'][DICT_SET['평균값계산틱수1']] != 0.:
+            평균값인덱스 = DICT_SET['평균값계산틱수1'] + 1
             초당거래대금평균 = int(self.dict_gsjm[종목코드]['초당거래대금'][1:평균값인덱스].mean())
             체결강도평균 = round(self.dict_gsjm[종목코드]['체결강도'][1:평균값인덱스].mean(), 2)
             최고체결강도 = round(self.dict_gsjm[종목코드]['체결강도'][1:평균값인덱스].max(), 2)
@@ -160,11 +160,11 @@ class StrategyStock:
             return
         if 종목코드 in self.list_sell:
             return
-        if self.dict_gsjm[종목코드]['체결강도'][DICT_SET[f'평균시간1']] == 0.:
+        if self.dict_gsjm[종목코드]['체결강도'][DICT_SET['평균값계산틱수1']] == 0.:
             return
 
         매도 = False
-        평균값인덱스 = DICT_SET['평균시간1'] + 1
+        평균값인덱스 = DICT_SET['평균값계산틱수1'] + 1
         등락율 = self.dict_gsjm[종목코드]['등락율'][0]
         고저평균대비등락율 = self.dict_gsjm[종목코드]['고저평균대비등락율'][0]
         체결강도 = self.dict_gsjm[종목코드]['체결강도'][0]

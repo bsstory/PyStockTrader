@@ -67,8 +67,7 @@ class Window(QtWidgets.QMainWindow):
         self.qtimer3.start()
 
         self.showqsize = False
-        self.backtester_proc1 = None
-        self.backtester_proc2 = None
+        self.backtester_proc = None
 
         self.receiver_coin_thread1 = WebsTicker(qlist)
         self.receiver_coin_thread2 = WebsOrderbook(qlist)
@@ -90,20 +89,22 @@ class Window(QtWidgets.QMainWindow):
                 self.KiwoomCollectorStart()
             if DICT_SET['키움트레이더'] and self.int_time < DICT_SET['트레이더'] <= int(strf_time('%H%M%S')):
                 self.KiwoomTraderStart()
-        if DICT_SET['백테스터'] and self.int_time < DICT_SET['백테스터시작시간'] <= int(strf_time('%H%M%S')):
-            self.BacktestStart()
         if DICT_SET['업비트콜렉터']:
             self.UpbitCollectorStart()
         if DICT_SET['업비트트레이더']:
             self.UpbitTraderStart()
+        if DICT_SET['주식최적화백테스터'] and self.int_time < DICT_SET['주식백테시작시간'] <= int(strf_time('%H%M%S')):
+            self.StockBacktestStart()
+        if DICT_SET['코인최적화백테스터'] and self.int_time < DICT_SET['코인백테시작시간'] <= int(strf_time('%H%M%S')):
+            self.CoinBacktestStart()
         if self.int_time < 100 <= int(strf_time('%H%M%S')):
             self.ClearTextEdit()
-        self.ChangeWindowTitle()
+        self.UpdateWindowTitle()
         self.int_time = int(strf_time('%H%M%S'))
 
     # noinspection PyArgumentList
     def KiwoomCollectorStart(self):
-        self.backtester_proc1 = None
+        self.backtester_proc = None
         if DICT_SET['아이디2'] is not None:
             os.system(f'python {LOGIN_PATH}/versionupdater.py')
             os.system(f'python {LOGIN_PATH}/autologin2.py')
@@ -142,13 +143,6 @@ class Window(QtWidgets.QMainWindow):
                 '키움 첫번째 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
             )
 
-    # noinspection PyArgumentList
-    def BacktestStart(self):
-        if self.backtester_proc1 is None or self.backtester_proc1.poll() == 0:
-            self.ButtonClicked_8()
-            QTest.qWait(3000)
-            self.ButtonClicked_9()
-
     def UpbitCollectorStart(self):
         if not self.receiver_coin_thread1.isRunning():
             self.receiver_coin_thread1.start()
@@ -175,13 +169,27 @@ class Window(QtWidgets.QMainWindow):
                 '업비트 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
             )
 
+    def StockBacktestStart(self):
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
+            return
+        else:
+            self.backtester_proc = subprocess.Popen(f'python {SYSTEM_PATH}/backtester/backtester_stock_vc.py')
+
+    def CoinBacktestStart(self):
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
+            return
+        else:
+            self.backtester_proc = subprocess.Popen(f'python {SYSTEM_PATH}/backtester/backtester_coin_vc.py')
+
     def ClearTextEdit(self):
         self.st_textEdit.clear()
         self.ct_textEdit.clear()
         self.sc_textEdit.clear()
         self.cc_textEdit.clear()
 
-    def ChangeWindowTitle(self):
+    def UpdateWindowTitle(self):
         if self.showqsize:
             queryQ_size = query1Q.qsize() + query2Q.qsize()
             stocktickQ_size = tick1Q.qsize() + tick2Q.qsize() + tick3Q.qsize() + tick4Q.qsize()
@@ -270,7 +278,7 @@ class Window(QtWidgets.QMainWindow):
         if buttonReply == QtWidgets.QMessageBox.Yes:
             coinQ.put(['매도', code, c, oc])
 
-    def ButtonClicked_1(self):
+    def ButtonClicked_01(self):
         if self.main_tabWidget.currentWidget() == self.st_tab:
             if not self.s_calendarWidget.isVisible():
                 boolean1 = False
@@ -321,7 +329,7 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, '오류 알림', '해당 버튼은 트레이더탭에서만 작동합니다.\n')
 
     # noinspection PyArgumentList
-    def ButtonClicked_2(self):
+    def ButtonClicked_02(self):
         buttonReply = QtWidgets.QMessageBox.question(
             self, '주식 수동 시작', '주식 콜렉터 또는 트레이더를 시작합니다.\n계속하시겠습니까?\n',
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
@@ -343,7 +351,7 @@ class Window(QtWidgets.QMainWindow):
             else:
                 self.KiwoomTraderStart()
 
-    def ButtonClicked_3(self):
+    def ButtonClicked_03(self):
         if self.geometry().width() > 1000:
             self.setFixedSize(722, 383)
             self.zo_pushButton.setStyleSheet(style_bc_dk)
@@ -351,28 +359,7 @@ class Window(QtWidgets.QMainWindow):
             self.setFixedSize(1403, 763)
             self.zo_pushButton.setStyleSheet(style_bc_bt)
 
-    def ButtonClicked_4(self):
-        buttonReply = QtWidgets.QMessageBox.warning(
-            self, '최적화 백테스터 초기화', '최적화 백테스터의 기본값이 모두 초기화됩니다.\n계속하시겠습니까?\n',
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
-        )
-        if buttonReply == QtWidgets.QMessageBox.Yes:
-            columns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                       26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]
-            data = [10, 14, 36000, 90000, 100000, 3, 4, 5, 6, 7, 8, 9, 0.1, 0.1,
-                    30, 60, 90, 120, 150, 180, 30, 3, 0, 500, 50, 10, 50, 100, 10, 10,
-                    0, 100000, 10000, 1000, 0, 10, 1, 0.1, 25, 15, -1, -1, 3, 10, 1, 0.2, 6]
-            df = pd.DataFrame([data], columns=columns, index=[0])
-            query1Q.put([1, df, 'stockback_jcv', 'replace'])
-            data = [10, 14, 1008000, 90000, 100000, 3, 4, 5, 6, 7, 8, 9, 0.1, 0.1,
-                    30, 60, 90, 120, 150, 180, 30, 3, 0, 100000000, 10000000, 10000000,
-                    50, 100, 10, 10, 0, 1000000000, 100000000, 100000000,
-                    0, 10, 1, 0.1, 25, 15, -1, -1, 3, 10, 1, 0.2, 6]
-            df = pd.DataFrame([data], columns=columns, index=[0])
-            query1Q.put([1, df, 'coinback_jjv', 'replace'])
-            self.bd_pushButton.setStyleSheet(style_bc_dk)
-
-    def ButtonClicked_5(self):
+    def ButtonClicked_04(self):
         buttonReply = QtWidgets.QMessageBox.warning(
             self, '데이터베이스 초기화', '체결목록, 잔고목록, 거래목록, 일별목록이 모두 초기화됩니다.\n계속하시겠습니까?\n',
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
@@ -388,7 +375,7 @@ class Window(QtWidgets.QMainWindow):
             query1Q.put([2, 'DELETE FROM c_totaltradelist'])
             self.dd_pushButton.setStyleSheet(style_bc_dk)
 
-    def ButtonClicked_6(self):
+    def ButtonClicked_05(self):
         buttonReply = QtWidgets.QMessageBox.warning(
             self, '계정 설정 초기화', '계정 설정 항목이 모두 초기화됩니다.\n계속하시겠습니까?\n',
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
@@ -399,7 +386,7 @@ class Window(QtWidgets.QMainWindow):
             query1Q.put([1, 'DELETE FROM telegram'])
             self.sd_pushButton.setStyleSheet(style_bc_dk)
 
-    def ButtonClicked_7(self, cmd):
+    def ButtonClicked_06(self, cmd):
         if '집계' in cmd:
             if 'S' in cmd:
                 gubun = 'S'
@@ -459,992 +446,6 @@ class Window(QtWidgets.QMainWindow):
                     year = str(int(year) - 1)
                 self.UpdateTablewidget([ui_num[f'{gubun}누적상세'], df2])
 
-    def ButtonClicked_8(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM stockback_jcv', con)
-        df = df.set_index('index')
-        con.close()
-        self.sbvc_lineEdit_01.setText(str(df['1'][0]))
-        self.sbvc_lineEdit_02.setText(str(df['2'][0]))
-        self.sbvc_lineEdit_03.setText(str(df['3'][0]))
-        self.sbvc_lineEdit_04.setText(str(df['4'][0]))
-        self.sbvc_lineEdit_05.setText(str(df['5'][0]))
-        self.sbvc_lineEdit_06.setText(str(df['6'][0]))
-        self.sbvc_lineEdit_07.setText(str(df['7'][0]))
-        self.sbvc_lineEdit_08.setText(str(df['8'][0]))
-        self.sbvc_lineEdit_09.setText(str(df['9'][0]))
-        self.sbvc_lineEdit_10.setText(str(df['10'][0]))
-        self.sbvc_lineEdit_11.setText(str(df['11'][0]))
-        self.sbvc_lineEdit_12.setText(str(df['12'][0]))
-        self.sbvc_lineEdit_13.setText(str(df['13'][0]))
-        self.sbvc_lineEdit_14.setText(str(df['14'][0]))
-        self.sbvc_lineEdit_15.setText(str(df['15'][0]))
-        self.sbvc_lineEdit_16.setText(str(df['16'][0]))
-        self.sbvc_lineEdit_17.setText(str(df['17'][0]))
-        self.sbvc_lineEdit_18.setText(str(df['18'][0]))
-        self.sbvc_lineEdit_19.setText(str(df['19'][0]))
-        self.sbvc_lineEdit_20.setText(str(df['20'][0]))
-        self.sbvc_lineEdit_21.setText(str(df['21'][0]))
-        self.sbvc_lineEdit_22.setText(str(df['22'][0]))
-        self.sbvc_lineEdit_23.setText(str(df['23'][0]))
-        self.sbvc_lineEdit_24.setText(str(df['24'][0]))
-        self.sbvc_lineEdit_25.setText(str(df['25'][0]))
-        self.sbvc_lineEdit_26.setText(str(df['26'][0]))
-        self.sbvc_lineEdit_27.setText(str(df['27'][0]))
-        self.sbvc_lineEdit_28.setText(str(df['28'][0]))
-        self.sbvc_lineEdit_29.setText(str(df['29'][0]))
-        self.sbvc_lineEdit_30.setText(str(df['30'][0]))
-        self.sbvc_lineEdit_31.setText(str(df['31'][0]))
-        self.sbvc_lineEdit_32.setText(str(df['32'][0]))
-        self.sbvc_lineEdit_33.setText(str(df['33'][0]))
-        self.sbvc_lineEdit_34.setText(str(df['34'][0]))
-        self.sbvc_lineEdit_35.setText(str(df['35'][0]))
-        self.sbvc_lineEdit_36.setText(str(df['36'][0]))
-        self.sbvc_lineEdit_37.setText(str(df['37'][0]))
-        self.sbvc_lineEdit_38.setText(str(df['38'][0]))
-        self.sbvc_lineEdit_39.setText(str(df['39'][0]))
-        self.sbvc_lineEdit_40.setText(str(df['40'][0]))
-        self.sbvc_lineEdit_41.setText(str(df['41'][0]))
-        self.sbvc_lineEdit_42.setText(str(df['42'][0]))
-        self.sbvc_lineEdit_43.setText(str(df['43'][0]))
-        self.sbvc_lineEdit_44.setText(str(df['44'][0]))
-        self.sbvc_lineEdit_45.setText(str(df['45'][0]))
-        self.sbvc_lineEdit_46.setText(str(df['46'][0]))
-        self.sbvc_lineEdit_47.setText(str(df['47'][0]))
-
-    def ButtonClicked_9(self):
-        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
-            return
-        textfull = True
-        if self.sbvc_lineEdit_01.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_02.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_03.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_04.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_05.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_06.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_07.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_08.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_09.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_10.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_11.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_12.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_13.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_14.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_15.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_16.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_17.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_18.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_19.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_20.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_21.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_22.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_23.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_24.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_25.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_26.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_27.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_28.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_29.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_30.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_31.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_32.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_33.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_34.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_35.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_36.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_37.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_38.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_39.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_40.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_41.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_42.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_43.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_44.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_45.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_46.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_47.text() == '':
-            textfull = False
-        if not textfull:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-            return
-        self.backtester_proc1 = subprocess.Popen(
-            f'python {SYSTEM_PATH}/backtester/backtester_stock_vc.py '
-            f'{self.sbvc_lineEdit_01.text()} {self.sbvc_lineEdit_02.text()} {self.sbvc_lineEdit_03.text()} '
-            f'{self.sbvc_lineEdit_04.text()} {self.sbvc_lineEdit_05.text()} {self.sbvc_lineEdit_06.text()} '
-            f'{self.sbvc_lineEdit_07.text()} {self.sbvc_lineEdit_08.text()} {self.sbvc_lineEdit_09.text()} '
-            f'{self.sbvc_lineEdit_10.text()} {self.sbvc_lineEdit_11.text()} {self.sbvc_lineEdit_12.text()} '
-            f'{self.sbvc_lineEdit_13.text()} {self.sbvc_lineEdit_14.text()} {self.sbvc_lineEdit_15.text()} '
-            f'{self.sbvc_lineEdit_16.text()} {self.sbvc_lineEdit_17.text()} {self.sbvc_lineEdit_18.text()} '
-            f'{self.sbvc_lineEdit_19.text()} {self.sbvc_lineEdit_20.text()} {self.sbvc_lineEdit_21.text()} '
-            f'{self.sbvc_lineEdit_22.text()} {self.sbvc_lineEdit_23.text()} {self.sbvc_lineEdit_24.text()} '
-            f'{self.sbvc_lineEdit_25.text()} {self.sbvc_lineEdit_26.text()} {self.sbvc_lineEdit_27.text()} '
-            f'{self.sbvc_lineEdit_28.text()} {self.sbvc_lineEdit_29.text()} {self.sbvc_lineEdit_30.text()} '
-            f'{self.sbvc_lineEdit_31.text()} {self.sbvc_lineEdit_32.text()} {self.sbvc_lineEdit_33.text()} '
-            f'{self.sbvc_lineEdit_34.text()} {self.sbvc_lineEdit_35.text()} {self.sbvc_lineEdit_36.text()} '
-            f'{self.sbvc_lineEdit_37.text()} {self.sbvc_lineEdit_38.text()} {self.sbvc_lineEdit_39.text()} '
-            f'{self.sbvc_lineEdit_40.text()} {self.sbvc_lineEdit_41.text()} {self.sbvc_lineEdit_42.text()} '
-            f'{self.sbvc_lineEdit_43.text()} {self.sbvc_lineEdit_44.text()} {self.sbvc_lineEdit_45.text()} '
-            f'{self.sbvc_lineEdit_46.text()} {self.sbvc_lineEdit_47.text()}'
-        )
-
-    def ButtonClicked_10(self):
-        textfull = True
-        if self.sbvc_lineEdit_01.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_02.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_03.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_04.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_05.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_06.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_07.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_08.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_09.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_10.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_11.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_12.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_13.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_14.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_15.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_16.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_17.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_18.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_19.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_20.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_21.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_22.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_23.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_24.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_25.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_26.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_27.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_28.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_29.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_30.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_31.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_32.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_33.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_34.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_35.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_36.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_37.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_38.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_39.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_40.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_41.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_42.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_43.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_44.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_45.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_46.text() == '':
-            textfull = False
-        elif self.sbvc_lineEdit_47.text() == '':
-            textfull = False
-        if not textfull:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-            return
-        data = [
-            self.sbvc_lineEdit_01.text(), self.sbvc_lineEdit_02.text(), self.sbvc_lineEdit_03.text(),
-            self.sbvc_lineEdit_04.text(), self.sbvc_lineEdit_05.text(), self.sbvc_lineEdit_06.text(),
-            self.sbvc_lineEdit_07.text(), self.sbvc_lineEdit_08.text(), self.sbvc_lineEdit_09.text(),
-            self.sbvc_lineEdit_10.text(), self.sbvc_lineEdit_11.text(), self.sbvc_lineEdit_12.text(),
-            self.sbvc_lineEdit_13.text(), self.sbvc_lineEdit_14.text(), self.sbvc_lineEdit_15.text(),
-            self.sbvc_lineEdit_16.text(), self.sbvc_lineEdit_17.text(), self.sbvc_lineEdit_18.text(),
-            self.sbvc_lineEdit_19.text(), self.sbvc_lineEdit_20.text(), self.sbvc_lineEdit_21.text(),
-            self.sbvc_lineEdit_22.text(), self.sbvc_lineEdit_23.text(), self.sbvc_lineEdit_24.text(),
-            self.sbvc_lineEdit_25.text(), self.sbvc_lineEdit_26.text(), self.sbvc_lineEdit_27.text(),
-            self.sbvc_lineEdit_28.text(), self.sbvc_lineEdit_29.text(), self.sbvc_lineEdit_30.text(),
-            self.sbvc_lineEdit_31.text(), self.sbvc_lineEdit_32.text(), self.sbvc_lineEdit_33.text(),
-            self.sbvc_lineEdit_34.text(), self.sbvc_lineEdit_35.text(), self.sbvc_lineEdit_36.text(),
-            self.sbvc_lineEdit_37.text(), self.sbvc_lineEdit_38.text(), self.sbvc_lineEdit_39.text(),
-            self.sbvc_lineEdit_40.text(), self.sbvc_lineEdit_41.text(), self.sbvc_lineEdit_42.text(),
-            self.sbvc_lineEdit_43.text(), self.sbvc_lineEdit_44.text(), self.sbvc_lineEdit_45.text(),
-            self.sbvc_lineEdit_46.text(), self.sbvc_lineEdit_47.text()
-        ]
-        columns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                   26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]
-        df = pd.DataFrame([data], columns=columns, index=[0])
-        query1Q.put([1, df, 'stockback_jcv', 'replace'])
-
-    def ButtonClicked_11(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM stock', con)
-        df = df.set_index('index')
-        con.close()
-        self.sbvj_lineEdit_01.setText(str(df['종목당투자금'][0]))
-        self.sbvj_lineEdit_02.setText(str(df['백테스팅기간'][0]))
-        self.sbvj_lineEdit_03.setText(str(df['백테스팅시간'][0]))
-        self.sbvj_lineEdit_04.setText(str(df['시작시간'][0]))
-        self.sbvj_lineEdit_05.setText(str(df['종료시간'][0]))
-        self.sbvj_lineEdit_06.setText(str(df['체결강도차이'][0]))
-        self.sbvj_lineEdit_07.setText(str(df['평균시간'][0]))
-        self.sbvj_lineEdit_08.setText(str(df['거래대금차이'][0]))
-        self.sbvj_lineEdit_09.setText(str(df['체결강도하한'][0]))
-        self.sbvj_lineEdit_10.setText(str(df['누적거래대금하한'][0]))
-        self.sbvj_lineEdit_11.setText(str(df['등락율하한'][0]))
-        self.sbvj_lineEdit_12.setText(str(df['등락율상한'][0]))
-        self.sbvj_lineEdit_13.setText(str(df['청산수익률'][0]))
-        self.sbvj_lineEdit_14.setText(str(df['멀티프로세스'][0]))
-
-    def ButtonClicked_12(self):
-        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
-            return
-        textfull = True
-        if self.sbvj_lineEdit_01.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_02.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_03.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_04.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_05.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_06.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_07.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_08.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_09.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_10.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_11.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_12.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_13.text() == '':
-            textfull = False
-        elif self.sbvj_lineEdit_14.text() == '':
-            textfull = False
-        if not textfull:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-            return
-        self.backtester_proc1 = subprocess.Popen(
-            f'python {SYSTEM_PATH}/backtester/backtester_stock_vj.py '
-            f'{self.sbvj_lineEdit_01.text()} {self.sbvj_lineEdit_02.text()} {self.sbvj_lineEdit_03.text()} '
-            f'{self.sbvj_lineEdit_04.text()} {self.sbvj_lineEdit_05.text()} {self.sbvj_lineEdit_06.text()} '
-            f'{self.sbvj_lineEdit_07.text()} {self.sbvj_lineEdit_08.text()} {self.sbvj_lineEdit_09.text()} '
-            f'{self.sbvj_lineEdit_10.text()} {self.sbvj_lineEdit_11.text()} {self.sbvj_lineEdit_12.text()} '
-            f'{self.sbvj_lineEdit_13.text()} {self.sbvj_lineEdit_14.text()}'
-        )
-
-    def ButtonClicked_13(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM coinback_jjv', con)
-        df = df.set_index('index')
-        con.close()
-        self.cbvc_lineEdit_01.setText(str(df['1'][0]))
-        self.cbvc_lineEdit_02.setText(str(df['2'][0]))
-        self.cbvc_lineEdit_03.setText(str(df['3'][0]))
-        self.cbvc_lineEdit_04.setText(str(df['4'][0]))
-        self.cbvc_lineEdit_05.setText(str(df['5'][0]))
-        self.cbvc_lineEdit_06.setText(str(df['6'][0]))
-        self.cbvc_lineEdit_07.setText(str(df['7'][0]))
-        self.cbvc_lineEdit_08.setText(str(df['8'][0]))
-        self.cbvc_lineEdit_09.setText(str(df['9'][0]))
-        self.cbvc_lineEdit_10.setText(str(df['10'][0]))
-        self.cbvc_lineEdit_11.setText(str(df['11'][0]))
-        self.cbvc_lineEdit_12.setText(str(df['12'][0]))
-        self.cbvc_lineEdit_13.setText(str(df['13'][0]))
-        self.cbvc_lineEdit_14.setText(str(df['14'][0]))
-        self.cbvc_lineEdit_15.setText(str(df['15'][0]))
-        self.cbvc_lineEdit_16.setText(str(df['16'][0]))
-        self.cbvc_lineEdit_17.setText(str(df['17'][0]))
-        self.cbvc_lineEdit_18.setText(str(df['18'][0]))
-        self.cbvc_lineEdit_19.setText(str(df['19'][0]))
-        self.cbvc_lineEdit_20.setText(str(df['20'][0]))
-        self.cbvc_lineEdit_21.setText(str(df['21'][0]))
-        self.cbvc_lineEdit_22.setText(str(df['22'][0]))
-        self.cbvc_lineEdit_23.setText(str(df['23'][0]))
-        self.cbvc_lineEdit_24.setText(str(df['24'][0]))
-        self.cbvc_lineEdit_25.setText(str(df['25'][0]))
-        self.cbvc_lineEdit_26.setText(str(df['26'][0]))
-        self.cbvc_lineEdit_27.setText(str(df['27'][0]))
-        self.cbvc_lineEdit_28.setText(str(df['28'][0]))
-        self.cbvc_lineEdit_29.setText(str(df['29'][0]))
-        self.cbvc_lineEdit_30.setText(str(df['30'][0]))
-        self.cbvc_lineEdit_31.setText(str(df['31'][0]))
-        self.cbvc_lineEdit_32.setText(str(df['32'][0]))
-        self.cbvc_lineEdit_33.setText(str(df['33'][0]))
-        self.cbvc_lineEdit_34.setText(str(df['34'][0]))
-        self.cbvc_lineEdit_35.setText(str(df['35'][0]))
-        self.cbvc_lineEdit_36.setText(str(df['36'][0]))
-        self.cbvc_lineEdit_37.setText(str(df['37'][0]))
-        self.cbvc_lineEdit_38.setText(str(df['38'][0]))
-        self.cbvc_lineEdit_39.setText(str(df['39'][0]))
-        self.cbvc_lineEdit_40.setText(str(df['40'][0]))
-        self.cbvc_lineEdit_41.setText(str(df['41'][0]))
-        self.cbvc_lineEdit_42.setText(str(df['42'][0]))
-        self.cbvc_lineEdit_43.setText(str(df['43'][0]))
-        self.cbvc_lineEdit_44.setText(str(df['44'][0]))
-        self.cbvc_lineEdit_45.setText(str(df['45'][0]))
-        self.cbvc_lineEdit_46.setText(str(df['46'][0]))
-        self.cbvc_lineEdit_47.setText(str(df['47'][0]))
-
-    def ButtonClicked_14(self):
-        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
-            return
-        textfull = True
-        if self.cbvc_lineEdit_01.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_02.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_03.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_04.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_05.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_06.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_07.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_08.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_09.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_10.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_11.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_12.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_13.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_14.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_15.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_16.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_17.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_18.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_19.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_20.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_21.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_22.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_23.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_24.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_25.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_26.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_27.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_28.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_29.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_30.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_31.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_32.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_33.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_34.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_35.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_36.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_37.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_38.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_39.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_40.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_41.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_42.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_43.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_44.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_45.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_46.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_47.text() == '':
-            textfull = False
-        if not textfull:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-            return
-        self.backtester_proc1 = subprocess.Popen(
-            f'python {SYSTEM_PATH}/backtester/backtester_coin_vc.py '
-            f'{self.cbvc_lineEdit_01.text()} {self.cbvc_lineEdit_02.text()} {self.cbvc_lineEdit_03.text()} '
-            f'{self.cbvc_lineEdit_04.text()} {self.cbvc_lineEdit_05.text()} {self.cbvc_lineEdit_06.text()} '
-            f'{self.cbvc_lineEdit_07.text()} {self.cbvc_lineEdit_08.text()} {self.cbvc_lineEdit_09.text()} '
-            f'{self.cbvc_lineEdit_10.text()} {self.cbvc_lineEdit_11.text()} {self.cbvc_lineEdit_12.text()} '
-            f'{self.cbvc_lineEdit_13.text()} {self.cbvc_lineEdit_14.text()} {self.cbvc_lineEdit_15.text()} '
-            f'{self.cbvc_lineEdit_16.text()} {self.cbvc_lineEdit_17.text()} {self.cbvc_lineEdit_18.text()} '
-            f'{self.cbvc_lineEdit_19.text()} {self.cbvc_lineEdit_20.text()} {self.cbvc_lineEdit_21.text()} '
-            f'{self.cbvc_lineEdit_22.text()} {self.cbvc_lineEdit_23.text()} {self.cbvc_lineEdit_24.text()} '
-            f'{self.cbvc_lineEdit_25.text()} {self.cbvc_lineEdit_26.text()} {self.cbvc_lineEdit_27.text()} '
-            f'{self.cbvc_lineEdit_28.text()} {self.cbvc_lineEdit_29.text()} {self.cbvc_lineEdit_30.text()} '
-            f'{self.cbvc_lineEdit_31.text()} {self.cbvc_lineEdit_32.text()} {self.cbvc_lineEdit_33.text()} '
-            f'{self.cbvc_lineEdit_34.text()} {self.cbvc_lineEdit_35.text()} {self.cbvc_lineEdit_36.text()} '
-            f'{self.cbvc_lineEdit_37.text()} {self.cbvc_lineEdit_38.text()} {self.cbvc_lineEdit_39.text()} '
-            f'{self.cbvc_lineEdit_40.text()} {self.cbvc_lineEdit_41.text()} {self.cbvc_lineEdit_42.text()} '
-            f'{self.cbvc_lineEdit_43.text()} {self.cbvc_lineEdit_44.text()} {self.cbvc_lineEdit_45.text()} '
-            f'{self.cbvc_lineEdit_46.text()} {self.cbvc_lineEdit_47.text()}'
-        )
-
-    def ButtonClicked_15(self):
-        textfull = True
-        if self.cbvc_lineEdit_01.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_02.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_03.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_04.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_05.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_06.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_07.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_08.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_09.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_10.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_11.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_12.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_13.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_14.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_15.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_16.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_17.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_18.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_19.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_20.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_21.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_22.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_23.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_24.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_25.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_26.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_27.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_28.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_29.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_30.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_31.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_32.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_33.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_34.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_35.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_36.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_37.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_38.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_39.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_40.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_41.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_42.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_43.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_44.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_45.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_46.text() == '':
-            textfull = False
-        elif self.cbvc_lineEdit_47.text() == '':
-            textfull = False
-        if not textfull:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-            return
-        data = [
-            self.cbvc_lineEdit_01.text(), self.cbvc_lineEdit_02.text(), self.cbvc_lineEdit_03.text(),
-            self.cbvc_lineEdit_04.text(), self.cbvc_lineEdit_05.text(), self.cbvc_lineEdit_06.text(),
-            self.cbvc_lineEdit_07.text(), self.cbvc_lineEdit_08.text(), self.cbvc_lineEdit_09.text(),
-            self.cbvc_lineEdit_10.text(), self.cbvc_lineEdit_11.text(), self.cbvc_lineEdit_12.text(),
-            self.cbvc_lineEdit_13.text(), self.cbvc_lineEdit_14.text(), self.cbvc_lineEdit_15.text(),
-            self.cbvc_lineEdit_16.text(), self.cbvc_lineEdit_17.text(), self.cbvc_lineEdit_18.text(),
-            self.cbvc_lineEdit_19.text(), self.cbvc_lineEdit_20.text(), self.cbvc_lineEdit_21.text(),
-            self.cbvc_lineEdit_22.text(), self.cbvc_lineEdit_23.text(), self.cbvc_lineEdit_24.text(),
-            self.cbvc_lineEdit_25.text(), self.cbvc_lineEdit_26.text(), self.cbvc_lineEdit_27.text(),
-            self.cbvc_lineEdit_28.text(), self.cbvc_lineEdit_29.text(), self.cbvc_lineEdit_30.text(),
-            self.cbvc_lineEdit_31.text(), self.cbvc_lineEdit_32.text(), self.cbvc_lineEdit_33.text(),
-            self.cbvc_lineEdit_34.text(), self.cbvc_lineEdit_35.text(), self.cbvc_lineEdit_36.text(),
-            self.cbvc_lineEdit_37.text(), self.cbvc_lineEdit_38.text(), self.cbvc_lineEdit_39.text(),
-            self.cbvc_lineEdit_40.text(), self.cbvc_lineEdit_41.text(), self.cbvc_lineEdit_42.text(),
-            self.cbvc_lineEdit_43.text(), self.cbvc_lineEdit_44.text(), self.cbvc_lineEdit_45.text(),
-            self.cbvc_lineEdit_46.text(), self.cbvc_lineEdit_47.text()
-        ]
-        columns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                   26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]
-        df = pd.DataFrame([data], columns=columns, index=[0])
-        query1Q.put([1, df, 'coinback_jjv', 'replace'])
-
-    def ButtonClicked_16(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM coin', con)
-        df = df.set_index('index')
-        con.close()
-        self.cbvj_lineEdit_01.setText(str(df['종목당투자금'][0]))
-        self.cbvj_lineEdit_02.setText(str(df['백테스팅기간'][0]))
-        self.cbvj_lineEdit_03.setText(str(df['백테스팅시간'][0]))
-        self.cbvj_lineEdit_04.setText(str(df['시작시간'][0]))
-        self.cbvj_lineEdit_05.setText(str(df['종료시간'][0]))
-        self.cbvj_lineEdit_06.setText(str(df['체결강도차이'][0]))
-        self.cbvj_lineEdit_07.setText(str(df['평균시간'][0]))
-        self.cbvj_lineEdit_08.setText(str(df['거래대금차이'][0]))
-        self.cbvj_lineEdit_09.setText(str(df['체결강도하한'][0]))
-        self.cbvj_lineEdit_10.setText(str(df['누적거래대금하한'][0]))
-        self.cbvj_lineEdit_11.setText(str(df['등락율하한'][0]))
-        self.cbvj_lineEdit_12.setText(str(df['등락율상한'][0]))
-        self.cbvj_lineEdit_13.setText(str(df['청산수익률'][0]))
-        self.cbvj_lineEdit_14.setText(str(df['멀티프로세스'][0]))
-
-    def ButtonClicked_17(self):
-        if self.backtester_proc1 is not None and self.backtester_proc1.poll() != 0:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
-            return
-        textfull = True
-        if self.cbvj_lineEdit_01.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_02.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_03.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_04.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_05.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_06.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_07.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_08.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_09.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_10.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_11.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_12.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_13.text() == '':
-            textfull = False
-        elif self.cbvj_lineEdit_14.text() == '':
-            textfull = False
-        if not textfull:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-            return
-        self.backtester_proc1 = subprocess.Popen(
-            f'python {SYSTEM_PATH}/backtester/backtester_coin_vj.py '
-            f'{self.cbvj_lineEdit_01.text()} {self.cbvj_lineEdit_02.text()} {self.cbvj_lineEdit_03.text()} '
-            f'{self.cbvj_lineEdit_04.text()} {self.cbvj_lineEdit_05.text()} {self.cbvj_lineEdit_06.text()} '
-            f'{self.cbvj_lineEdit_07.text()} {self.cbvj_lineEdit_08.text()} {self.cbvj_lineEdit_09.text()} '
-            f'{self.cbvj_lineEdit_10.text()} {self.cbvj_lineEdit_11.text()} {self.cbvj_lineEdit_12.text()} '
-            f'{self.cbvj_lineEdit_13.text()} {self.cbvj_lineEdit_14.text()}'
-        )
-
-    def ButtonClicked_18(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM main', con)
-        df = df.set_index('index')
-        con.close()
-        if len(df) > 0:
-            self.sj_main_checkBox_01.setChecked(True) if df['키움콜렉터'][0] else self.sj_main_checkBox_01.setChecked(False)
-            self.sj_main_checkBox_02.setChecked(True) if df['키움트레이더'][0] else self.sj_main_checkBox_02.setChecked(False)
-            self.sj_main_checkBox_03.setChecked(True) if df['업비트콜렉터'][0] else self.sj_main_checkBox_03.setChecked(False)
-            self.sj_main_checkBox_04.setChecked(True) if df['업비트트레이더'][0] else self.sj_main_checkBox_04.setChecked(
-                False)
-            self.sj_main_checkBox_05.setChecked(True) if df['백테스터'][0] else self.sj_main_checkBox_05.setChecked(False)
-            self.sj_main_lineEdit_01.setText(str(df['시작시간'][0]))
-            self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 불러오기 완료'])
-        else:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '시스템 기본 설정값이\n존재하지 않습니다.\n')
-
-    def ButtonClicked_19(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM kiwoom', con)
-        df = df.set_index('index')
-        con.close()
-        if len(df) > 0:
-            self.sj_sacc_lineEdit_01.setText(df['아이디1'][0])
-            self.sj_sacc_lineEdit_02.setText(df['비밀번호1'][0])
-            self.sj_sacc_lineEdit_03.setText(df['인증서비밀번호1'][0])
-            self.sj_sacc_lineEdit_04.setText(df['계좌비밀번호1'][0])
-            self.sj_sacc_lineEdit_05.setText(df['아이디2'][0])
-            self.sj_sacc_lineEdit_06.setText(df['비밀번호2'][0])
-            self.sj_sacc_lineEdit_07.setText(df['인증서비밀번호2'][0])
-            self.sj_sacc_lineEdit_08.setText(df['계좌비밀번호2'][0])
-            self.UpdateTexedit([ui_num['설정텍스트'], '키움증권 계정 설정값 불러오기 완료'])
-        else:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '키움증권 계정 설정값이\n존재하지 않습니다.\n')
-
-    def ButtonClicked_20(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM upbit', con)
-        df = df.set_index('index')
-        con.close()
-        if len(df) > 0:
-            self.sj_cacc_lineEdit_01.setText(df['Access_key'][0])
-            self.sj_cacc_lineEdit_02.setText(df['Secret_key'][0])
-            self.UpdateTexedit([ui_num['설정텍스트'], '업비트 계정 설정값 불러오기 완료'])
-        else:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '업비트 계정 설정값이\n존재하지 않습니다.\n')
-
-    def ButtonClicked_21(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM telegram', con)
-        df = df.set_index('index')
-        con.close()
-        if len(df) > 0:
-            self.sj_tele_lineEdit_01.setText(df['str_bot'][0])
-            self.sj_tele_lineEdit_02.setText(str(df['int_id'][0]))
-            self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 불러오기 완료'])
-        else:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '텔레그램 봇토큰 및 사용자 아이디\n설정값이 존재하지 않습니다.\n')
-
-    def ButtonClicked_22(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM stock', con)
-        df = df.set_index('index')
-        con.close()
-        if len(df) > 0:
-            self.sj_stock_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_stock_checkBox_01.setChecked(False)
-            self.sj_stock_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_stock_checkBox_02.setChecked(False)
-            self.sj_stock_lineEdit_01.setText(str(df['콜렉터'][0]))
-            self.sj_stock_lineEdit_02.setText(str(df['트레이더'][0]))
-            self.sj_stock_lineEdit_03.setText(str(df['잔고청산'][0]))
-            self.sj_stock_lineEdit_04.setText(str(df['체결강도차이'][0]))
-            self.sj_stock_lineEdit_05.setText(str(df['평균시간'][0]))
-            self.sj_stock_lineEdit_06.setText(str(df['거래대금차이'][0]))
-            self.sj_stock_lineEdit_07.setText(str(df['체결강도하한'][0]))
-            self.sj_stock_lineEdit_08.setText(str(df['누적거래대금하한'][0]))
-            self.sj_stock_lineEdit_09.setText(str(df['등락율하한'][0]))
-            self.sj_stock_lineEdit_10.setText(str(df['등락율상한'][0]))
-            self.sj_stock_lineEdit_11.setText(str(df['청산수익률'][0]))
-            self.sj_stock_lineEdit_12.setText(str(df['최대매수종목수'][0]))
-            self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 불러오기 완료'])
-        else:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '주식 전략 설정값이\n존재하지 않습니다.\n')
-
-    def ButtonClicked_23(self):
-        con = sqlite3.connect(DB_SETTING)
-        df = pd.read_sql('SELECT * FROM coin', con)
-        df = df.set_index('index')
-        con.close()
-        if len(df) > 0:
-            self.sj_coin_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_coin_checkBox_01.setChecked(False)
-            self.sj_coin_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_coin_checkBox_02.setChecked(False)
-            self.sj_coin_lineEdit_01.setText(str(df['체결강도차이'][0]))
-            self.sj_coin_lineEdit_02.setText(str(df['평균시간'][0]))
-            self.sj_coin_lineEdit_03.setText(str(df['거래대금차이'][0]))
-            self.sj_coin_lineEdit_04.setText(str(df['체결강도하한'][0]))
-            self.sj_coin_lineEdit_05.setText(str(df['누적거래대금하한'][0]))
-            self.sj_coin_lineEdit_06.setText(str(df['등락율하한'][0]))
-            self.sj_coin_lineEdit_07.setText(str(df['등락율상한'][0]))
-            self.sj_coin_lineEdit_08.setText(str(df['청산수익률'][0]))
-            self.sj_coin_lineEdit_09.setText(str(df['최대매수종목수'][0]))
-            self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 불러오기 완료'])
-        else:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '코인 전략 설정값이\n존재하지 않습니다.\n')
-
-    def ButtonClicked_24(self):
-        kc = 1 if self.sj_main_checkBox_01.isChecked() else 0
-        kt = 1 if self.sj_main_checkBox_02.isChecked() else 0
-        cc = 1 if self.sj_main_checkBox_03.isChecked() else 0
-        ct = 1 if self.sj_main_checkBox_04.isChecked() else 0
-        bt = 1 if self.sj_main_checkBox_05.isChecked() else 0
-        t = self.sj_main_lineEdit_01.text()
-        if t == '':
-            t = 0
-        df = pd.DataFrame([[kc, kt, cc, ct, bt, int(t)]], columns=columns_sm, index=[0])
-        query1Q.put([1, df, 'main', 'replace'])
-        self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 저장하기 완료'])
-
-        # noinspection PyGlobalUndefined
-        global DICT_SET
-        DICT_SET['키움콜렉터'] = kc
-        DICT_SET['키움트레이더'] = kt
-        DICT_SET['업비트콜렉터'] = cc
-        DICT_SET['업비트트레이더'] = ct
-        DICT_SET['백테스터'] = bt
-        DICT_SET['백테스터시작시간'] = int(t)
-
-    def ButtonClicked_25(self):
-        id1 = self.sj_sacc_lineEdit_01.text()
-        ps1 = self.sj_sacc_lineEdit_02.text()
-        cp1 = self.sj_sacc_lineEdit_03.text()
-        ap1 = self.sj_sacc_lineEdit_04.text()
-        id2 = self.sj_sacc_lineEdit_05.text()
-        ps2 = self.sj_sacc_lineEdit_06.text()
-        cp2 = self.sj_sacc_lineEdit_07.text()
-        ap2 = self.sj_sacc_lineEdit_08.text()
-        if id1 == '' or ps1 == '' or cp1 == '' or ap1 == '' or id2 == '' or ps2 == '' or cp2 == '' or ap2 == '':
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
-        else:
-            df = pd.DataFrame([[id1, ps1, cp1, ap1, id2, ps2, cp2, ap2]], columns=columns_sk, index=[0])
-            query1Q.put([1, df, 'kiwoom', 'replace'])
-            self.UpdateTexedit([ui_num['설정텍스트'], '키움증권 계정 설정값 저장하기 완료'])
-
-            # noinspection PyGlobalUndefined
-            global DICT_SET
-            DICT_SET['아이디1'] = id1
-            DICT_SET['비밀번호1'] = ps1
-            DICT_SET['인증서비밀번호1'] = cp1
-            DICT_SET['계좌비밀번호1'] = ap1
-            DICT_SET['아이디2'] = id2
-            DICT_SET['비밀번호2'] = ps2
-            DICT_SET['인증서비밀번호2'] = cp2
-            DICT_SET['계좌비밀번호2'] = ap2
-
-    def ButtonClicked_26(self):
-        access_key = self.sj_cacc_lineEdit_01.text()
-        secret_key = self.sj_cacc_lineEdit_02.text()
-        if access_key == '' or secret_key == '':
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
-        else:
-            df = pd.DataFrame([[access_key, secret_key]], columns=columns_su, index=[0])
-            query1Q.put([1, df, 'upbit', 'replace'])
-            self.UpdateTexedit([ui_num['설정텍스트'], '업비트 계정 설정값 저장하기 완료'])
-
-            # noinspection PyGlobalUndefined
-            global DICT_SET
-            DICT_SET['Access_key'] = access_key
-            DICT_SET['Secret_key'] = secret_key
-
-    def ButtonClicked_27(self):
-        str_bot = self.sj_tele_lineEdit_01.text()
-        int_id = self.sj_tele_lineEdit_02.text()
-        if str_bot == '' or int_id == '':
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
-        else:
-            df = pd.DataFrame([[str_bot, int(int_id)]], columns=columns_st, index=[0])
-            query1Q.put([1, df, 'telegram', 'replace'])
-            self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 저장하기 완료'])
-
-            # noinspection PyGlobalUndefined
-            global DICT_SET
-            DICT_SET['텔레그램봇토큰'] = str_bot
-            DICT_SET['텔레그램사용자아이디'] = int(int_id)
-
-    def ButtonClicked_28(self):
-        me = 1 if self.sj_stock_checkBox_01.isChecked() else 0
-        sd = 1 if self.sj_stock_checkBox_02.isChecked() else 0
-        cl = int(self.sj_stock_lineEdit_01.text())
-        tr = int(self.sj_stock_lineEdit_02.text())
-        cs = int(self.sj_stock_lineEdit_03.text())
-        gapch = float(self.sj_stock_lineEdit_04.text())
-        avgtime = int(self.sj_stock_lineEdit_05.text())
-        gapsm = int(self.sj_stock_lineEdit_06.text())
-        chlow = float(self.sj_stock_lineEdit_07.text())
-        dmlow = int(self.sj_stock_lineEdit_08.text())
-        plow = float(self.sj_stock_lineEdit_09.text())
-        phigh = float(self.sj_stock_lineEdit_10.text())
-        csper = float(self.sj_stock_lineEdit_11.text())
-        buyc = int(self.sj_stock_lineEdit_12.text())
-        if cl == '' or tr == '' or cs == '' or gapch == '' or avgtime == '' or gapsm == '' or chlow == '' or \
-                dmlow == '' or plow == '' or phigh == '' or csper == '' or buyc == '':
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-        else:
-            query = f"UPDATE stock SET 모의투자 = {me}, 알림소리 = {sd}, 콜렉터 = {cl}, 트레이더 = {tr}, 잔고청산 = {cs}," \
-                    f"체결강도차이 = {gapch}, 평균시간 = {avgtime}, 거래대금차이 = {gapsm}, 체결강도하한 = {chlow}, " \
-                    f"누적거래대금하한 = {dmlow}, 등락율하한 = {plow}, 등락율상한 = {phigh}, 청산수익률 = {csper}, " \
-                    f"최대매수종목수 = {buyc}"
-            query1Q.put([1, query])
-            self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 저장하기 완료'])
-
-            # noinspection PyGlobalUndefined
-            global DICT_SET
-            DICT_SET['모의투자1'] = me
-            DICT_SET['알림소리1'] = sd
-            DICT_SET['콜렉터'] = cl
-            DICT_SET['트레이더'] = tr
-            DICT_SET['잔고청산'] = cs
-            DICT_SET['체결강도차이1'] = gapch
-            DICT_SET['평균시간1'] = avgtime
-            DICT_SET['거래대금차이1'] = gapsm
-            DICT_SET['체결강도하한1'] = chlow
-            DICT_SET['누적거래대금하한1'] = dmlow
-            DICT_SET['등락율하한1'] = plow
-            DICT_SET['등락율상한1'] = phigh
-            DICT_SET['청산수익률1'] = csper
-            DICT_SET['최대매수종목수1'] = buyc
-
-    def ButtonClicked_29(self):
-        me = 1 if self.sj_coin_checkBox_01.isChecked() else 0
-        sd = 1 if self.sj_coin_checkBox_02.isChecked() else 0
-        gapch = float(self.sj_coin_lineEdit_01.text())
-        avgtime = int(self.sj_coin_lineEdit_02.text())
-        gapsm = int(self.sj_coin_lineEdit_03.text())
-        chlow = float(self.sj_coin_lineEdit_04.text())
-        dmlow = int(self.sj_coin_lineEdit_05.text())
-        plow = float(self.sj_coin_lineEdit_06.text())
-        phigh = float(self.sj_coin_lineEdit_07.text())
-        csper = float(self.sj_coin_lineEdit_08.text())
-        buyc = int(self.sj_coin_lineEdit_09.text())
-        if gapch == '' or avgtime == '' or gapsm == '' or chlow == '' or \
-                dmlow == '' or plow == '' or phigh == '' or csper == '' or buyc == '':
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
-        else:
-            query = f"UPDATE coin SET 모의투자 = {me}, 알림소리 = {sd}, 체결강도차이 = {gapch}, 평균시간 = {avgtime}," \
-                    f"거래대금차이 = {gapsm}, 체결강도하한 = {chlow}, 누적거래대금하한 = {dmlow}, 등락율하한 = {plow}," \
-                    f"등락율상한 = {phigh}, 청산수익률 = {csper}, 최대매수종목수 = {buyc}"
-            query1Q.put([1, query])
-            self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 저장하기 완료'])
-
-            # noinspection PyGlobalUndefined
-            global DICT_SET
-            DICT_SET['모의투자2'] = me
-            DICT_SET['알림소리2'] = sd
-            DICT_SET['체결강도차이2'] = gapch
-            DICT_SET['평균시간2'] = avgtime
-            DICT_SET['거래대금차이2'] = gapsm
-            DICT_SET['체결강도하한2'] = chlow
-            DICT_SET['누적거래대금하한2'] = dmlow
-            DICT_SET['등락율하한2'] = plow
-            DICT_SET['등락율상한2'] = phigh
-            DICT_SET['청산수익률2'] = csper
-            DICT_SET['최대매수종목수2'] = buyc
-
     def Activated_01(self):
         strategy_name = self.ssi_comboBox.currentText()
         if strategy_name != '':
@@ -1499,7 +500,7 @@ class Window(QtWidgets.QMainWindow):
             self.cs_textEdit_03.clear()
             self.cs_textEdit_03.append(df['전략코드'][strategy_name])
 
-    def ButtonClicked_31(self):
+    def ButtonClicked_11(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
         df = pd.read_sql('SELECT * FROM init', con).set_index('index')
         con.close()
@@ -1511,7 +512,7 @@ class Window(QtWidgets.QMainWindow):
         else:
             windowQ.put([ui_num['S전략텍스트'], '시작전략 없음'])
 
-    def ButtonClicked_32(self):
+    def ButtonClicked_12(self):
         strategy_name = self.ssi_lineEdit.text()
         strategy = self.ss_textEdit_01.toPlainText()
         if strategy_name == '':
@@ -1530,13 +531,13 @@ class Window(QtWidgets.QMainWindow):
             query1Q.put([3, df, 'init', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '시작전략 저장하기 완료'])
 
-    def ButtonClicked_33(self):
+    def ButtonClicked_13(self):
         buy_code = '''"""def __init__(self)"""'''
         self.ss_textEdit_01.clear()
         self.ss_textEdit_01.append(buy_code)
         windowQ.put([ui_num['S전략텍스트'], '시작변수 불러오기 완료'])
 
-    def ButtonClicked_34(self):
+    def ButtonClicked_14(self):
         strategy = self.ss_textEdit_01.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1553,7 +554,7 @@ class Window(QtWidgets.QMainWindow):
                 self, '적용 알림', '시작전략은 프로그램을 재시작해야 적용됩니다.\n'
             )
 
-    def ButtonClicked_35(self):
+    def ButtonClicked_15(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
         df = pd.read_sql('SELECT * FROM buy', con).set_index('index')
         con.close()
@@ -1565,7 +566,7 @@ class Window(QtWidgets.QMainWindow):
         else:
             windowQ.put([ui_num['S전략텍스트'], '매수전략 없음'])
 
-    def ButtonClicked_36(self):
+    def ButtonClicked_16(self):
         strategy_name = self.ssb_lineEdit.text()
         strategy = self.ss_textEdit_02.toPlainText()
         if strategy_name == '':
@@ -1584,7 +585,7 @@ class Window(QtWidgets.QMainWindow):
             query1Q.put([3, df, 'buy', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매수전략 저장하기 완료'])
 
-    def ButtonClicked_37(self):
+    def ButtonClicked_17(self):
         buy_code = '''"""
 def BuyStrategy(self, *args)
 매수(True), 종목코드(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
@@ -1596,7 +597,7 @@ VI해제시간(datetime), VI아래5호가(int), 초당매수수량(int), 초당�
         self.ss_textEdit_02.append(buy_code)
         windowQ.put([ui_num['S전략텍스트'], '매수변수 불러오기 완료'])
 
-    def ButtonClicked_38(self):
+    def ButtonClicked_18(self):
         strategy = self.ss_textEdit_02.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1608,39 +609,39 @@ VI해제시간(datetime), VI아래5호가(int), 초당매수수량(int), 초당�
             df = pd.DataFrame({'전략코드': [strategy]}, index=['현재전략'])
             query1Q.put([3, df, 'buy', 'append'])
             sstgQ.put(['매수전략', strategy])
-            windowQ.put([ui_num['S전략텍스트'], '매수전략 설정하기 완료'])
+            windowQ.put([ui_num['S전략텍스트'], '매수전략 시작하기 완료'])
 
-    def ButtonClicked_39(self):
+    def ButtonClicked_19(self):
         sell_code = '''if 고저평균대비등락율 < 0:\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_40(self):
+    def ButtonClicked_20(self):
         sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_41(self):
+    def ButtonClicked_21(self):
         sell_code = '''if 초당거래대금 < 초당거래대금평균 + 90:\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_42(self):
+    def ButtonClicked_22(self):
         sell_code = '''if now() < timedelta_sec(1800, VI해제시간):\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_43(self):
+    def ButtonClicked_23(self):
         sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_44(self):
+    def ButtonClicked_24(self):
         sell_code = '''if 매도잔량1 < 매수잔량1 * 2:\n    매수 = False'''
         self.ss_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_45(self):
+    def ButtonClicked_25(self):
         sell_code = '''
 if 매수:
     매수수량 = int(self.int_tujagm / 현재가)
@@ -1651,10 +652,42 @@ if 매수:
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
     # noinspection PyMethodMayBeStatic
-    def ButtonClicked_46(self):
+    def ButtonClicked_26(self):
         sstgQ.put(['매수전략중지', ''])
 
-    def ButtonClicked_47(self):
+    def ButtonClicked_27(self):
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
+            return
+        else:
+            testperiod = self.ssb_lineEdit_01.text()
+            totaltime = self.ssb_lineEdit_02.text()
+            avgtime = self.ssb_lineEdit_03.text()
+            starttime = self.ssb_lineEdit_04.text()
+            endtime = self.ssb_lineEdit_05.text()
+            multi = self.ssb_lineEdit_06.text()
+            buystg = self.ssb_comboBox.currentText()
+            sellstg = self.sss_comboBox.currentText()
+            if buystg == '' or sellstg == '' or testperiod == '' or totaltime == '' or avgtime == '' or \
+                    starttime == '' or endtime == '' or multi == '':
+                QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 공백 상태입니다.\n')
+                return
+            self.backtester_proc = subprocess.Popen(
+                    f'python {SYSTEM_PATH}/backtester/backtester_stock_stg.py '
+                    f'{testperiod} {totaltime} {avgtime} {starttime} {endtime} {multi} {buystg} {sellstg}'
+            )
+
+    def ButtonClicked_28(self):
+        if self.backtester_proc is None or self.backtester_proc.poll() == 0:
+            buttonReply = QtWidgets.QMessageBox.question(
+                self, '최적화 백테스터',
+                'backtester/backtester_stock_vc.py 파일을\n본인의 전략에 맞게 수정 후 사용해야합니다.\n계속하시겠습니까?\n',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+            )
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.backtester_proc = subprocess.Popen(f'python {SYSTEM_PATH}/backtester/backtester_stock_vc.py')
+
+    def ButtonClicked_29(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
@@ -1666,7 +699,7 @@ if 매수:
         else:
             windowQ.put([ui_num['S전략텍스트'], '매도전략 없음'])
 
-    def ButtonClicked_48(self):
+    def ButtonClicked_30(self):
         strategy_name = self.sss_lineEdit.text()
         strategy = self.ss_textEdit_03.toPlainText()
         if strategy_name == '':
@@ -1685,7 +718,7 @@ if 매수:
             query1Q.put([3, df, 'sell', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 저장하기 완료'])
 
-    def ButtonClicked_49(self):
+    def ButtonClicked_31(self):
         sell_code = '''"""
 def SellStrategy(self, *args)
 매도(False), 종목코드(str), 수익률(float), 보유수량(int), 매수시간(datetime), 현재가(int), 등락율(float), 고저평균대비등락율(float),
@@ -1696,7 +729,7 @@ def SellStrategy(self, *args)
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 불러오기 완료'])
 
-    def ButtonClicked_50(self):
+    def ButtonClicked_32(self):
         strategy = self.ss_textEdit_03.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1708,39 +741,39 @@ def SellStrategy(self, *args)
             df = pd.DataFrame({'전략코드': [strategy]}, index=['현재전략'])
             query1Q.put([3, df, 'sell', 'append'])
             sstgQ.put(['매도전략', strategy])
-            windowQ.put([ui_num['S전략텍스트'], '매도전략 설정하기 완료'])
+            windowQ.put([ui_num['S전략텍스트'], '매도전략 시작하기 완료'])
 
-    def ButtonClicked_51(self):
+    def ButtonClicked_33(self):
         sell_code = '''if now() > timedelta_sec(1800, 매수시간):\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_52(self):
+    def ButtonClicked_34(self):
         sell_code = '''if 수익률 <= -2 :\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_53(self):
+    def ButtonClicked_35(self):
         sell_code = '''if 수익률 >= 3:\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_54(self):
+    def ButtonClicked_36(self):
         sell_code = '''if 체결강도 < 체결강도평균:\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_55(self):
+    def ButtonClicked_37(self):
         sell_code = '''if 매도총잔량 < 매수총잔량:\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_56(self):
+    def ButtonClicked_38(self):
         sell_code = '''if 현재가 > VI아래5호가 * 1.003:\n    매도 = True'''
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_57(self):
+    def ButtonClicked_39(self):
         sell_code = '''
 if 매도:
     self.list_sell.append(종목코드)
@@ -1749,10 +782,10 @@ if 매도:
         windowQ.put([ui_num['S전략텍스트'], '매도전략 모듈추가 완료'])
 
     # noinspection PyMethodMayBeStatic
-    def ButtonClicked_58(self):
+    def ButtonClicked_40(self):
         sstgQ.put(['매도전략중지', ''])
 
-    def ButtonClicked_59(self):
+    def ButtonClicked_41(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM init', con).set_index('index')
         con.close()
@@ -1764,7 +797,7 @@ if 매도:
         else:
             windowQ.put([ui_num['C전략텍스트'], '시작전략 없음'])
 
-    def ButtonClicked_60(self):
+    def ButtonClicked_42(self):
         strategy_name = self.csi_lineEdit.text()
         strategy = self.cs_textEdit_01.toPlainText()
         if strategy_name == '':
@@ -1783,13 +816,13 @@ if 매도:
             query1Q.put([4, df, 'init', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '시작전략 저장하기 완료'])
 
-    def ButtonClicked_61(self):
+    def ButtonClicked_43(self):
         buy_code = '''"""def __init__(self)"""'''
         self.cs_textEdit_01.clear()
         self.cs_textEdit_01.append(buy_code)
         windowQ.put([ui_num['C전략텍스트'], '시작변수 불러오기 완료'])
 
-    def ButtonClicked_62(self):
+    def ButtonClicked_44(self):
         strategy = self.cs_textEdit_01.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1806,7 +839,7 @@ if 매도:
                 self, '적용 알림', '시작전략은 프로그램을 재시작해야 적용됩니다.\n'
             )
 
-    def ButtonClicked_63(self):
+    def ButtonClicked_45(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM buy', con).set_index('index')
         con.close()
@@ -1818,7 +851,7 @@ if 매도:
         else:
             windowQ.put([ui_num['C전략텍스트'], '매수전략 없음'])
 
-    def ButtonClicked_64(self):
+    def ButtonClicked_46(self):
         strategy_name = self.csb_lineEdit.text()
         strategy = self.cs_textEdit_02.toPlainText()
         if strategy_name == '':
@@ -1837,7 +870,7 @@ if 매도:
             query1Q.put([4, df, 'buy', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '매수전략 저장하기 완료'])
 
-    def ButtonClicked_65(self):
+    def ButtonClicked_47(self):
         buy_code = '''"""
 def BuyStrategy(self, *args)
 매수(True), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float), 당일거래대금(int), 초당거래대금(int),
@@ -1851,7 +884,7 @@ def BuyStrategy(self, *args)
         self.cs_textEdit_02.append(buy_code)
         windowQ.put([ui_num['C전략텍스트'], '매수변수 불러오기 완료'])
 
-    def ButtonClicked_66(self):
+    def ButtonClicked_48(self):
         strategy = self.cs_textEdit_02.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1863,39 +896,39 @@ def BuyStrategy(self, *args)
             df = pd.DataFrame({'전략코드': [strategy]}, index=['현재전략'])
             query1Q.put([4, df, 'buy', 'append'])
             cstgQ.put(['매수전략', strategy])
-            windowQ.put([ui_num['C전략텍스트'], '매수전략 설정하기 완료'])
+            windowQ.put([ui_num['C전략텍스트'], '매수전략 시작하기 완료'])
 
-    def ButtonClicked_67(self):
+    def ButtonClicked_49(self):
         sell_code = '''if 고저평균대비등락율 < 0:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_68(self):
+    def ButtonClicked_50(self):
         sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_69(self):
+    def ButtonClicked_51(self):
         sell_code = '''if 초당거래대금 < 초당거래대금평균 + 10000000:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_70(self):
+    def ButtonClicked_52(self):
         sell_code = '''if 당일거래대금 < 10000000000:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_71(self):
+    def ButtonClicked_53(self):
         sell_code = '''if 매도총잔량 < 매수총잔량:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_72(self):
+    def ButtonClicked_54(self):
         sell_code = '''if 매도잔량1 < 매수잔량1 * 2:\n    매수 = False'''
         self.cs_textEdit_02.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매수전략 모듈추가 완료'])
 
-    def ButtonClicked_73(self):
+    def ButtonClicked_55(self):
         sell_code = '''
 if 매수:
     매수수량 = round(self.int_tujagm / 현재가, 8)
@@ -1906,10 +939,42 @@ if 매수:
         windowQ.put([ui_num['C전략텍스트'], '매수전략 모듈추가 완료'])
 
     # noinspection PyMethodMayBeStatic
-    def ButtonClicked_74(self):
+    def ButtonClicked_56(self):
         cstgQ.put(['매수전략중지', ''])
 
-    def ButtonClicked_75(self):
+    def ButtonClicked_57(self):
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
+            return
+        else:
+            testperiod = self.csb_lineEdit_01.text()
+            totaltime = self.csb_lineEdit_02.text()
+            avgtime = self.csb_lineEdit_03.text()
+            starttime = self.csb_lineEdit_04.text()
+            endtime = self.csb_lineEdit_05.text()
+            multi = self.csb_lineEdit_06.text()
+            buystg = self.csb_comboBox.currentText()
+            sellstg = self.css_comboBox.currentText()
+            if buystg == '' or sellstg == '' or testperiod == '' or totaltime == '' or avgtime == '' or \
+                    starttime == '' or endtime == '' or multi == '':
+                QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 공백 상태입니다.\n')
+                return
+            self.backtester_proc = subprocess.Popen(
+                    f'python {SYSTEM_PATH}/backtester/backtester_coin_stg.py '
+                    f'{testperiod} {totaltime} {avgtime} {starttime} {endtime} {multi} {buystg} {sellstg}'
+            )
+
+    def ButtonClicked_58(self):
+        if self.backtester_proc is None or self.backtester_proc.poll() == 0:
+            buttonReply = QtWidgets.QMessageBox.question(
+                self, '최적화 백테스터',
+                'backtester/backtester_coin_vc.py 파일을\n본인의 전략에 맞게 수정 후 사용해야합니다.\n계속하시겠습니까?\n',
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
+            )
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.backtester_proc = subprocess.Popen(f'python {SYSTEM_PATH}/backtester/backtester_coin_vc.py')
+
+    def ButtonClicked_59(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
         df = pd.read_sql('SELECT * FROM sell', con).set_index('index')
         con.close()
@@ -1921,7 +986,7 @@ if 매수:
         else:
             windowQ.put([ui_num['C전략텍스트'], '매도전략 없음'])
 
-    def ButtonClicked_76(self):
+    def ButtonClicked_60(self):
         strategy_name = self.css_lineEdit.text()
         strategy = self.cs_textEdit_03.toPlainText()
         if strategy_name == '':
@@ -1940,7 +1005,7 @@ if 매수:
             query1Q.put([4, df, 'sell', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '매도전략 저장하기 완료'])
 
-    def ButtonClicked_77(self):
+    def ButtonClicked_61(self):
         sell_code = '''"""
 def SellStrategy(self, *args)
 매도(False), 종목명(str), 수익률(float), 보유수량(float), 매수시간(datetime), 현재가(float), 등락율(float), 고저평균대비등락율(float),
@@ -1954,7 +1019,7 @@ def SellStrategy(self, *args)
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도변수 불러오기 완료'])
 
-    def ButtonClicked_78(self):
+    def ButtonClicked_62(self):
         strategy = self.cs_textEdit_03.toPlainText()
         if strategy == '':
             QtWidgets.QMessageBox.critical(
@@ -1966,39 +1031,39 @@ def SellStrategy(self, *args)
             df = pd.DataFrame({'전략코드': [strategy]}, index=['현재전략'])
             query1Q.put([4, df, 'sell', 'append'])
             cstgQ.put(['매도전략', strategy])
-            windowQ.put([ui_num['C전략텍스트'], '매도전략 설정하기 완료'])
+            windowQ.put([ui_num['C전략텍스트'], '매도전략 시작하기 완료'])
 
-    def ButtonClicked_79(self):
+    def ButtonClicked_63(self):
         sell_code = '''if now() > timedelta_sec(1800, 매수시간):\n    매도 = True'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_80(self):
+    def ButtonClicked_64(self):
         sell_code = '''if 수익률 <= -2 :\n    매도 = True'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_81(self):
+    def ButtonClicked_65(self):
         sell_code = '''if 수익률 >= 3:\n    매도 = True'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_82(self):
+    def ButtonClicked_66(self):
         sell_code = '''if 체결강도 < 체결강도평균 + 5:\n    매도 = True'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_83(self):
+    def ButtonClicked_67(self):
         sell_code = '''if 매도총잔량 < 매수총잔량:\n    매도 = True'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_84(self):
+    def ButtonClicked_68(self):
         sell_code = '''if 고저평균대비등락율 < 0.:\n    매도 = True'''
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
-    def ButtonClicked_85(self):
+    def ButtonClicked_69(self):
         sell_code = '''
 if 매도:
     self.list_sell.append(종목명)
@@ -2007,52 +1072,229 @@ if 매도:
         windowQ.put([ui_num['C전략텍스트'], '매도전략 모듈추가 완료'])
 
     # noinspection PyMethodMayBeStatic
-    def ButtonClicked_86(self):
+    def ButtonClicked_70(self):
         cstgQ.put(['매도전략중지', ''])
 
-    def ButtonClicked_87(self):
-        if self.backtester_proc2 is not None and self.backtester_proc2.poll() != 0:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
-            return
+    def ButtonClicked_71(self):
+        con = sqlite3.connect(DB_SETTING)
+        df = pd.read_sql('SELECT * FROM main', con)
+        df = df.set_index('index')
+        con.close()
+        if len(df) > 0:
+            self.sj_main_checkBox_01.setChecked(True) if df['키움콜렉터'][0] else self.sj_main_checkBox_01.setChecked(False)
+            self.sj_main_checkBox_02.setChecked(True) if df['키움트레이더'][0] else self.sj_main_checkBox_02.setChecked(False)
+            self.sj_main_checkBox_03.setChecked(True) if df['업비트콜렉터'][0] else self.sj_main_checkBox_03.setChecked(False)
+            self.sj_main_checkBox_04.setChecked(True) if df['업비트트레이더'][0] else self.sj_main_checkBox_04.setChecked(False)
+            self.sj_main_checkBox_05.setChecked(True) if df['주식최적화백테스터'][0] else self.sj_main_checkBox_05.setChecked(False)
+            self.sj_main_checkBox_06.setChecked(True) if df['코인최적화백테스터'][0] else self.sj_main_checkBox_06.setChecked(False)
+            self.sj_main_lineEdit_01.setText(str(df['주식백테시작시간'][0]))
+            self.sj_main_lineEdit_02.setText(str(df['코인백테시작시간'][0]))
+            self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 불러오기 완료'])
         else:
-            testperiod = self.ssb_lineEdit_01.text()
-            totaltime = self.ssb_lineEdit_02.text()
-            avgtime = self.ssb_lineEdit_03.text()
-            starttime = self.ssb_lineEdit_04.text()
-            endtime = self.ssb_lineEdit_05.text()
-            multi = self.ssb_lineEdit_06.text()
-            buystg = self.ssb_comboBox.currentText()
-            sellstg = self.sss_comboBox.currentText()
-            if buystg == '' or sellstg == '' or testperiod == '' or totaltime == '' or avgtime == '' or \
-                    starttime == '' or endtime == '' or multi == '':
-                QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 공백 상태입니다.\n')
-                return
-            self.backtester_proc2 = subprocess.Popen(
-                    f'python {SYSTEM_PATH}/backtester/backtester_stock_stg.py '
-                    f'{testperiod} {totaltime} {avgtime} {starttime} {endtime} {multi} {buystg} {sellstg}'
-                )
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '시스템 기본 설정값이\n존재하지 않습니다.\n')
 
-    def ButtonClicked_88(self):
-        if self.backtester_proc2 is not None and self.backtester_proc2.poll() != 0:
-            QtWidgets.QMessageBox.critical(self, '오류 알림', '현재 백테스터가 실행중입니다.\n중복 실행할 수 없습니다.\n')
-            return
+    def ButtonClicked_72(self):
+        con = sqlite3.connect(DB_SETTING)
+        df = pd.read_sql('SELECT * FROM kiwoom', con)
+        df = df.set_index('index')
+        con.close()
+        if len(df) > 0:
+            self.sj_sacc_lineEdit_01.setText(df['아이디1'][0])
+            self.sj_sacc_lineEdit_02.setText(df['비밀번호1'][0])
+            self.sj_sacc_lineEdit_03.setText(df['인증서비밀번호1'][0])
+            self.sj_sacc_lineEdit_04.setText(df['계좌비밀번호1'][0])
+            self.sj_sacc_lineEdit_05.setText(df['아이디2'][0])
+            self.sj_sacc_lineEdit_06.setText(df['비밀번호2'][0])
+            self.sj_sacc_lineEdit_07.setText(df['인증서비밀번호2'][0])
+            self.sj_sacc_lineEdit_08.setText(df['계좌비밀번호2'][0])
+            self.UpdateTexedit([ui_num['설정텍스트'], '키움증권 계정 설정값 불러오기 완료'])
         else:
-            testperiod = self.csb_lineEdit_01.text()
-            totaltime = self.csb_lineEdit_02.text()
-            avgtime = self.csb_lineEdit_03.text()
-            starttime = self.csb_lineEdit_04.text()
-            endtime = self.csb_lineEdit_05.text()
-            multi = self.csb_lineEdit_06.text()
-            buystg = self.csb_comboBox.currentText()
-            sellstg = self.css_comboBox.currentText()
-            if buystg == '' or sellstg == '' or testperiod == '' or totaltime == '' or avgtime == '' or \
-                    starttime == '' or endtime == '' or multi == '':
-                QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 공백 상태입니다.\n')
-                return
-            self.backtester_proc2 = subprocess.Popen(
-                    f'python {SYSTEM_PATH}/backtester/backtester_coin_stg.py '
-                    f'{testperiod} {totaltime} {avgtime} {starttime} {endtime} {multi} {buystg} {sellstg}'
-                )
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '키움증권 계정 설정값이\n존재하지 않습니다.\n')
+
+    def ButtonClicked_73(self):
+        con = sqlite3.connect(DB_SETTING)
+        df = pd.read_sql('SELECT * FROM upbit', con)
+        df = df.set_index('index')
+        con.close()
+        if len(df) > 0:
+            self.sj_cacc_lineEdit_01.setText(df['Access_key'][0])
+            self.sj_cacc_lineEdit_02.setText(df['Secret_key'][0])
+            self.UpdateTexedit([ui_num['설정텍스트'], '업비트 계정 설정값 불러오기 완료'])
+        else:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '업비트 계정 설정값이\n존재하지 않습니다.\n')
+
+    def ButtonClicked_74(self):
+        con = sqlite3.connect(DB_SETTING)
+        df = pd.read_sql('SELECT * FROM telegram', con)
+        df = df.set_index('index')
+        con.close()
+        if len(df) > 0:
+            self.sj_tele_lineEdit_01.setText(df['str_bot'][0])
+            self.sj_tele_lineEdit_02.setText(str(df['int_id'][0]))
+            self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 불러오기 완료'])
+        else:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '텔레그램 봇토큰 및 사용자 아이디\n설정값이 존재하지 않습니다.\n')
+
+    def ButtonClicked_75(self):
+        con = sqlite3.connect(DB_SETTING)
+        df = pd.read_sql('SELECT * FROM stock', con)
+        df = df.set_index('index')
+        con.close()
+        if len(df) > 0:
+            self.sj_stock_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_stock_checkBox_01.setChecked(False)
+            self.sj_stock_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_stock_checkBox_02.setChecked(False)
+            self.sj_stock_lineEdit_01.setText(str(df['콜렉터'][0]))
+            self.sj_stock_lineEdit_02.setText(str(df['트레이더'][0]))
+            self.sj_stock_lineEdit_03.setText(str(df['잔고청산'][0]))
+            self.sj_stock_lineEdit_05.setText(str(df['평균값계산틱수'][0]))
+            self.sj_stock_lineEdit_06.setText(str(df['최대매수종목수'][0]))
+            self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 불러오기 완료'])
+        else:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '주식 전략 설정값이\n존재하지 않습니다.\n')
+
+    def ButtonClicked_76(self):
+        con = sqlite3.connect(DB_SETTING)
+        df = pd.read_sql('SELECT * FROM coin', con)
+        df = df.set_index('index')
+        con.close()
+        if len(df) > 0:
+            self.sj_coin_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_coin_checkBox_01.setChecked(False)
+            self.sj_coin_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_coin_checkBox_02.setChecked(False)
+            self.sj_coin_lineEdit_01.setText(str(df['평균값계산틱수'][0]))
+            self.sj_coin_lineEdit_029.setText(str(df['최대매수종목수'][0]))
+            self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 불러오기 완료'])
+        else:
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '코인 전략 설정값이\n존재하지 않습니다.\n')
+
+    def ButtonClicked_77(self):
+        kc = 1 if self.sj_main_checkBox_01.isChecked() else 0
+        kt = 1 if self.sj_main_checkBox_02.isChecked() else 0
+        cc = 1 if self.sj_main_checkBox_03.isChecked() else 0
+        ct = 1 if self.sj_main_checkBox_04.isChecked() else 0
+        sbt = 1 if self.sj_main_checkBox_05.isChecked() else 0
+        cbt = 1 if self.sj_main_checkBox_06.isChecked() else 0
+        sbst = self.sj_main_lineEdit_01.text()
+        if sbst == '':
+            sbst = 0
+        cbst = self.sj_main_lineEdit_02.text()
+        if cbst == '':
+            cbst = 0
+        df = pd.DataFrame([[kc, kt, cc, ct, sbt, int(sbst), cbt, int(cbst)]], columns=columns_sm, index=[0])
+        query1Q.put([1, df, 'main', 'replace'])
+        self.UpdateTexedit([ui_num['설정텍스트'], '시스템 기본 설정값 저장하기 완료'])
+
+        # noinspection PyGlobalUndefined
+        global DICT_SET
+        DICT_SET['키움콜렉터'] = kc
+        DICT_SET['키움트레이더'] = kt
+        DICT_SET['업비트콜렉터'] = cc
+        DICT_SET['업비트트레이더'] = ct
+        DICT_SET['주식최적화백테스터'] = sbt
+        DICT_SET['주식백테시작시간'] = int(sbst)
+        DICT_SET['코인최적화백테스터'] = cbt
+        DICT_SET['코인백테시작시간'] = int(cbst)
+
+    def ButtonClicked_78(self):
+        id1 = self.sj_sacc_lineEdit_01.text()
+        ps1 = self.sj_sacc_lineEdit_02.text()
+        cp1 = self.sj_sacc_lineEdit_03.text()
+        ap1 = self.sj_sacc_lineEdit_04.text()
+        id2 = self.sj_sacc_lineEdit_05.text()
+        ps2 = self.sj_sacc_lineEdit_06.text()
+        cp2 = self.sj_sacc_lineEdit_07.text()
+        ap2 = self.sj_sacc_lineEdit_08.text()
+        if id1 == '' or ps1 == '' or cp1 == '' or ap1 == '' or id2 == '' or ps2 == '' or cp2 == '' or ap2 == '':
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
+        else:
+            df = pd.DataFrame([[id1, ps1, cp1, ap1, id2, ps2, cp2, ap2]], columns=columns_sk, index=[0])
+            query1Q.put([1, df, 'kiwoom', 'replace'])
+            self.UpdateTexedit([ui_num['설정텍스트'], '키움증권 계정 설정값 저장하기 완료'])
+
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['아이디1'] = id1
+            DICT_SET['비밀번호1'] = ps1
+            DICT_SET['인증서비밀번호1'] = cp1
+            DICT_SET['계좌비밀번호1'] = ap1
+            DICT_SET['아이디2'] = id2
+            DICT_SET['비밀번호2'] = ps2
+            DICT_SET['인증서비밀번호2'] = cp2
+            DICT_SET['계좌비밀번호2'] = ap2
+
+    def ButtonClicked_79(self):
+        access_key = self.sj_cacc_lineEdit_01.text()
+        secret_key = self.sj_cacc_lineEdit_02.text()
+        if access_key == '' or secret_key == '':
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
+        else:
+            df = pd.DataFrame([[access_key, secret_key]], columns=columns_su, index=[0])
+            query1Q.put([1, df, 'upbit', 'replace'])
+            self.UpdateTexedit([ui_num['설정텍스트'], '업비트 계정 설정값 저장하기 완료'])
+
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['Access_key'] = access_key
+            DICT_SET['Secret_key'] = secret_key
+
+    def ButtonClicked_80(self):
+        str_bot = self.sj_tele_lineEdit_01.text()
+        int_id = self.sj_tele_lineEdit_02.text()
+        if str_bot == '' or int_id == '':
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 설정값이 입력되지 않았습니다.\n')
+        else:
+            df = pd.DataFrame([[str_bot, int(int_id)]], columns=columns_st, index=[0])
+            query1Q.put([1, df, 'telegram', 'replace'])
+            self.UpdateTexedit([ui_num['설정텍스트'], '텔레그램 봇토큰 및 사용자 아이디 설정값 저장하기 완료'])
+
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['텔레그램봇토큰'] = str_bot
+            DICT_SET['텔레그램사용자아이디'] = int(int_id)
+
+    def ButtonClicked_81(self):
+        me = 1 if self.sj_stock_checkBox_01.isChecked() else 0
+        sd = 1 if self.sj_stock_checkBox_02.isChecked() else 0
+        cl = int(self.sj_stock_lineEdit_01.text())
+        tr = int(self.sj_stock_lineEdit_02.text())
+        cs = int(self.sj_stock_lineEdit_03.text())
+        avgtime = int(self.sj_stock_lineEdit_04.text())
+        buyc = int(self.sj_stock_lineEdit_05.text())
+        if cl == '' or tr == '' or cs == '' or avgtime == '' or buyc == '':
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
+        else:
+            query = f"UPDATE stock SET 모의투자 = {me}, 알림소리 = {sd}, 콜렉터 = {cl}, 트레이더 = {tr}, 잔고청산 = {cs}," \
+                    f"평균값계산틱수 = {avgtime}, 최대매수종목수 = {buyc}"
+            query1Q.put([1, query])
+            self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 저장하기 완료'])
+
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['모의투자1'] = me
+            DICT_SET['알림소리1'] = sd
+            DICT_SET['콜렉터'] = cl
+            DICT_SET['트레이더'] = tr
+            DICT_SET['잔고청산'] = cs
+            DICT_SET['평균값계산틱수1'] = avgtime
+            DICT_SET['최대매수종목수1'] = buyc
+
+    def ButtonClicked_82(self):
+        me = 1 if self.sj_coin_checkBox_01.isChecked() else 0
+        sd = 1 if self.sj_coin_checkBox_02.isChecked() else 0
+        avgtime = int(self.sj_coin_lineEdit_01.text())
+        buyc = int(self.sj_coin_lineEdit_02.text())
+        if avgtime == '' or buyc == '':
+            QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
+        else:
+            query = f"UPDATE coin SET 모의투자 = {me}, 알림소리 = {sd}, 평균값계산틱수 = {avgtime}, 최대매수종목수 = {buyc}"
+            query1Q.put([1, query])
+            self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 저장하기 완료'])
+
+            # noinspection PyGlobalUndefined
+            global DICT_SET
+            DICT_SET['모의투자2'] = me
+            DICT_SET['알림소리2'] = sd
+            DICT_SET['평균값계산틱수2'] = avgtime
+            DICT_SET['최대매수종목수2'] = buyc
 
     def UpdateTexedit(self, data):
         text = f'[{now()}] {data[1]}'
