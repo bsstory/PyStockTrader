@@ -40,6 +40,7 @@ class Window(QtWidgets.QMainWindow):
         if int(strf_time('%H%M%S')) < 80000 or 160000 < int(strf_time('%H%M%S')):
             self.main_tabWidget.setCurrentWidget(self.ct_tab)
 
+        self.counter = 0
         self.cpu_per = 0
         self.int_time = int(strf_time('%H%M%S'))
         self.dict_name = {}
@@ -203,7 +204,21 @@ class Window(QtWidgets.QMainWindow):
             self.setWindowTitle('PyStockTrader')
 
     def UpdateProgressBar(self):
+        if self.counter > 9:
+            self.counter = 0
+        self.counter += 1
         self.progressBar.setValue(int(self.cpu_per))
+        if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
+            if self.counter % 2 == 0:
+                self.sb_pushButton_01.setStyleSheet(style_bc_st)
+                self.sb_pushButton_02.setStyleSheet(style_bc_bt)
+                self.cb_pushButton_01.setStyleSheet(style_bc_st)
+                self.cb_pushButton_02.setStyleSheet(style_bc_bt)
+            else:
+                self.sb_pushButton_01.setStyleSheet(style_bc_bt)
+                self.sb_pushButton_02.setStyleSheet(style_bc_st)
+                self.cb_pushButton_01.setStyleSheet(style_bc_bt)
+                self.cb_pushButton_02.setStyleSheet(style_bc_st)
 
     @thread_decorator
     def UpdateCpuper(self):
@@ -509,6 +524,7 @@ class Window(QtWidgets.QMainWindow):
             for index in df.index:
                 self.ssi_comboBox.addItem(index)
             windowQ.put([ui_num['S전략텍스트'], '시작전략 불러오기 완료'])
+            self.ssi_pushButton_04.setStyleSheet(style_bc_bt)
         else:
             windowQ.put([ui_num['S전략텍스트'], '시작전략 없음'])
 
@@ -530,12 +546,14 @@ class Window(QtWidgets.QMainWindow):
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([3, df, 'init', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '시작전략 저장하기 완료'])
+            self.ssi_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_13(self):
         buy_code = '''"""def __init__(self)"""'''
         self.ss_textEdit_01.clear()
         self.ss_textEdit_01.append(buy_code)
         windowQ.put([ui_num['S전략텍스트'], '시작변수 불러오기 완료'])
+        self.ssi_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_14(self):
         strategy = self.ss_textEdit_01.toPlainText()
@@ -553,6 +571,7 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(
                 self, '적용 알림', '시작전략은 프로그램을 재시작해야 적용됩니다.\n'
             )
+            self.ssi_pushButton_04.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_15(self):
         con = sqlite3.connect(DB_STOCK_STRETEGY)
@@ -563,6 +582,7 @@ class Window(QtWidgets.QMainWindow):
             for index in df.index:
                 self.ssb_comboBox.addItem(index)
             windowQ.put([ui_num['S전략텍스트'], '매수전략 불러오기 완료'])
+            self.ssb_pushButton_04.setStyleSheet(style_bc_bt)
         else:
             windowQ.put([ui_num['S전략텍스트'], '매수전략 없음'])
 
@@ -584,6 +604,7 @@ class Window(QtWidgets.QMainWindow):
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([3, df, 'buy', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매수전략 저장하기 완료'])
+            self.ssb_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_17(self):
         buy_code = '''"""
@@ -596,6 +617,7 @@ VI해제시간(datetime), VI아래5호가(int), 초당매수수량(int), 초당�
         self.ss_textEdit_02.clear()
         self.ss_textEdit_02.append(buy_code)
         windowQ.put([ui_num['S전략텍스트'], '매수변수 불러오기 완료'])
+        self.ssb_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_18(self):
         strategy = self.ss_textEdit_02.toPlainText()
@@ -610,6 +632,8 @@ VI해제시간(datetime), VI아래5호가(int), 초당매수수량(int), 초당�
             query1Q.put([3, df, 'buy', 'append'])
             sstgQ.put(['매수전략', strategy])
             windowQ.put([ui_num['S전략텍스트'], '매수전략 시작하기 완료'])
+            self.ssb_pushButton_04.setStyleSheet(style_bc_dk)
+            self.ssb_pushButton_12.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_19(self):
         sell_code = '''if 고저평균대비등락율 < 0:\n    매수 = False'''
@@ -654,6 +678,7 @@ if 매수:
     # noinspection PyMethodMayBeStatic
     def ButtonClicked_26(self):
         sstgQ.put(['매수전략중지', ''])
+        self.ssb_pushButton_12.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_27(self):
         if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
@@ -696,6 +721,7 @@ if 매수:
             for index in df.index:
                 self.sss_comboBox.addItem(index)
             windowQ.put([ui_num['S전략텍스트'], '매도전략 불러오기 완료'])
+            self.sss_pushButton_03.setStyleSheet(style_bc_bt)
         else:
             windowQ.put([ui_num['S전략텍스트'], '매도전략 없음'])
 
@@ -717,6 +743,7 @@ if 매수:
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([3, df, 'sell', 'append'])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 저장하기 완료'])
+            self.sss_pushButton_03.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_31(self):
         sell_code = '''"""
@@ -728,6 +755,7 @@ def SellStrategy(self, *args)
         self.ss_textEdit_03.clear()
         self.ss_textEdit_03.append(sell_code)
         windowQ.put([ui_num['S전략텍스트'], '매도전략 불러오기 완료'])
+        self.sss_pushButton_03.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_32(self):
         strategy = self.ss_textEdit_03.toPlainText()
@@ -742,6 +770,8 @@ def SellStrategy(self, *args)
             query1Q.put([3, df, 'sell', 'append'])
             sstgQ.put(['매도전략', strategy])
             windowQ.put([ui_num['S전략텍스트'], '매도전략 시작하기 완료'])
+            self.sss_pushButton_03.setStyleSheet(style_bc_dk)
+            self.sss_pushButton_12.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_33(self):
         sell_code = '''if now() > timedelta_sec(1800, 매수시간):\n    매도 = True'''
@@ -784,6 +814,7 @@ if 매도:
     # noinspection PyMethodMayBeStatic
     def ButtonClicked_40(self):
         sstgQ.put(['매도전략중지', ''])
+        self.sss_pushButton_12.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_41(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
@@ -794,6 +825,7 @@ if 매도:
             for index in df.index:
                 self.csi_comboBox.addItem(index)
             windowQ.put([ui_num['C전략텍스트'], '시작전략 불러오기 완료'])
+            self.csi_pushButton_04.setStyleSheet(style_bc_bt)
         else:
             windowQ.put([ui_num['C전략텍스트'], '시작전략 없음'])
 
@@ -815,12 +847,14 @@ if 매도:
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([4, df, 'init', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '시작전략 저장하기 완료'])
+            self.csi_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_43(self):
         buy_code = '''"""def __init__(self)"""'''
         self.cs_textEdit_01.clear()
         self.cs_textEdit_01.append(buy_code)
         windowQ.put([ui_num['C전략텍스트'], '시작변수 불러오기 완료'])
+        self.csi_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_44(self):
         strategy = self.cs_textEdit_01.toPlainText()
@@ -838,6 +872,7 @@ if 매도:
             QtWidgets.QMessageBox.warning(
                 self, '적용 알림', '시작전략은 프로그램을 재시작해야 적용됩니다.\n'
             )
+            self.csi_pushButton_04.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_45(self):
         con = sqlite3.connect(DB_COIN_STRETEGY)
@@ -848,6 +883,7 @@ if 매도:
             for index in df.index:
                 self.csb_comboBox.addItem(index)
             windowQ.put([ui_num['C전략텍스트'], '매수전략 불러오기 완료'])
+            self.csb_pushButton_04.setStyleSheet(style_bc_bt)
         else:
             windowQ.put([ui_num['C전략텍스트'], '매수전략 없음'])
 
@@ -869,6 +905,7 @@ if 매도:
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([4, df, 'buy', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '매수전략 저장하기 완료'])
+            self.csb_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_47(self):
         buy_code = '''"""
@@ -883,6 +920,7 @@ def BuyStrategy(self, *args)
         self.cs_textEdit_02.clear()
         self.cs_textEdit_02.append(buy_code)
         windowQ.put([ui_num['C전략텍스트'], '매수변수 불러오기 완료'])
+        self.csb_pushButton_04.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_48(self):
         strategy = self.cs_textEdit_02.toPlainText()
@@ -897,6 +935,8 @@ def BuyStrategy(self, *args)
             query1Q.put([4, df, 'buy', 'append'])
             cstgQ.put(['매수전략', strategy])
             windowQ.put([ui_num['C전략텍스트'], '매수전략 시작하기 완료'])
+            self.csb_pushButton_04.setStyleSheet(style_bc_dk)
+            self.csb_pushButton_12.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_49(self):
         sell_code = '''if 고저평균대비등락율 < 0:\n    매수 = False'''
@@ -941,6 +981,7 @@ if 매수:
     # noinspection PyMethodMayBeStatic
     def ButtonClicked_56(self):
         cstgQ.put(['매수전략중지', ''])
+        self.csb_pushButton_12.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_57(self):
         if self.backtester_proc is not None and self.backtester_proc.poll() != 0:
@@ -983,6 +1024,7 @@ if 매수:
             for index in df.index:
                 self.css_comboBox.addItem(index)
             windowQ.put([ui_num['C전략텍스트'], '매도전략 불러오기 완료'])
+            self.css_pushButton_03.setStyleSheet(style_bc_bt)
         else:
             windowQ.put([ui_num['C전략텍스트'], '매도전략 없음'])
 
@@ -1004,6 +1046,7 @@ if 매수:
             df = pd.DataFrame({'전략코드': [strategy]}, index=[strategy_name])
             query1Q.put([4, df, 'sell', 'append'])
             windowQ.put([ui_num['C전략텍스트'], '매도전략 저장하기 완료'])
+            self.css_pushButton_03.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_61(self):
         sell_code = '''"""
@@ -1018,6 +1061,7 @@ def SellStrategy(self, *args)
         self.cs_textEdit_03.clear()
         self.cs_textEdit_03.append(sell_code)
         windowQ.put([ui_num['C전략텍스트'], '매도변수 불러오기 완료'])
+        self.css_pushButton_03.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_62(self):
         strategy = self.cs_textEdit_03.toPlainText()
@@ -1032,6 +1076,8 @@ def SellStrategy(self, *args)
             query1Q.put([4, df, 'sell', 'append'])
             cstgQ.put(['매도전략', strategy])
             windowQ.put([ui_num['C전략텍스트'], '매도전략 시작하기 완료'])
+            self.css_pushButton_03.setStyleSheet(style_bc_dk)
+            self.css_pushButton_12.setStyleSheet(style_bc_bt)
 
     def ButtonClicked_63(self):
         sell_code = '''if now() > timedelta_sec(1800, 매수시간):\n    매도 = True'''
@@ -1074,6 +1120,7 @@ if 매도:
     # noinspection PyMethodMayBeStatic
     def ButtonClicked_70(self):
         cstgQ.put(['매도전략중지', ''])
+        self.css_pushButton_12.setStyleSheet(style_bc_dk)
 
     def ButtonClicked_71(self):
         con = sqlite3.connect(DB_SETTING)
@@ -1143,11 +1190,11 @@ if 매도:
         if len(df) > 0:
             self.sj_stock_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_stock_checkBox_01.setChecked(False)
             self.sj_stock_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_stock_checkBox_02.setChecked(False)
-            self.sj_stock_lineEdit_01.setText(str(df['콜렉터'][0]))
-            self.sj_stock_lineEdit_02.setText(str(df['트레이더'][0]))
-            self.sj_stock_lineEdit_03.setText(str(df['잔고청산'][0]))
-            self.sj_stock_lineEdit_05.setText(str(df['평균값계산틱수'][0]))
-            self.sj_stock_lineEdit_06.setText(str(df['최대매수종목수'][0]))
+            self.sj_stock_lineEdit_01.setText(str(df['평균값계산틱수'][0]))
+            self.sj_stock_lineEdit_02.setText(str(df['최대매수종목수'][0]))
+            self.sj_stock_lineEdit_03.setText(str(df['콜렉터'][0]))
+            self.sj_stock_lineEdit_04.setText(str(df['트레이더'][0]))
+            self.sj_stock_lineEdit_05.setText(str(df['잔고청산'][0]))
             self.UpdateTexedit([ui_num['설정텍스트'], '주식 전략 설정값 불러오기 완료'])
         else:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '주식 전략 설정값이\n존재하지 않습니다.\n')
@@ -1161,7 +1208,7 @@ if 매도:
             self.sj_coin_checkBox_01.setChecked(True) if df['모의투자'][0] else self.sj_coin_checkBox_01.setChecked(False)
             self.sj_coin_checkBox_02.setChecked(True) if df['알림소리'][0] else self.sj_coin_checkBox_02.setChecked(False)
             self.sj_coin_lineEdit_01.setText(str(df['평균값계산틱수'][0]))
-            self.sj_coin_lineEdit_029.setText(str(df['최대매수종목수'][0]))
+            self.sj_coin_lineEdit_02.setText(str(df['최대매수종목수'][0]))
             self.UpdateTexedit([ui_num['설정텍스트'], '코인 전략 설정값 불러오기 완료'])
         else:
             QtWidgets.QMessageBox.critical(self, '오류 알림', '코인 전략 설정값이\n존재하지 않습니다.\n')
@@ -1254,11 +1301,11 @@ if 매도:
     def ButtonClicked_81(self):
         me = 1 if self.sj_stock_checkBox_01.isChecked() else 0
         sd = 1 if self.sj_stock_checkBox_02.isChecked() else 0
-        cl = int(self.sj_stock_lineEdit_01.text())
-        tr = int(self.sj_stock_lineEdit_02.text())
-        cs = int(self.sj_stock_lineEdit_03.text())
-        avgtime = int(self.sj_stock_lineEdit_04.text())
-        buyc = int(self.sj_stock_lineEdit_05.text())
+        avgtime = int(self.sj_stock_lineEdit_01.text())
+        buyc = int(self.sj_stock_lineEdit_02.text())
+        cl = int(self.sj_stock_lineEdit_03.text())
+        tr = int(self.sj_stock_lineEdit_04.text())
+        cs = int(self.sj_stock_lineEdit_05.text())
         if cl == '' or tr == '' or cs == '' or avgtime == '' or buyc == '':
             QtWidgets.QMessageBox.critical(self, '오류 알림', '일부 변수값이 입력되지 않았습니다.\n')
         else:
