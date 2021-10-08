@@ -247,7 +247,12 @@ def SetUI(self):
     self.dd_pushButton = setPushbutton('', click=self.ButtonClicked_5, icon=icon_dbdel, tip='  거래목록 데이터 삭제 및 초기화')
     self.sd_pushButton = setPushbutton('', click=self.ButtonClicked_6, icon=icon_accdel, tip='  모든 계정 설정 삭제 및 초기화')
     self.qs_pushButton = setPushbutton('', click=self.ShowQsize)
+    self.tt_pushButton.setShortcut('Alt+T')
+    self.ms_pushButton.setShortcut('Alt+S')
     self.zo_pushButton.setShortcut('Alt+Z')
+    self.dd_pushButton.setShortcut('Alt+X')
+    self.bd_pushButton.setShortcut('Alt+B')
+    self.sd_pushButton.setShortcut('Alt+A')
     self.qs_pushButton.setShortcut('Alt+Q')
 
     self.progressBar = QtWidgets.QProgressBar(self)
