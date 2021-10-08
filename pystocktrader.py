@@ -1588,7 +1588,7 @@ class Window(QtWidgets.QMainWindow):
 def BuyStrategy(self, *args)
 매수(True), 종목코드(str), 종목명(str), 현재가(int), 시가(int), 고가(int), 저가(int), 등락율(float), 고저평균대비등락율(float),
 당일거래대금(int), 초당거래대금(int), 초당거래대금평균(int), 체결강도(float), 체결강도평균(float), 최고체결강도(float),
-VI해제시간(datatime), VI아래5호가(int), 초당매수수량(int), 초당매도수량(int), 매도총잔량(int), 매수총잔량(int),
+VI해제시간(datetime), VI아래5호가(int), 초당매수수량(int), 초당매도수량(int), 매도총잔량(int), 매수총잔량(int),
 매도호가2(int), 매도호가1(int), 매수호가1(int), 매수호가2(int), 매도잔량2(int), 매도잔량1(int), 매수잔량1(int), 매수잔량2(int)
 """'''
         self.ss_textEdit_02.clear()
