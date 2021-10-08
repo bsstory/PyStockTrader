@@ -127,7 +127,7 @@ class StrategyStock:
         초당거래대금 = 0 if 직전당일거래대금 == 0 else int(당일거래대금 - 직전당일거래대금)
 
         self.dict_gsjm[종목코드] = self.dict_gsjm[종목코드].shift(1)
-        self.dict_gsjm[종목코드].at[0] = 등락율, 고저평균대비등락율, 초당거래대금, 당일거래대금, 초당거래대금, 0., 체결시간
+        self.dict_gsjm[종목코드].at[0] = 등락율, 고저평균대비등락율, 초당거래대금, 당일거래대금, 체결강도, 0., 체결시간
         self.dict_hgjr[종목코드] = \
             [매도총잔량, 매수총잔량, 매도호가2, 매도호가1, 매수호가1, 매수호가2, 매도잔량2, 매도잔량1, 매수잔량1, 매수잔량2]
         if self.dict_gsjm[종목코드]['체결강도'][DICT_SET[f'평균시간1']] != 0.:
@@ -166,7 +166,7 @@ class StrategyStock:
         매도 = False
         평균값인덱스 = DICT_SET['평균시간1'] + 1
         등락율 = self.dict_gsjm[종목코드]['등락율'][0]
-        체결강도 = self.dict_gsjm[종목명]['체결강도'][0]
+        체결강도 = self.dict_gsjm[종목코드]['체결강도'][0]
         고저평균대비등락율 = self.dict_gsjm[종목코드]['고저평균대비등락율'][0]
         초당거래대금평균 = self.dict_gsjm[종목코드]['초당거래대금'][평균값인덱스]
         체결강도평균 = self.dict_gsjm[종목코드]['체결강도'][평균값인덱스]

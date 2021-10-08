@@ -164,6 +164,7 @@ class ReceiverKiwoom:
                         self.StartJangjungStrategy()
             if self.operation == 8:
                 self.AllRemoveRealreg()
+                self.SaveTickData()
                 break
 
             if now() > self.dict_time['거래대금순위기록']:
@@ -284,10 +285,20 @@ class ReceiverKiwoom:
     def AllRemoveRealreg(self):
         self.sreceivQ.put(['ALL', 'ALL'])
         self.windowQ.put([ui_num['S단순텍스트'], '시스템 명령 실행 알림 - 실시간 데이터 중단 완료'])
-        self.tick1Q.put('콜렉터종료')
-        self.tick2Q.put('콜렉터종료')
-        self.tick3Q.put('콜렉터종료')
-        self.tick4Q.put('콜렉터종료')
+
+    def SaveTickData(self):
+        con = sqlite3.connect(DB_TRADELIST)
+        df = pd.read_sql(f"SELECT * FROM s_tradelist WHERE 체결시간 LIKE '{self.str_tday}%'", con).set_index('index')
+        con.close()
+        codes = []
+        for index in df.index:
+            code = self.name_code[df['종목명'][index]]
+            if code not in codes:
+                codes.append(code)
+        self.tick1Q.put(['콜렉터종료', codes])
+        self.tick2Q.put(['콜렉터종료', codes])
+        self.tick3Q.put(['콜렉터종료', codes])
+        self.tick4Q.put(['콜렉터종료', codes])
 
     def UpdateMoneyTop(self):
         timetype = '%Y%m%d%H%M%S'
@@ -457,12 +468,23 @@ class ReceiverKiwoom:
                 self.dict_vipr[code][1] = timedelta_sec(5)
             else:
                 self.dict_vipr[code] = [False, timedelta_sec(5), 0]
-            self.windowQ.put([ui_num['S단순텍스트'], f'변동성 완화 장치 발동 - [{code}] {key}'])
         elif type(key) == int:
             vid5 = self.GetVIPriceDown5(code, key)
             self.dict_vipr[code] = [True, timedelta_sec(5), vid5]
 
     def UpdateTickData(self, code, name, c, o, h, low, per, dm, ch, bids, asks, t, receivetime):
+        dt = self.str_tday + t[:4]
+        if code not in self.dict_cdjm.keys():
+            columns = ['1분누적거래대금', '1분전당일거래대금']
+            self.dict_cdjm[code] = pd.DataFrame([[0, dm]], columns=columns, index=[dt])
+        elif dt != self.dict_cdjm[code].index[-1]:
+            predm = self.dict_cdjm[code]['1분전당일거래대금'][-1]
+            self.dict_cdjm[code].at[dt] = dm - predm, dm
+            if len(self.dict_cdjm[code]) == MONEYTOP_MINUTE:
+                if per > 0:
+                    self.df_mc.at[code] = self.dict_cdjm[code]['1분누적거래대금'].sum()
+                self.dict_cdjm[code].drop(index=self.dict_cdjm[code].index[0], inplace=True)
+
         vitime = self.dict_vipr[code][1]
         vid5price = self.dict_vipr[code][2]
         try:
@@ -473,29 +495,13 @@ class ReceiverKiwoom:
         data = [code, c, o, h, low, per, dm, ch, bids, asks, vitime, vid5price,
                 tsjr, tbjr, s2hg, s1hg, b1hg, b2hg, s2jr, s1jr, b1jr, b2jr, t, receivetime]
 
-        if DICT_SET['키움트레이더']:
-            dt = self.str_tday + t[:4]
-            if code not in self.dict_cdjm.keys():
-                columns = ['1분누적거래대금', '1분전당일거래대금']
-                self.dict_cdjm[code] = pd.DataFrame([[0, dm]], columns=columns, index=[dt])
-            elif dt == self.dict_cdjm[code].index[-1]:
-                predm = self.dict_cdjm[code]['1분전당일거래대금'][-1]
-                self.dict_cdjm[code].at[dt] = dm - predm, predm
-            else:
-                if len(self.dict_cdjm[code]) >= MONEYTOP_MINUTE:
-                    if per > 0:
-                        self.df_mc.at[code] = self.dict_cdjm[code]['1분누적거래대금'].sum()
-                    self.dict_cdjm[code].drop(index=self.dict_cdjm[code].index[0], inplace=True)
-                predm = self.dict_cdjm[code]['1분전당일거래대금'][-1] + self.dict_cdjm[code]['1분누적거래대금'][-1]
-                self.dict_cdjm[code].at[dt] = dm - predm, predm
-
-            if code in self.dict_gsjm.keys():
-                injango = code in self.list_jang
-                data.append(name)
-                data.append(injango)
-                self.sstgQ.put(data)
-                if injango:
-                    self.stockQ.put([code, name, c])
+        if DICT_SET['키움트레이더'] and code in self.dict_gsjm.keys():
+            injango = code in self.list_jang
+            data.append(name)
+            data.append(injango)
+            self.sstgQ.put(data)
+            if injango:
+                self.stockQ.put([code, name, c])
 
         data[10] = strf_time('%Y%m%d%H%M%S', vitime)
         if code in self.list_code1:

@@ -8,6 +8,8 @@ from utility.setting import ui_num, DICT_SET
 from utility.static import now, strf_time, timedelta_sec
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
+DIVIDE_SAVE = True     # 틱데이터 저장방식 선택 - True: 경우 10초에 한번 저장, False: 장마감 후 거래종목만 저장
+
 
 class CollectorKiwoom:
     def __init__(self, gubun, qlist):
@@ -40,11 +42,13 @@ class CollectorKiwoom:
     def Start(self):
         while True:
             tick = self.tickQ.get()
-            if type(tick) == list:
+            if len(tick) != 2:
                 self.UpdateTickData(tick[0], tick[1], tick[2], tick[3], tick[4], tick[5], tick[6], tick[7], tick[8],
                                     tick[9], tick[10], tick[11], tick[12], tick[13], tick[14], tick[15], tick[16],
                                     tick[17], tick[18], tick[19], tick[20], tick[21], tick[22], tick[23])
-            elif tick == '콜렉터종료':
+            elif tick[0] == '콜렉터종료':
+                if not DIVIDE_SAVE:
+                    self.SaveTickData(tick[1])
                 break
 
         if self.gubun == 4:
@@ -78,6 +82,17 @@ class CollectorKiwoom:
             if self.gubun == 4:
                 gap = (now() - receivetime).total_seconds()
                 self.windowQ.put([ui_num['S단순텍스트'], f'콜렉터 수신 기록 알림 - 수신시간과 기록시간의 차이는 [{gap}]초입니다.'])
-            self.query2Q.put([1, self.dict_df])
-            self.dict_df = {}
+            if DIVIDE_SAVE:
+                self.query2Q.put([1, self.dict_df])
+                self.dict_df = {}
             self.time_info = timedelta_sec(10)
+
+    def SaveTickData(self, codes):
+        for code in list(self.dict_df.keys()):
+            if code in codes:
+                columns = ['현재가', '시가', '고가', '거래대금', '누적거래대금', '상승VID5가격', '매수수량', '매도수량',
+                           '매도호가2', '매도호가1', '매수호가1', '매수호가2', '매도잔량2', '매도잔량1', '매수잔량1', '매수잔량2']
+                self.dict_df[code][columns] = self.dict_df[code][columns].astype(int)
+            else:
+                del self.dict_df[code]
+        self.query2Q.put([1, self.dict_df])

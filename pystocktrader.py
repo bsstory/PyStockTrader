@@ -326,18 +326,18 @@ class Window(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
         if buttonReply == QtWidgets.QMessageBox.Yes:
-            if DICT_SET['아이디1'] is None:
+            if DICT_SET['아이디2'] is None:
                 QtWidgets.QMessageBox.critical(
                     self, '오류 알림',
-                    '키움 첫번째 계정이 설정되지 않아\n콜렉터를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+                    '키움 두번째 계정이 설정되지 않아\n콜렉터를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
                 )
             else:
                 self.KiwoomCollectorStart()
                 QTest.qWait(20000)
-            if DICT_SET['아이디2'] is None:
+            if DICT_SET['아이디1'] is None:
                 QtWidgets.QMessageBox.critical(
                     self, '오류 알림',
-                    '키움 두번째 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
+                    '키움 첫번째 계정이 설정되지 않아\n트레이더를 시작할 수 없습니다.\n계정 설정 후 다시 시작하십시오.\n'
                 )
             else:
                 self.KiwoomTraderStart()
