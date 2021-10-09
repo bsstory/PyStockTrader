@@ -1520,17 +1520,17 @@ if 매도:
             smavg = dict_df[code]['초당거래대금'][DICT_SET[f'평균값계산틱수{tn}'] + 1]
             item = QtWidgets.QTableWidgetItem(changeFormat(smavg).split('.')[0])
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
-            gj_tableWidget.setItem(j, columns_gj3.index('smavg'), item)
+            gj_tableWidget.setItem(j, columns_gj3.index('sm_avg'), item)
 
             chavg = dict_df[code]['체결강도'][DICT_SET[f'평균값계산틱수{tn}'] + 1]
             item = QtWidgets.QTableWidgetItem(changeFormat(chavg))
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
-            gj_tableWidget.setItem(j, columns_gj3.index('chavg'), item)
+            gj_tableWidget.setItem(j, columns_gj3.index('ch_avg'), item)
 
             chhigh = dict_df[code]['최고체결강도'][DICT_SET[f'평균값계산틱수{tn}'] + 1]
             item = QtWidgets.QTableWidgetItem(changeFormat(chhigh))
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
-            gj_tableWidget.setItem(j, columns_gj3.index('chhigh'), item)
+            gj_tableWidget.setItem(j, columns_gj3.index('ch_high'), item)
 
             for i, column in enumerate(columns_gj2):
                 if column in ['초당거래대금', '당일거래대금']:
