@@ -124,7 +124,7 @@ def SetUI(self):
         tableWidget.setColumnCount(len(columns))
         tableWidget.setRowCount(rowcount)
         tableWidget.setHorizontalHeaderLabels(columns)
-        if columns[-1] == 'chhigh':
+        if columns[-1] == 'ch_high':
             if tab == self.st_tab:
                 tableWidget.setColumnWidth(0, 122)
                 tableWidget.setColumnWidth(1, 68)
