@@ -1517,17 +1517,17 @@ if 매도:
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
             gj_tableWidget.setItem(j, 0, item)
 
-            smavg = dict_df[code]['초당거래대금'][DICT_SET[f'평균시간{tn}'] + 1]
+            smavg = dict_df[code]['초당거래대금'][DICT_SET[f'평균값계산틱수{tn}'] + 1]
             item = QtWidgets.QTableWidgetItem(changeFormat(smavg).split('.')[0])
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             gj_tableWidget.setItem(j, columns_gj3.index('smavg'), item)
 
-            chavg = dict_df[code]['체결강도'][DICT_SET[f'평균시간{tn}'] + 1]
+            chavg = dict_df[code]['체결강도'][DICT_SET[f'평균값계산틱수{tn}'] + 1]
             item = QtWidgets.QTableWidgetItem(changeFormat(chavg))
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             gj_tableWidget.setItem(j, columns_gj3.index('chavg'), item)
 
-            chhigh = dict_df[code]['최고체결강도'][DICT_SET[f'평균시간{tn}'] + 1]
+            chhigh = dict_df[code]['최고체결강도'][DICT_SET[f'평균값계산틱수{tn}'] + 1]
             item = QtWidgets.QTableWidgetItem(changeFormat(chhigh))
             item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             gj_tableWidget.setItem(j, columns_gj3.index('chhigh'), item)
@@ -1538,33 +1538,6 @@ if 매도:
                 else:
                     item = QtWidgets.QTableWidgetItem(changeFormat(dict_df[code][column][0]))
                 item.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
-                if column == '등락율':
-                    if DICT_SET[f'등락율하한{tn}'] <= dict_df[code][column][0] <= \
-                            DICT_SET[f'등락율상한{tn}']:
-                        item.setForeground(color_fg_bt)
-                    else:
-                        item.setForeground(color_fg_dk)
-                elif column == '고저평균대비등락율':
-                    if dict_df[code][column][0] >= 0:
-                        item.setForeground(color_fg_bt)
-                    else:
-                        item.setForeground(color_fg_dk)
-                elif column == '초당거래대금':
-                    if dict_df[code][column][0] >= smavg + DICT_SET[f'거래대금차이{tn}']:
-                        item.setForeground(color_fg_bt)
-                    else:
-                        item.setForeground(color_fg_dk)
-                elif column == '당일거래대금':
-                    if dict_df[code][column][0] >= DICT_SET[f'누적거래대금하한{tn}']:
-                        item.setForeground(color_fg_bt)
-                    else:
-                        item.setForeground(color_fg_dk)
-                elif column == '체결강도':
-                    if dict_df[code][column][0] >= DICT_SET[f'체결강도하한{tn}'] and \
-                            dict_df[code][column][0] >= chavg + DICT_SET[f'체결강도차이{tn}']:
-                        item.setForeground(color_fg_bt)
-                    else:
-                        item.setForeground(color_fg_dk)
                 gj_tableWidget.setItem(j, i + 1, item)
 
         if len(dict_df) < 15:
