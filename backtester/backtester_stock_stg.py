@@ -9,7 +9,7 @@ from utility.setting import DB_BACKTEST, DB_STOCK_STRETEGY, DB_STOCK_TICK
 from utility.static import now, strf_time, timedelta_sec, timedelta_day, strp_time
 
 
-class BackTesterCoinStg:
+class BackTesterStockStg:
     def __init__(self, q_, code_list_, var_, buystg_, sellstg_, df_mt_):
         self.q = q_
         self.code_list = code_list_
@@ -63,8 +63,6 @@ class BackTesterCoinStg:
             self.df = pd.read_sql(f"SELECT * FROM '{code}'", conn).set_index('index')
             self.df['고저평균대비등락율'] = (self.df['현재가'] / ((self.df['고가'] + self.df['저가']) / 2) - 1) * 100
             self.df['고저평균대비등락율'] = self.df['고저평균대비등락율'].round(2)
-            self.df['체결강도'] = self.df['누적매수량'] / self.df['누적매도량'] * 100
-            self.df['체결강도'] = self.df['체결강도'].round(2)
             self.df['직전체결강도'] = self.df['체결강도'].shift(1)
             self.df['직전당일거래대금'] = self.df['당일거래대금'].shift(1)
             self.df = self.df.fillna(0)
@@ -120,6 +118,8 @@ class BackTesterCoinStg:
         등락율 = self.df['등락율'][self.index]
         고저평균대비등락율 = self.df['고저평균대비등락율'][self.index]
         당일거래대금 = self.df['당일거래대금'][self.index]
+        VI해제시간 = self.df['VI해제시간'][self.index]
+        VI아래5호가 = self.df['VI아래5호가'][self.index]
         체결강도 = self.df['체결강도'][self.index]
         체결강도평균 = self.df['체결강도평균'][self.index]
         최고체결강도 = self.df['최고체결강도'][self.index]
@@ -393,7 +393,7 @@ if __name__ == "__main__":
         workcount = int(last / int(sys.argv[6])) + 1
         for j in range(0, last, workcount):
             code_list = table_list[j:j + workcount]
-            p = Process(target=BackTesterCoinStg, args=(q, code_list, var, buystg, sellstg, df3))
+            p = Process(target=BackTesterStockStg, args=(q, code_list, var, buystg, sellstg, df3))
             procs.append(p)
             p.start()
         for p in procs:
