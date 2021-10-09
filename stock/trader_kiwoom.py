@@ -298,6 +298,7 @@ class TraderKiwoom:
 
     def OperationRealreg(self):
         self.stockQ.put([sn_oper, ' ', '215;20;214', 0])
+        self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 장운영시간 등록 완료'])
         self.windowQ.put([ui_num['S로그텍스트'], '시스템 명령 실행 알림 - 트레이더 시작 완료'])
 
     def JangoChungsan(self):
