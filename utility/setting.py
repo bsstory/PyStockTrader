@@ -75,9 +75,7 @@ sn_brrq = 1000
 sn_brrd = 1001
 sn_cond = 1002
 sn_oper = 1003
-sn_jscg = 1004
-sn_vijc = 1005
-sn_jchj = 2000
+sn_recv = 2000
 
 color_fg_bt = QColor(230, 230, 235)
 color_fg_bc = QColor(190, 190, 195)
